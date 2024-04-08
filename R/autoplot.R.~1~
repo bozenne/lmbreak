@@ -1,0 +1,132 @@
+### autoplot.R --- 
+##----------------------------------------------------------------------
+## Author: Brice Ozenne
+## Created: Apr  5 2024 (15:33) 
+## Version: 
+## Last-Updated: Apr  5 2024 (15:33) 
+##           By: Brice Ozenne
+##     Update #: 1
+##----------------------------------------------------------------------
+## 
+### Commentary: 
+## 
+### Change Log:
+##----------------------------------------------------------------------
+## 
+### Code:
+
+## * autoplot
+#' @title Display Regression Line and Observations
+#' @description Display regression line and observations.
+#'
+#' @param object output of \code{breakpoint}
+#' @param pattern [vector of character] the number and type of breakpoints to be display.
+#' @param newdata [data.frame/data.table] datapoint at which the fit should be display.
+#' @param combine.plot [logical] should the plots for the different patterns be combined into one.
+#' @param nrow [integer, >0] number of rows used when combining the plots.
+#' @param ncol [integer, >0] number of columns used when combining the plots.
+#' @param title [character] the title of the combined plot. 
+#' @param plot [logical] should the plot be displayed in a window?
+#' @param text.size [numeric, >0] the size of the text in the plot.
+#' @param add.cv.title [logical] should the convergence status of the estimation algorithm
+#' be displayed in the title of the plot.
+#' @param add.bic.title [logical] should the bic of the model
+#' be displayed in the title of the plot.
+#' @param ... not used. For compatibility with the generic function.
+#' 
+#' 
+#' @method autoplot lmBreak
+#' @export 
+autoplot.lmBreak <- function(object, newdata = NULL, pattern = NULL, plot = TRUE,
+                             combine.plot = TRUE, nrow = NULL, ncol = NULL, title = NULL, text.size = 10,
+                             add.cv.title = TRUE, add.bic.title = FALSE, ...){
+
+    fit <- NULL ## [:CRANtest:] ggplot2
+
+    ## ** normalize argument
+    if(is.null(pattern)){
+        pattern <- grep("^BP", names(object), value = TRUE)
+    }else{
+        pattern <- match.arg(pattern, choices = names(object), several.ok = TRUE)
+    }
+    n.pattern <- length(pattern)
+
+    breakpoint.var <- object$breakpoint.var
+    response.var <- object$response.var
+    if(is.null(newdata)){
+        newdata <- data.table::copy(object$data)
+    }
+    newdata.fit <- lapply(pattern, function(iPattern){
+        out <- data.table::copy(object[[iPattern]]$fit)
+        return(out)
+    })
+    names(newdata.fit) <- pattern
+
+    
+    ##
+    tryPkg <- requireNamespace("gridExtra")
+    if("try-error" %in% class(tryPkg)){
+        stop(tryPkg)
+    }
+
+    ## ** make individual plots
+    ls.plot <- vector(mode = "list", length = n.pattern)
+    names(ls.plot) <- pattern
+    object.BIC <- BIC(object)
+
+    newdata <- cbind(newdata, observation = "observation")
+        
+    for(iPattern in pattern){ ## iPattern <- pattern[2]
+        title.txt <- paste0("pattern: ",iPattern)
+        iFit <- newdata.fit[[iPattern]]
+            
+        if(add.cv.title){title.txt <- paste0(title.txt," | convergence: ",object[[iPattern]]$cv)}
+        if(add.bic.title){title.txt <- paste0(title.txt," | BIC: ",round(object.BIC[iPattern],3))}
+
+        ls.plot[[iPattern]] <- ggplot2::ggplot(mapping = aes_string(breakpoint.var))
+        ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::geom_point(data = newdata, aes_string(y = response.var, color = "observation"))
+        if(!is.null(iFit)){
+            ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::geom_line(data = iFit, aes(y = fit, color = "fit"))
+            ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::scale_colour_manual(name = "",
+                                                                                      values = c("red","black"))
+        }else{
+               ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::scale_colour_manual(name = "", values = c("black"))
+        }
+        
+        ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::ggtitle(label = title.txt)
+        ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::theme(text = element_text(size = text.size))
+
+        if(names(object.BIC)[which.min(object.BIC)]==iPattern){
+            ls.plot[[iPattern]] <- ls.plot[[iPattern]] + ggplot2::theme(plot.title = element_text(colour = "darkblue"))
+        }
+    }
+
+    if(combine.plot && n.pattern>1){
+        vec.txt <- paste0("ls.plot[[\"",pattern,"\"]] + theme(legend.position=\"none\")")
+        txt <- paste0(vec.txt, collapse = ", \n", sep = "")
+        txt.all <- paste0("gridExtra::arrangeGrob(",txt,
+                          if(!is.null(nrow)){paste0(", nrow = ",nrow)},
+                          if(!is.null(ncol)){paste0(", ncol = ",ncol)},
+                          if(!is.null(title)){paste0(",top=\"",title,"\"")},
+                          ")")
+        out <- eval(parse(text = txt.all))
+        if(plot){
+            gridExtra::grid.arrange(out)
+        }
+    }else{
+        out <- list(plot = ls.plot,
+                    data = newdata,
+                    fit = newdata.fit)
+        if(plot){
+            lapply(out$plot, print)
+        }
+    }
+
+    
+        return(invisible(out))
+}
+
+
+
+##----------------------------------------------------------------------
+### autoplot.R ends here

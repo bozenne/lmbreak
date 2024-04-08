@@ -1,0 +1,21 @@
+Package: lmbreak
+Type: Package
+Title: Linear Regression with Unknown Breakpoints
+Version: 0.0.0
+Date: 2024-04-05
+Authors@R: c(
+    person("Brice", "Ozenne", role = c("aut", "cre"), email = "brice.mh.ozenne@gmail.com", comment = c(ORCID = "0000-0001-9694-2956"))
+	)
+Description: Fit linear regression with unknown breakpoints
+License: GPL-3 + file LICENSE
+Encoding: UTF-8
+URL: https://github.com/bozenne/lmbreak
+BugReports: https://github.com/bozenne/lmbreak/issues
+Depends:
+    R (>= 3.5.0),
+Imports:
+    ggplot2,
+    lava
+Suggests:
+    testthat
+RoxygenNote: 7.2.3

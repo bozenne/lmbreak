@@ -1,0 +1,370 @@
+### lmbreak.R --- 
+##----------------------------------------------------------------------
+## Author: Brice Ozenne
+## Created: Apr  5 2024 (15:33) 
+## Version: 
+## Last-Updated: Apr  8 2024 (12:12) 
+##           By: Brice Ozenne
+##     Update #: 280
+##----------------------------------------------------------------------
+## 
+### Commentary: 
+## 
+### Change Log:
+##----------------------------------------------------------------------
+## 
+### Code:
+
+## * lmbreak (documentation)
+#' @title Find One or Two Breakpoints
+#' @description Find one or two breakpoints.
+#' @name lmBreak
+#'
+#' @param formula a formula where the breakpoint variable appears on the right hand side
+#' with an argument pattern specifying the number of breakpoints and possible constrains. See detail section.
+#' @param pattern [vector of character] the number and type of breakpoints to be search. 0 indicates a flat line. 
+#' @param n.iter [integer, >0] the maximum number of iterations used to estimates the breakpoints.
+#' @param n.init [integer, >0] the number of quantiles used to generate initialisation points.
+#' Only active when breakpoint.init is \code{NULL}.
+#' @param tol [numeric, >0] the maximum accpetable difference between two consecutive estimates of the breakpoints.
+#' When reached, the estimation algorithm stops.
+#' @param trace [0,1,2] trace the execution of the function.
+#' @param digits [integer] how to round values that are displayed in the terminal.
+#'
+#'
+#' @details
+#' \textbf{formula}: \code{Y~bp(X, pattern = "111")} indicates a two breakpoints model without constrains (one intercept and three slopes).
+#'  \code{Y~bp(X, pattern = "101")} indicates a two breakpoints model with a plateau (one intercept and two slopes).
+#' 
+#' @references Muggeo, V. M. R. Estimating regression models with unknown break-points.
+#' Statistics in medicine 2003; 22:3055-3071. 
+
+## * lmbreak (example)
+#' @examples
+##'
+##' ####  simulate data ####
+##' set.seed(10)
+##' df1 <- simBreak(10, breakpoint = c(0,1,3,4), slope = c(1,0,-1), sigma = 0.1)
+##' df1$gender <- df1$id %% 2
+##'
+##' #### fit breakpoint regression
+##' e.lmbreak <- lmbreak(Y ~ bp(X, pattern = "101"), data = df1)
+##' e.lmbreak <- lmbreak(Y ~ gender + bp(X, pattern = "101"), data = df1, trace = 1)
+##' e.lmbreak <- lmbreak(Y ~ bp(X, "101"), data = df1)
+##' 
+##' e.lmbreak <- lmbreak(Y ~ gender + bp(X, "111"), data = df1)
+##' e.lmbreak <- lmbreak(Y ~ gender + bp(X, "101"), data = df1)
+##' 
+#' BIC(resBP)
+#' gg + geom_line(data = resBP$BP101$fit, aes(y = fit))
+#'
+#' #### example from the package segmented
+#' if(require(segmented)){
+#' GS <- segmented(e.lm, psi = c(1,2))
+#'
+#' 
+#' cbind(value = resBP$BP111$breakpoint,
+#'       se = resBP$BP111$breakpoint.se)
+#' GS$psi
+#' }
+#' 
+#' if(require(gridExtra)){
+#'   autoplot(resBP)
+#' }
+#'  
+
+## * lmbreak (code)
+#' @rdname breakpoint
+#' @export
+lmbreak <- function(formula, data,
+                    n.iter = 25, tol = 1e-3, enforce.continuity = TRUE,
+                    trace = FALSE, nQuantile.init = NULL, digits = -log10(tol)){
+
+    ## ** normalize user input
+    ## *** formula
+    if(!inherits(formula,"formula")){
+        stop("Argument \'formula\' should be or inherit from formula. \n")
+    }
+    response.var <- all.vars(update(formula,".~0"))
+    if(length(response.var)!=1){
+        stop("The argument \'formula\' should have exactly a single variable on the left hand side. \n")
+    }
+    terms.formula <- terms(formula, specials = "bp")
+
+    ## *** find breakpoint variable
+    formula.bp <- attr(terms.formula,"specials")$bp
+    if(is.null(formula.bp)){
+        stop("The argument \'formula\' should contain a single variable on the right hand side indicating the breakpoints. \n",
+             "Something like: Y ~ bp(X, pattern = \"111\") for three breakpoints.")
+    }else if(length(formula.bp)!=1){
+        stop("The argument \'formula\' currently only supports a single breakpoint variable. \n")
+    }
+    
+    var.bp <- all.vars(attr(terms.formula,"variables")[[formula.bp+1]])
+    if(length(attr(terms.formula,"term.labels"))==1){
+        terms.nobp <- terms(update(terms.formula, .~1))
+    }else{
+        terms.nobp <- drop.terms(terms.formula, dropx = formula.bp-1, keep.response = TRUE)
+    }
+
+    ## *** find pattern
+    term.bp <- attr(terms.formula,"variables")[[formula.bp+1]]
+    if(length(term.bp)<3 || !is.character(term.bp[[3]]) || nchar(term.bp[[3]])<2){
+        stop("When specifying the breakpoint in argument \'formula\', the number breakpoints and possible constrained should be specified with 0 or 1. \n",
+             "Something like: Y ~ bp(X, pattern = \"111\") for 2 breakpoints \n",
+             "                Y ~ bp(X, pattern = \"101\") for 2 breakpoints with a plateau. \n")
+    }
+    pattern <- term.bp[[3]]
+    n.pattern <- nchar(pattern)
+    n.breakpoint <- n.pattern-1
+    vec.pattern <- sapply(1:n.pattern, function(iIndex){substr(pattern, iIndex, iIndex)})
+    if(any("1" %in% vec.pattern == FALSE & "0" %in% vec.pattern == FALSE)){
+        stop("When specifying the breakpoint in argument \'formula\', the pattern should only be specified with 0 or 1. \n",
+             "Something like: Y ~ bp(X, pattern = \"111\") for 2 breakpoints \n",
+             "                Y ~ bp(X, pattern = \"101\") for 2 breakpoints with a plateau. \n")
+    }
+    if(any(vec.pattern==0) && any(diff(which(vec.pattern==0))==1)){
+        stop("When specifying the breakpoint in argument \'formula\', the pattern cannot contain two consecutive 0.")
+    }
+
+    ## *** find initialization
+    if(length(term.bp)==4){
+        breakpoint.init <- cbind(as.double(eval(term.bp[[4]])))
+        if(length(breakpoint.init) != n.breakpoint){
+            stop("Incorrect number of breakpoints given for the initialization")
+        }
+        if(!is.null(nQuantile.init)){
+            nQuantile.init <- NULL
+            message("Argument \'nQuantile.init\' is ignored when initialization values for the breakpoints are given via argument \'formula\'. \n")
+        }
+    }else{
+        if(!is.null(nQuantile.init) && (length(nQuantile.init)!=1 || nQuantile.init<=(n.breakpoint+2) || (n.init %% 1 != 0))){
+            stop("Incorrect argument \'nQuantile.init\': should be an integer greater or equal to ",n.breakpoint+2,". \n")
+        }else{
+            ## +2 because 2 quantiles are removed (0,1)
+            if(n.breakpoint==1){
+                nQuantile.init <- 2 + n.breakpoint + 4
+            }else if(n.breakpoint==2){
+                nQuantile.init <- 2 + n.breakpoint + 3
+            }else if(n.breakpoint==3){
+                nQuantile.init <- 2 + n.breakpoint + 2
+            }else{
+                nQuantile.init <- 2 + n.breakpoint + 1
+            }
+            
+        }
+        probs.breakpoint <- seq(0,1, length.out = nQuantile.init)[2:(nQuantile.init-1)]
+        quantile.data <- quantile(data[[var.bp]], probs = probs.breakpoint)
+        breakpoint.init <- utils::combn(quantile.data, m = n.breakpoint)
+    }
+    n.init <- NCOL(breakpoint.init)
+        
+    ## *** data
+    data <- as.data.frame(data)
+    reserved.names <- c("fit", paste0("Us",1:n.pattern),paste0("Vs",1:n.pattern),paste0("beta",1:n.pattern),paste0("gamma",1:n.pattern))
+    if(any(names(data) %in% reserved.names)){
+        txt <- names(dt[names(data) %in% reserved.names])
+        stop("data contains reserved names: \"",paste0(txt, collapse = "\" \""),"\"\n")
+    }
+    
+
+    ## ** prepare underlying model
+    index.1 <- which(vec.pattern!="0")
+    addU.terms <- paste0("Us",index.1-1) ## Us0 is X
+    if(any(vec.pattern[-1]=="0")){
+        index.0 <- setdiff(which(vec.pattern=="0"),0)
+        for(i0 in 1:length(index.0)){ ## i0 <- 1
+            iIndex <- which(index.1<index.0[i0])
+            addU.terms[iIndex] <- paste0("I(",addU.terms[iIndex],"-",paste0("Us",index.0[i0]-1),")")
+            index.1[iIndex] <- Inf
+        }        
+    }
+    addV.terms <- paste0("Vs",1:n.breakpoint)
+    formula2 <- update(terms.nobp, paste0(".~.+",paste(addU.terms, collapse="+"),"+",paste(addV.terms, collapse="+")))
+
+    ## ** fit
+    ## ggplot(data, aes(x = .data[[var.bp]], y = .data[[all.vars(formula2)[1]]])) + geom_point()
+    ls.fit <- apply(breakpoint.init, MARGIN = 2, FUN = function(iInit){
+        lmbreak.fit(formula = formula2, variable = var.bp, pattern = vec.pattern, data = data,
+                    n.iter = n.iter, tol = tol, initialization = iInit, enforce.continuity = enforce.continuity,
+                    trace = trace, digits = digits)
+    }, simplify = FALSE)
+
+    if(NCOL(breakpoint.init)>1){
+        vec.cv <- unlist(lapply(ls.fit, "[[","cv"))
+        vec.R2 <- unlist(lapply(ls.fit, "[[","R2"))
+        out <- ls.fit[[which.max(vec.cv+vec.R2)]]
+        attr(out$cv,"all") <- vec.cv
+        attr(out$R2,"all") <- vec.R2
+        attr(out$breakpoint.init,"all") <- do.call(cbind, lapply(ls.fit, "[[","breakpoint.init"))
+        attr(out$coef,"all") <- do.call(cbind, lapply(ls.fit, "[[","coef"))
+        attr(out$breakpoint,"all") <- do.call(cbind, lapply(ls.fit, function(iM){iM$breakpoint$value}))
+    }else{
+        out <- ls.fit[[1]]
+    }
+
+    ## ** standard error
+    if(out$cv){
+        vcov.bp <- vcov(out$model)
+        beta.Us <- out$coef[out$breakpoint$Us]
+        beta.Vs <- out$coef[out$breakpoint$Vs]
+        
+        term1 <- diag(vcov.bp)[out$breakpoint$Us] / beta.Us^2
+        term2 <- diag(vcov.bp)[out$breakpoint$Vs] * (beta.Vs/beta.Us^2)^2
+        term3 <- -2 * out$breakpoint$sign * diag(vcov.bp[out$breakpoint$Us,out$breakpoint$Vs]) * beta.Vs / beta.Us^3
+        out$breakpoint.se <- sqrt(term1+term2+term3)
+        out$breakpoint.se <- sqrt(term1)
+    }
+    
+    ## ** export
+    if(out$cv == FALSE){
+        warning("The optimizer did not converge to a stable solution. \n")
+    }else if(out$continuity == FALSE){
+        warning("The optimizer did not converge to a continuous solution (non-0 Vs terms). \n")
+    }
+    
+    out$call <- match.call()
+    out$breakpoint.var <- var.bp
+    out$response.var <- response.var
+    out$pattern <- vec.pattern
+    out$data <- data
+    class(out) <- "lmbreak"
+    return(out)
+}
+
+
+
+## * .lmbreak.fit
+lmbreak.fit <- function(formula, variable, pattern, data,
+                        n.iter, tol, initialization, enforce.continuity,
+                        trace, digits){
+
+    ## ** initialize data
+    n.breakpoint <- length(initialization)
+    bp.range <- range(data[[variable]], na.rm=TRUE)
+    ## if(transform){
+    ##     beta <- -2/diff(bp.range)
+    ##     alpha <- sum(bp.range)/diff(bp.range)
+    ##     ## alpha + beta*bp.range
+    ## }
+    
+    terms.formula <- terms(formula)
+    index.gamma <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint)
+    index.Us <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint+sum(pattern=="1"))[1:sum(pattern=="1")]
+    index.beta <- index.Us[1+cumsum(pattern=="1")]
+    browser()
+    sign.beta <- c(-1,1)[1+(pattern[-1]=="1")]
+    
+    ## ** loop
+    Hist.breakpoint <- matrix(NA, nrow = n.iter, ncol = n.breakpoint)
+    iBreakpoint <- initialization
+    cv <- FALSE
+    escape <- FALSE
+    step <- 1
+    if(trace>1){
+        cat(" - initialization of the breakpoints: ",paste(round(initialization, digits), collapse =", "),"\n",
+            " - iteration:", sep="")
+        if(trace<3){
+            cat(" ")
+        }
+        
+    }
+
+    for(iIter in 1:n.iter){ ## iIter <- 1
+        Hist.breakpoint[iIter,] <- iBreakpoint
+
+        ## ** update design
+        iData <- model.frame.lmbreak(list(breakpoint.var = variable, breakpoint = iBreakpoint),
+                                     newdata = data)
+
+        ## ** estimate model coefficients
+        iE.lm <- lm(formula, data = iData)
+
+        ## ** update breakpoint
+        iCoef <- coef(iE.lm)
+        iBreakpoint <- unname(step * sign.beta * iCoef[index.gamma]/iCoef[index.beta] + Hist.breakpoint[iIter,])
+        if(any(rowSums(abs(Hist.breakpoint[1:iIter,,drop=FALSE] - matrix(iBreakpoint, nrow = iIter, ncol = n.breakpoint, byrow = TRUE)))<tol/10)){ ## same iteration as before
+            step <- step/2
+            iBreakpoint <- unname(step * sign.beta * iCoef[index.gamma]/iCoef[index.beta] + Hist.breakpoint[iIter,])
+        }
+        
+        ## \alpha + \beta a = -1
+        ## \alpha + \beta b = 1
+        ## \beta = 2/(b-a) and \alpha = - (a+b)/(b-a)
+    
+        ## ** display
+        if(trace>2){
+            cat(" ",iIter," (breakpoint/Vs/step = ",paste(paste(round(iBreakpoint, digits = digits),round(iCoef[index.gamma], digits = digits),step, sep = "/"), collapse = ", "), ") \n             ", sep = "")
+            if(FALSE){
+                iNewdata <- stats::setNames(data.frame(seq(bp.range[1],bp.range[2], length.out = 1e4)), variable)
+                iNewdataUsVs <- model.frame.lmbreak(list(breakpoint.var = variable, breakpoint = Hist.breakpoint[iIter,]),
+                                     newdata = iNewdata)
+                iNewdataUsVs$fit <- predict(iE.lm, newdata = iNewdataUsVs)
+
+                dev.new()
+                iGG <- ggplot() + geom_point(data = data, mapping = aes(x = .data[[variable]], y = .data[[all.vars(formula)[1]]]))
+                iGG <- iGG + geom_line(data = iNewdataUsVs, mapping = aes(x = .data[[variable]], y = fit), color = "red")
+                iGG <- iGG + geom_point(data = iNewdataUsVs[sapply(iBreakpoint, function(iB){which.min(abs(iNewdataUsVs[[variable]]-iB))}),], mapping = aes(x = .data[[variable]], y = fit), color = "blue")
+                iGG <- iGG + ggtitle(paste0("iteration ",iIter))
+                print(iGG)
+            }
+
+        }else if(trace>0){
+            cat("*")
+        }
+
+        ## ** cv
+        iDiff <- abs(iBreakpoint-Hist.breakpoint[iIter,])
+        test.continuity <- all(abs(iCoef[index.gamma])<tol)
+        if(any(is.na(iBreakpoint)) || iBreakpoint[1]<bp.range[1] || iBreakpoint[n.breakpoint]>bp.range[2] || is.unsorted(iBreakpoint) ){
+            ## case where one breakpoint is outside the domain
+            ## or when the breakpoints are not in increasing order
+            if(trace>0){
+                if(any(is.na(iBreakpoint))){
+                    cat(" (NA)")
+                }else if(is.unsorted(iBreakpoint)){
+                    cat(" (breakpoints no more ordered) ")
+                }else if(iBreakpoint[1]<bp.range[1] || iBreakpoint[2]>bp.range[2]){
+                    cat(" (breakpoints outside the range of observed values) ")
+                }
+            }
+            escape <- TRUE
+            break            
+
+        }else if(all(iDiff<tol)){
+            cv <- TRUE
+            if(trace>0){
+                cat(" (cv)")
+            }
+            if(enforce.continuity && !test.continuity){
+                attr(iE.lm,"continuity") <- lm(update(formula, paste0(".~.-",paste(paste("Vs",1:n.breakpoint,sep=""),collapse="-"))), data = iData)                
+            }
+            escape <- TRUE
+            break
+        }
+        
+    }
+
+    if(trace>0){
+        if(escape==FALSE){
+            cat(" (maximum number of iterations reached)")
+        }
+        cat("\n")
+    }
+
+    ## ** export
+    return(list(model = iE.lm,
+                Us = data.frame(name = index.beta, sign = sign.beta),
+                R2 = summary(iE.lm)$r.squared,
+                coef = iCoef,
+                breakpoint = data.frame(value = iBreakpoint, Us = index.beta, Vs = index.gamma, sign = sign.beta),
+                breakpoint.init = initialization,
+                diff = iDiff,
+                n.iter = iIter,
+                cv = cv,
+                continuity = test.continuity))
+}
+
+
+##----------------------------------------------------------------------
+### lmbreak.R ends here

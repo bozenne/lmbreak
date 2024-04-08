@@ -1,0 +1,40 @@
+### coef.R --- 
+##----------------------------------------------------------------------
+## Author: Brice Ozenne
+## Created: Apr  6 2024 (12:23) 
+## Version: 
+## Last-Updated: Apr  6 2024 (22:04) 
+##           By: Brice Ozenne
+##     Update #: 7
+##----------------------------------------------------------------------
+## 
+### Commentary: 
+## 
+### Change Log:
+##----------------------------------------------------------------------
+## 
+### Code:
+
+##' @export
+coef.lmbreak <- function(object, type = "breakpoint", ...){
+
+    ## ** normalize user input
+    type <- match.arg(type, c("bp","breakpoint","Us","slope","Vs","discontinuity","lm"))
+
+    ## ** extract coefficient
+    if(type %in% c("bp","breakpoint")){
+        out <- object$breakpoint$value
+    }else if(type %in% c("Us","slope")){
+        out <- object$coef[object$breakpoint$Us]
+    }else if(type %in% c("Vs","discontinuity")){
+        out <- object$coef[object$breakpoint$Vs]
+    }else if(type == "lm"){
+        otu <- coef(object$model)
+    }
+
+    ## ** output
+    return(out)
+}
+
+##----------------------------------------------------------------------
+### coef.R ends here
