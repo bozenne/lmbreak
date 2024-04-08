@@ -5,8 +5,9 @@
 #'
 #' 
 #' 
-#' @import ggplot2
-#' @importFrom stats  coef rnorm
+#' @importFrom ggplot2 autoplot
+#' @importFrom mgcv gam s
+#' @importFrom stats coef rnorm
 NULL
 
 

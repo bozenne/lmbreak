@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (10:00) 
 ## Version: 
-## Last-Updated: Apr  8 2024 (10:07) 
+## Last-Updated: apr  8 2024 (16:14) 
 ##           By: Brice Ozenne
-##     Update #: 13
+##     Update #: 14
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -16,7 +16,6 @@
 ### Code:
 
 ## * print.lmbreak (code)
-#' @method print lmBreak
 #' @export 
 print.lmbreak <- function(x, digits = options()$digits, ...){
 

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: Apr  8 2024 (11:47) 
+## Last-Updated: apr  8 2024 (16:14) 
 ##           By: Brice Ozenne
-##     Update #: 54
+##     Update #: 55
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -33,7 +33,6 @@
 #' 
 
 ## * autoplot.lmbreak (code)
-#' @method autoplot lmBreak
 #' @export 
 autoplot.lmbreak <- function(object, xlim = NULL, ylim = NULL,
                              color = grDevices::palette.colors(2), size = c(1.5,2.5), linewidth = 1, alpha = 1, title = NULL, ...){

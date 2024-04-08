@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: Apr  8 2024 (12:12) 
+## Last-Updated: apr  8 2024 (18:38) 
 ##           By: Brice Ozenne
-##     Update #: 280
+##     Update #: 322
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -33,7 +33,7 @@
 #'
 #'
 #' @details
-#' \textbf{formula}: \code{Y~bp(X, pattern = "111")} indicates a two breakpoints model without constrains (one intercept and three slopes).
+#' \strong{formula}: \code{Y~bp(X, pattern = "111")} indicates a two breakpoints model without constrains (one intercept and three slopes).
 #'  \code{Y~bp(X, pattern = "101")} indicates a two breakpoints model with a plateau (one intercept and two slopes).
 #' 
 #' @references Muggeo, V. M. R. Estimating regression models with unknown break-points.
@@ -127,6 +127,18 @@ lmbreak <- function(formula, data,
         stop("When specifying the breakpoint in argument \'formula\', the pattern cannot contain two consecutive 0.")
     }
 
+    ## *** data
+    data <- as.data.frame(data)
+    reserved.names <- c("fit", paste0("Us",1:n.pattern),paste0("Vs",1:n.pattern),paste0("beta",1:n.pattern),paste0("gamma",1:n.pattern))
+    if(any(names(data) %in% reserved.names)){
+        txt <- names(dt[names(data) %in% reserved.names])
+        stop("Argument \'data\' contains reserved names: \"",paste0(txt, collapse = "\" \""),"\"\n")
+    }
+    if(any(all.vars(formula) %in% names(data) == FALSE)){
+         stop("Argument \'data\' should contain all variables mentionned in argument \'formula\'. \n",
+              "Missing variables: \"",paste0(all.vars(formula)[all.vars(formula) %in% names(data) == FALSE], collapse = "\" \""),"\".\n")
+    }
+
     ## *** find initialization
     if(length(term.bp)==4){
         breakpoint.init <- cbind(as.double(eval(term.bp[[4]])))
@@ -138,35 +150,41 @@ lmbreak <- function(formula, data,
             message("Argument \'nQuantile.init\' is ignored when initialization values for the breakpoints are given via argument \'formula\'. \n")
         }
     }else{
-        if(!is.null(nQuantile.init) && (length(nQuantile.init)!=1 || nQuantile.init<=(n.breakpoint+2) || (n.init %% 1 != 0))){
-            stop("Incorrect argument \'nQuantile.init\': should be an integer greater or equal to ",n.breakpoint+2,". \n")
-        }else{
-            ## +2 because 2 quantiles are removed (0,1)
-            if(n.breakpoint==1){
-                nQuantile.init <- 2 + n.breakpoint + 4
-            }else if(n.breakpoint==2){
-                nQuantile.init <- 2 + n.breakpoint + 3
-            }else if(n.breakpoint==3){
-                nQuantile.init <- 2 + n.breakpoint + 2
-            }else{
-                nQuantile.init <- 2 + n.breakpoint + 1
-            }
-            
+        
+        ## via gam
+        if(is.null(nQuantile.init)){
+            formulaS <- as.formula(paste(response.var,"~s(",var.bp,")"))
+            e.gam <- mgcv::gam(formulaS, data = data)
+            ## plot(e.gam)
+            df.spline <- data.frame(seq(min(data[[var.bp]], na.rm=TRUE), max(data[[var.bp]], na.rm=TRUE), length.out = 1e4))
+            names(df.spline) <- var.bp
+            df.spline$fit <- predict(e.gam, newdata = df.spline)
+            index.init <- which(diff(sign(diff(df.spline$fit)))!=0)
         }
-        probs.breakpoint <- seq(0,1, length.out = nQuantile.init)[2:(nQuantile.init-1)]
-        quantile.data <- quantile(data[[var.bp]], probs = probs.breakpoint)
-        breakpoint.init <- utils::combn(quantile.data, m = n.breakpoint)
+
+        if(is.null(nQuantile.init) && length(index.init)>=n.breakpoint){
+            breakpoint.init <- utils::combn(df.spline[[1]][index.init], m = n.breakpoint)
+        }else{
+            if(!is.null(nQuantile.init) && (length(nQuantile.init)!=1 || nQuantile.init<=(n.breakpoint+2) || (nQuantile.init %% 1 != 0))){
+                stop("Incorrect argument \'nQuantile.init\': should be an integer greater or equal to ",n.breakpoint+2,". \n")
+            }else{
+                ## +2 because 2 quantiles are removed (0,1)
+                if(n.breakpoint==1){
+                    nQuantile.init <- 2 + n.breakpoint + 4
+                }else if(n.breakpoint==2){
+                    nQuantile.init <- 2 + n.breakpoint + 3
+                }else if(n.breakpoint==3){
+                    nQuantile.init <- 2 + n.breakpoint + 2
+                }else{
+                    nQuantile.init <- 2 + n.breakpoint + 1
+                }
+            }
+            probs.breakpoint <- seq(0,1, length.out = nQuantile.init)[2:(nQuantile.init-1)]
+            quantile.data <- quantile(data[[var.bp]], probs = probs.breakpoint)
+            breakpoint.init <- utils::combn(quantile.data, m = n.breakpoint)
+        }
     }
     n.init <- NCOL(breakpoint.init)
-        
-    ## *** data
-    data <- as.data.frame(data)
-    reserved.names <- c("fit", paste0("Us",1:n.pattern),paste0("Vs",1:n.pattern),paste0("beta",1:n.pattern),paste0("gamma",1:n.pattern))
-    if(any(names(data) %in% reserved.names)){
-        txt <- names(dt[names(data) %in% reserved.names])
-        stop("data contains reserved names: \"",paste0(txt, collapse = "\" \""),"\"\n")
-    }
-    
 
     ## ** prepare underlying model
     index.1 <- which(vec.pattern!="0")
@@ -211,9 +229,8 @@ lmbreak <- function(formula, data,
         
         term1 <- diag(vcov.bp)[out$breakpoint$Us] / beta.Us^2
         term2 <- diag(vcov.bp)[out$breakpoint$Vs] * (beta.Vs/beta.Us^2)^2
-        term3 <- -2 * out$breakpoint$sign * diag(vcov.bp[out$breakpoint$Us,out$breakpoint$Vs]) * beta.Vs / beta.Us^3
-        out$breakpoint.se <- sqrt(term1+term2+term3)
-        out$breakpoint.se <- sqrt(term1)
+        term3 <- -2 * out$breakpoint$sign * diag(vcov.bp[out$breakpoint$Us,out$breakpoint$Vs,drop=FALSE]) * beta.Vs / beta.Us^3
+        out$breakpoint$se <- sqrt(term1+term2+term3)
     }
     
     ## ** export
@@ -250,11 +267,11 @@ lmbreak.fit <- function(formula, variable, pattern, data,
     
     terms.formula <- terms(formula)
     index.gamma <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint)
-    index.Us <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint+sum(pattern=="1"))[1:sum(pattern=="1")]
-    index.beta <- index.Us[1+cumsum(pattern=="1")]
-    browser()
-    sign.beta <- c(-1,1)[1+(pattern[-1]=="1")]
-    
+    terms.beta <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint + sum(pattern == "1"))[1:sum(pattern == "1")] ## 0.1.0, 0.1.1, 1.0.1, 1.1.0, 1.1.1
+    patten.beta <- paste(pattern[1:n.breakpoint],pattern[2:(n.breakpoint+1)],c(pattern,1)[3:(n.breakpoint+2)], sep=".")
+    index.beta <- terms.beta[patten.beta[1] %in% c("1.1.1","1.1.0","1.0.1")+ cumsum(patten.beta != "1.0.1")]
+    sign.beta <- c(1,-1)[1+(patten.beta=="1.0.1")]
+
     ## ** loop
     Hist.breakpoint <- matrix(NA, nrow = n.iter, ncol = n.breakpoint)
     iBreakpoint <- initialization
@@ -283,7 +300,9 @@ lmbreak.fit <- function(formula, variable, pattern, data,
         ## ** update breakpoint
         iCoef <- coef(iE.lm)
         iBreakpoint <- unname(step * sign.beta * iCoef[index.gamma]/iCoef[index.beta] + Hist.breakpoint[iIter,])
-        if(any(rowSums(abs(Hist.breakpoint[1:iIter,,drop=FALSE] - matrix(iBreakpoint, nrow = iIter, ncol = n.breakpoint, byrow = TRUE)))<tol/10)){ ## same iteration as before
+
+        if(all(!is.na(iBreakpoint)) && any(rowSums(abs(Hist.breakpoint[1:iIter,,drop=FALSE] - matrix(iBreakpoint, nrow = iIter, ncol = n.breakpoint, byrow = TRUE)))<tol/10)){
+            ## same iteration as before
             step <- step/2
             iBreakpoint <- unname(step * sign.beta * iCoef[index.gamma]/iCoef[index.beta] + Hist.breakpoint[iIter,])
         }

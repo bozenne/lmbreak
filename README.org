@@ -1,0 +1,30 @@
+#+BEGIN_HTML
+<a href="https://ci.appveyor.com/project/bozenne/LMMstar"><img src="https://ci.appveyor.com/api/projects/status/github/bozenne/LMMstar?svg=true" alt="Build status"></a>
+<a href="https://github.com/bozenne/LMMstar/actions"><img src="https://github.com/bozenne/LMMstar/workflows/r/badge.svg" alt="Build status"></a>
+<a href="http://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License"></a>
+#+END_HTML
+
+#+BEGIN_SRC R :exports none :results output :session *R* :cache no
+options(width = 100)
+#+END_SRC
+
+#+RESULTS:
+
+* lmbreak: Linear Regression with Unknown Breakpoints
+
+*lmbreak*: Fit linear regression with unknown breakpoints
+
+** Installation
+
+You can download the latest stable =GitHub= version using:
+#+BEGIN_SRC R :exports both :eval never
+library(remotes)
+install_github("bozenne/lmbreak")
+#+END_SRC
+
+** Functionalities
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+
+#+END_SRC
+
+  
