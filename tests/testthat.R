@@ -3,7 +3,6 @@ library(testthat)
 library(lmbreak)
 
 library(ggplot2)
-library(lava)
 library(segmented)
 
 ## * run tests
