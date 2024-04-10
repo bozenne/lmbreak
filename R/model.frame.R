@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (08:33) 
 ## Version: 
-## Last-Updated: Apr  8 2024 (08:48) 
+## Last-Updated: apr  9 2024 (14:04) 
 ##           By: Brice Ozenne
-##     Update #: 12
+##     Update #: 13
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -20,10 +20,11 @@
 model.frame.lmbreak <- function(formula, newdata = NULL, ...){
 
     ## ** normalize user input
-    variable <- formula$breakpoint.var
     if(inherits(formula, "lmbreak")){
         breakpoint <- formula$breakpoint$value
+        variable <- formula$args$breakpoint.var
     }else{
+        variable <- formula$breakpoint.var
         breakpoint <- formula$breakpoint
     }
     n.breakpoint <- length(breakpoint)

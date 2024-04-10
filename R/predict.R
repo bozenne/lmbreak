@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (08:49) 
 ## Version: 
-## Last-Updated: Apr  8 2024 (11:53) 
+## Last-Updated: apr 10 2024 (16:31) 
 ##           By: Brice Ozenne
-##     Update #: 32
+##     Update #: 39
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -19,11 +19,15 @@
 ##' @export
 predict.lmbreak <- function(object, newdata = NULL, keep.newdata = TRUE, ...){
     
-    ## ** predictions
-    if(object$continuity == FALSE && !is.null(attr(object$model,"continuity"))){
-        out <- predict(attr(object$model,"continuity"), model.frame(object, newdata = newdata), ...)
+    ## ** extract from object
+    continuity <- object$opt$continuity
+    model <- object$model
+
+    ## ** predictions    
+    if(continuity == FALSE && !is.null(attr(model,"continuity"))){
+        out <- stats::predict(attr(model,"continuity"), stats::model.frame(object, newdata = newdata), ...)
     }else{
-        out <- predict(object$model, model.frame(object, newdata = newdata), ...)
+        out <- stats::predict(model, model.frame(object, newdata = newdata), ...)
     }
         
     ## ** reformat
@@ -47,5 +51,7 @@ predict.lmbreak <- function(object, newdata = NULL, keep.newdata = TRUE, ...){
     ## ** export
     return(out)
 }
+
+
 ##----------------------------------------------------------------------
 ### predict.lmbreak.R ends here

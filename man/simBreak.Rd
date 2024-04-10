@@ -47,3 +47,4 @@ ggplot(df2, aes(x = X, y = Y, group = id)) + geom_point() + geom_line()
 }
 
 }
+\keyword{datagen}

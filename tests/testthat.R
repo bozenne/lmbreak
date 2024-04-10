@@ -7,5 +7,5 @@ library(lava)
 library(segmented)
 
 ## * run tests
-## setwd("~/Documents/GitHub/LMMstar/tests/")
+## setwd("~/Documents/GitHub/lmbreak/tests/")
 test_check("lmbreak")

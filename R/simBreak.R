@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:37) 
 ## Version: 
-## Last-Updated: Apr  5 2024 (16:34) 
+## Last-Updated: apr 10 2024 (15:52) 
 ##           By: Brice Ozenne
-##     Update #: 38
+##     Update #: 41
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -31,6 +31,8 @@
 ##' @param seed [integer, >0] Random number generator (RNG) state used when starting imputation. If NULL no state is set.
 ##' @param rdist.X [numeric vector or function ] X values for each individuals or function used to generate the X values for each individual.
 ##' 
+##' @keywords datagen
+##' 
 ##' @examples
 ##' #### different timepoints for each individual ####
 ##' df1 <- simBreak(10, breakpoint = c(0,1,3,4), slope = c(1,0,-1), sigma = 0.1)
@@ -53,6 +55,7 @@
 ##' 
 
 ## * simBreak (code)
+##' @export
 simBreak <- function(n, breakpoint, slope, sigma = 1, 
                      rdist.X = stats::runif, seed = NULL){
 
@@ -61,7 +64,7 @@ simBreak <- function(n, breakpoint, slope, sigma = 1,
         stop("Argument \'n\' should only contain stricly positive integers. \n")
     }
     if(length(n)==1){
-        n <- c(n,10)
+        n <- c(n,25)
     }else if(length(n)>2){
         stop("Argument \'n\' should have length at most 2. \n")
     }

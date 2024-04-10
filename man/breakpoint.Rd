@@ -3,78 +3,100 @@
 \name{lmBreak}
 \alias{lmBreak}
 \alias{lmbreak}
-\title{Find One or Two Breakpoints}
+\title{Fit Breakpoint model}
 \usage{
 lmbreak(
   formula,
   data,
-  n.iter = 25,
+  n.iter = 50,
   tol = 0.001,
   enforce.continuity = TRUE,
+  init.gam = TRUE,
+  init.quantile = NULL,
   trace = FALSE,
-  nQuantile.init = NULL,
   digits = -log10(tol)
 )
 }
 \arguments{
 \item{formula}{a formula where the breakpoint variable appears on the right hand side
-with an argument pattern specifying the number of breakpoints and possible constrains. See detail section.}
+with an argument pattern specifying the number of breakpoints and possible constrains. See details section.}
+
+\item{data}{[data.frame] dataset}
 
 \item{n.iter}{[integer, >0] the maximum number of iterations used to estimates the breakpoints.}
 
 \item{tol}{[numeric, >0] the maximum accpetable difference between two consecutive estimates of the breakpoints.
 When reached, the estimation algorithm stops.}
 
+\item{enforce.continuity}{[logical] in the case where no continuous solution could be found,
+should a non-continuous breakpoint model be kept (\code{FALSE}) or a continuous breakpoint model be enforced (\code{TRUE}, refiting without the Vs terms).}
+
+\item{init.gam}{[logical] should a spline model be used to define initialization points (where the first derivative of the spline changes sign).}
+
+\item{init.quantile}{[logical or integer] number of quantiles used to try different initializations.}
+
 \item{trace}{[0,1,2] trace the execution of the function.}
 
 \item{digits}{[integer] how to round values that are displayed in the terminal.}
-
-\item{pattern}{[vector of character] the number and type of breakpoints to be search. 0 indicates a flat line.}
-
-\item{n.init}{[integer, >0] the number of quantiles used to generate initialisation points.
-Only active when breakpoint.init is \code{NULL}.}
 }
 \description{
-Find one or two breakpoints.
+Fit a linear regression with breakpoints.
 }
 \details{
 \strong{formula}: \code{Y~bp(X, pattern = "111")} indicates a two breakpoints model without constrains (one intercept and three slopes).
- \code{Y~bp(X, pattern = "101")} indicates a two breakpoints model with a plateau (one intercept and two slopes).
+\code{Y~bp(X, pattern = "101")} indicates a two breakpoints model with a plateau (one intercept and two slopes).
+It can also contain an additional argument to specify where to initalize the breakpoint via a numeric vector: \code{Y~bp(X, pattern = "101", c(1,2))}.
+
+By default initial values for the breakpoints are obtained fitting a spline model and using points where the first derivative of the spline changes sign.
+If not enought points are found, quantiles of the response value (Y) are used instead.
 }
 \examples{
 
 ####  simulate data ####
 set.seed(10)
-df1 <- simBreak(10, breakpoint = c(0,1,3,4), slope = c(1,0,-1), sigma = 0.1)
-df1$gender <- df1$id \%\% 2
+df1 <- simBreak(c(1, 100), breakpoint = c(0,1,3,4), slope = c(1,0,-1), sigma = 0.05)
 
-#### fit breakpoint regression
-e.lmbreak <- lmbreak(Y ~ bp(X, pattern = "101"), data = df1)
-e.lmbreak <- lmbreak(Y ~ gender + bp(X, pattern = "101"), data = df1, trace = 1)
-e.lmbreak <- lmbreak(Y ~ bp(X, "101"), data = df1)
+#### fit breakpoint regression ####
+## broken line
+e.lmbreak111 <- lmbreak(Y ~ bp(X, "111"), data = df1)
+plot(e.lmbreak111)
+summary(e.lmbreak111)
+coef(e.lmbreak111, type = "breakpoint")
+coef(e.lmbreak111, type = "slope")
+coef(e.lmbreak111, type = "intercept")
+coef(e.lmbreak111, type = "duration")
+model.tables(e.lmbreak111)
 
-e.lmbreak <- lmbreak(Y ~ gender + bp(X, "111"), data = df1)
-e.lmbreak <- lmbreak(Y ~ gender + bp(X, "101"), data = df1)
+## broken line with plateau
+e.lmbreak101 <- lmbreak(Y ~ bp(X, "101"), data = df1)
+plot(e.lmbreak101)
+summary(e.lmbreak101)
+model.tables(e.lmbreak101)
 
-BIC(resBP)
-gg + geom_line(data = resBP$BP101$fit, aes(y = fit))
+## broken line with plateau and no intercept
+e0.lmbreak101 <- lmbreak(Y ~ 0 + bp(X, "101"), data = df1)
+plot(e0.lmbreak101, xlim = c(0,4))
+summary(e0.lmbreak101)
+model.tables(e0.lmbreak101)
 
-#### example from the package segmented
-if(require(segmented)){
-GS <- segmented(e.lm, psi = c(1,2))
+#### handle covariates ####
+set.seed(10)
+df2 <- df1
+df2$tester <- cut(df1$X,c(0,0.5,2,4))
+df2$Y <- df1$Y + as.numeric(df2$tester) + rnorm(NROW(df1), sd = 0.05)
 
-
-cbind(value = resBP$BP111$breakpoint,
-      se = resBP$BP111$breakpoint.se)
-GS$psi
-}
-
-if(require(gridExtra)){
-  autoplot(resBP)
-}
- 
+eCov.lmbreak101 <- lmbreak(Y ~ tester + bp(X, "101"), data = df2)
+summary(eCov.lmbreak101)
+plot(eCov.lmbreak101)
 }
 \references{
 Muggeo, V. M. R. Estimating regression models with unknown break-points.
 Statistics in medicine 2003; 22:3055-3071.
 }
+\seealso{
+\code{\link{coef.lmbreak}} for extracting the estimated model parameters. \cr
+\code{\link{mlmbreak}} for fitting the breakpoint model over multiple clusters of data. \cr
+\code{\link{model.tables.lmbreak}} for extracting the breakpoints, slopes, intercept, and duration. \cr
+\code{\link{plot.lmbreak}} for a graphical display of the fitted breakpoint model. \cr
+}
+\keyword{models}

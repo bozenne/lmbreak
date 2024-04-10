@@ -1,11 +1,11 @@
-### test-manual-psilo.R --- 
+### test-auto-mlmbreak.R --- 
 ##----------------------------------------------------------------------
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (18:40) 
 ## Version: 
-## Last-Updated: apr  8 2024 (20:04) 
+## Last-Updated: apr 10 2024 (14:01) 
 ##           By: Brice Ozenne
-##     Update #: 7
+##     Update #: 20
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -18,17 +18,15 @@
 if(FALSE){
     library(testthat)
     library(ggplot2) 
-    library(ggpubr) 
 
     library(lmbreak)
 }
 
-context("Reproduce previous results")
+context("mlmbreak on real data in presence of NA")
 data("SDIpsilo")
 
 
 ## * graphical display
-data(SDIpsilo)
 if(FALSE){
 
     ggTraj <- ggplot(mapping = aes(x = time,y = score, group = id))
@@ -45,18 +43,20 @@ if(FALSE){
 }
 
 ## * lmbreak
-if(FALSE){
+test_that("mlmbreak with NA", {
 
-    SDIpsilo.red <- SDIpsilo[!is.na(SDIpsilo$score) & SDIpsilo$type %in% c("signal","added"),]
+    SDIpsilo.red <- SDIpsilo[SDIpsilo$type %in% c("signal","added"),]
+    e.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, trace = FALSE)
+    suppressWarnings(plot(e.mlmbreak, ylim = c(0,10)))
 
-    ls.elmbreak <- by(data = SDIpsilo.red, INDICES = SDIpsilo.red$id, FUN = function(iDF){lmbreak(score ~ bp(time, "101"), data = iDF, n.iter = 350)})
-    ls.gglmbreak <- lapply(1:length(ls.elmbreak), function(iID){
-        autoplot(ls.elmbreak[[iID]], title = paste0("id = ",iID,",cv = ", ls.elmbreak[[iID]]$cv))$plot
-    })
+    SDIpsilo.redNNA <- SDIpsilo.red[!is.na(SDIpsilo.red$score),]
+    eNNA.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.redNNA, trace = FALSE)
 
-    ggall <- do.call(ggarrange,c(ls.gglmbreak, list(common.legend = TRUE, legend = "bottom")))
-
-}
+    test <- model.tables(e.mlmbreak, format = "array")
+    GS <- model.tables(eNNA.mlmbreak, format = "array")
+    expect_equal(test,GS, tol = 1e-6)
+   
+})
 
 ##----------------------------------------------------------------------
-### test-manual-psilo.R ends here
+### test-auto-mlmbreak.R ends here

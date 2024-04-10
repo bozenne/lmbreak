@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:19) 
 ## Version: 
-## Last-Updated: apr  8 2024 (17:58) 
+## Last-Updated: apr 10 2024 (14:03) 
 ##           By: Brice Ozenne
-##     Update #: 25
+##     Update #: 27
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -24,7 +24,7 @@ if(FALSE){
     library(lmbreak)
 }
 
-context("Compare to segmented package")
+context("Compare lmbreak to segmented package")
 
 ## * Comparison with segmented
 ## example from the segmented package
@@ -145,11 +145,11 @@ test_that("Pattern 011", {
 
 })
 
-test_that("Pattern 011", {
+test_that("Pattern 110", {
 
     ## estimation
     test.110 <- suppressWarnings(lmbreak(y~bp(x,"110"), data = dati))
-    expect_equal(coef(test.110, "breakpoint"), c(32.68963358, 70.27439266), tol = 1e-3)
+    expect_equal(coef(test.110, "breakpoint"), c(33.41794, 70.10281), tol = 1e-3)
     expect_equal(test.110$breakpoint$Us,c("I(Us1 - Us2)","I(Us1 - Us2)"))
     expect_equal(test.110$breakpoint$sign,c(1,-1))
 
