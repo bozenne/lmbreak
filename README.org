@@ -23,8 +23,40 @@ install_github("bozenne/lmbreak")
 #+END_SRC
 
 ** Functionalities
-#+BEGIN_SRC R :exports both :results output :session *R* :cache no
 
+To illustrate the functionnalities of the package we will consider the following dataset:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+data(SDIpsilo, package = "lmbreak")
+str(SDIpsilo)
 #+END_SRC
 
-  
+#+RESULTS:
+: 'data.frame':	346 obs. of  4 variables:
+:  $ id   : Factor w/ 15 levels "1","2","3","4",..: 1 1 1 1 1 1 1 1 1 1 ...
+:  $ time : num  0 20 40 60 80 100 120 140 160 180 ...
+:  $ type : chr  "signal" "signal" "signal" "signal" ...
+:  $ score: num  0 1 3 8 10 10 10 9 10 10 ...
+
+where the experience of 15 individuals is monitored over time. To
+start with consider the data of a single individual:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+SDIpsilo1 <- SDIpsilo[SDIpsilo$id==1,]
+#+END_SRC
+
+We can model his experience using a breakpoint model with 2
+breakpoints, with an initial increase followed by a plateau followed
+by a normalization ("101"):
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+e.XP1 <- lmbreak(score ~ 0 + bp(time, "101"), data = SDIpsilo1)
+plot(e.XP1, ylim = c(0,10))
+#+END_SRC
+
+# # ggplot2::ggsave(ggplot2::autoplot(e.XP1, ylim = c(0,10))$plot, file = "inst/figures/gg-101-patient1.pdf")
+#+RESULTS:
+: Advarselsbesked:
+: [1m[22mRemoved 6 rows containing missing values (`geom_point()`).
+
+#+ATTR_HTML: :width 1\textwidth :options trim={0 0 0 0} :placement [!h]
+[[./inst/figures/gg-101-patient1.pdf]]
+
+

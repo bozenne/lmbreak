@@ -1,7 +1,6 @@
 ## * load packages
 library(testthat)
 library(lmbreak)
-
 library(ggplot2)
 library(segmented)
 

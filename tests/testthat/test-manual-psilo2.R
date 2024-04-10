@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 10 2024 (15:50) 
+## Last-Updated: apr 10 2024 (17:31) 
 ##           By: Brice Ozenne
-##     Update #: 9
+##     Update #: 11
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -16,27 +16,23 @@
 ### Code:
 
 
-library(readxl)
-library(data.table)
-library(ggplot2)
-
-## * load data
 if(FALSE){
+    library(readxl)
+    library(data.table)
+    library(ggplot2)
+
+    ## * load data
     dtW <- as.data.table(read_excel("SDI_Psilo_22.11.2023.xlsx"))
     dtL <- melt(dtW, id.vars = c("Study","PatientID"), variable.name = "time", value.name = "score")
     dtL$time.num <- as.numeric(as.character(dtL$time))
-}
 
-## * display
-if(FALSE){
+    ## * display
     ggTraj <- ggplot(dtL, aes(x = time.num, y = score, group = PatientID, color = Study))
     ggTraj <- ggTraj + geom_line() + geom_point()
     ggTraj <- ggTraj + facet_wrap(~PatientID)
     ggTraj
-}
 
-## * Analyse only SERT individuals
-if(FALSE){
+    ## * Analyse only SERT individuals
     dtL.SERT <- dtL[grep("SERT",dtL$PatientID),,drop=FALSE]
     ggTraj %+% dtL.SERT
 
