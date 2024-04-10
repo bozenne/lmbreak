@@ -54,7 +54,7 @@ plot(e.XP1, ylim = c(0,10))
 # # ggplot2::ggsave(ggplot2::autoplot(e.XP1, ylim = c(0,10))$plot, file = "inst/figures/gg-101-patient1.png")
 
 #+BEGIN_HTML
-<img src="[[./inst/figures/gg-101-patient1.png]]" title="101 pattern - patient 1" alt="101 pattern - patient 1" width="50%" style="display: block; margin: auto;" />
+<img src="./inst/figures/gg-101-patient1.png" title="101 pattern - patient 1" alt="101 pattern - patient 1" width="50%" style="display: block; margin: auto;" />
 #+END_HTML
 
 
