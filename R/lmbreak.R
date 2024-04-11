@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:36) 
+## Last-Updated: apr 11 2024 (10:01) 
 ##           By: Brice Ozenne
-##     Update #: 546
+##     Update #: 558
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -97,10 +97,23 @@
 #' @rdname breakpoint
 #' @export
 lmbreak <- function(formula, data,
-                    n.iter = 50, tol = 1e-3, enforce.continuity = TRUE, init.gam = TRUE, init.quantile = NULL,
+                    n.iter = NULL, tol = NULL, enforce.continuity = NULL, init.gam = TRUE, init.quantile = NULL,
                     trace = FALSE, digits = -log10(tol)){
 
     ## ** normalize user input
+    options <- lmbreak.options()        
+
+    ## *** opt
+    if(is.null(n.iter)){
+        n.iter <- options$n.iter
+    }
+    if(is.null(tol)){
+        tol <- options$tol
+    }
+    if(is.null(enforce.continuity)){
+        enforce.continuity <- options$enforce.continuity
+    }
+
     ## *** formula
     if(!inherits(formula,"formula")){
         stop("Argument \'formula\' should be or inherit from formula. \n")
@@ -129,6 +142,9 @@ lmbreak <- function(formula, data,
         }
     }else{
         terms.nobp <- stats::drop.terms(terms.formula, dropx = formula.bp-1, keep.response = TRUE)
+    }
+    if(any(attr(terms.formula,"order")>1) && any(attr(terms.formula,"factor")[formula.bp,attr(terms.formula,"order")>1]>0)){ ## check no interaction with breakpoint
+            stop("The argument \'formula\' should not contain interaction(s) with the breakpoint variable. \n")
     }
 
     ## *** find pattern
@@ -166,8 +182,8 @@ lmbreak <- function(formula, data,
         stop("Argument \'data\' contains reserved names: \"",paste0(txt, collapse = "\" \""),"\"\n")
     }
     if(any(all.vars(formula) %in% names(data) == FALSE)){
-         stop("Argument \'data\' should contain all variables mentionned in argument \'formula\'. \n",
-              "Missing variables: \"",paste0(all.vars(formula)[all.vars(formula) %in% names(data) == FALSE], collapse = "\" \""),"\".\n")
+        stop("Argument \'data\' should contain all variables mentionned in argument \'formula\'. \n",
+             "Missing variables: \"",paste0(all.vars(formula)[all.vars(formula) %in% names(data) == FALSE], collapse = "\" \""),"\".\n")
     }
     index.NA <- which(is.na(data[[response.var]]) | is.na(data[[var.bp]]))
     if(length(index.NA)>0){
@@ -184,7 +200,7 @@ lmbreak <- function(formula, data,
     attr(data.fit, "min.var.bp") <- data.fit[[var.bp]][1]
     attr(data.fit, "max.var.bp") <- data.fit[[var.bp]][NROW(data.fit)]
 
-    ## *** find initialization
+    ## ** find initialization
     if(length(term.bp)==4){
 
         term.init <- cbind(as.double(eval(term.bp[[4]])))
@@ -305,18 +321,18 @@ lmbreak <- function(formula, data,
     }
 
     ## ** standard error
-    if(out$opt$cv){
-        vcov.bp <- stats::vcov(out$model)
-        beta.Us <- coef(out$model)[out$breakpoint$Us]
-        beta.Vs <- coef(out$model)[out$breakpoint$Vs]
+    ## if(out$opt$cv){
+    ##     vcov.bp <- stats::vcov(out$model)
+    ##     beta.Us <- coef(out$model)[out$breakpoint$Us]
+    ##     beta.Vs <- coef(out$model)[out$breakpoint$Vs]
     
-        term1 <- diag(vcov.bp)[out$breakpoint$Us] / beta.Us^2
-        term2 <- diag(vcov.bp)[out$breakpoint$Vs] * (beta.Vs/beta.Us^2)^2
-        term3 <- -2 * out$breakpoint$sign * diag(vcov.bp[out$breakpoint$Us,out$breakpoint$Vs,drop=FALSE]) * beta.Vs / beta.Us^3
-        out$breakpoint$se <- sqrt(term1+term2+term3)
-    }else{
+    ##     term1 <- diag(vcov.bp)[out$breakpoint$Us] / beta.Us^2
+    ##     term2 <- diag(vcov.bp)[out$breakpoint$Vs] * (beta.Vs/beta.Us^2)^2
+    ##     term3 <- -2 * out$breakpoint$sign * diag(vcov.bp[out$breakpoint$Us,out$breakpoint$Vs,drop=FALSE]) * beta.Vs / beta.Us^3
+    ##     out$breakpoint$se <- sqrt(term1+term2+term3)
+    ## }else{
         out$breakpoint$se <- NA
-    }
+    ## }
     
     ## ** export
     if(out$opt$cv == FALSE){

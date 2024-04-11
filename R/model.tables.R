@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (11:38) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:27) 
+## Last-Updated: apr 11 2024 (09:48) 
 ##           By: Brice Ozenne
-##     Update #: 26
+##     Update #: 29
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -67,7 +67,7 @@ model.tables.mlmbreak <- function(x, cluster = NULL, format = "data.frame", ...)
     }else if(any(cluster %in% U.cluster == FALSE)){
         stop("Unknown value for argument \'cluster\'.")
     }
-    format <- match.arg(format, c("data.frame","array"))
+    format <- match.arg(format, c("data.frame","array","list"))
 
     ## ** extract
     ls.table <- lapply(cluster, function(iC){ ## iC <- cluster[1]
@@ -84,6 +84,10 @@ model.tables.mlmbreak <- function(x, cluster = NULL, format = "data.frame", ...)
         out <- do.call(rbind,ls.table)
         names(out)[1] <- var.cluster
     }else if(format == "array"){
+        if(length(unique(sapply(ls.table,NROW)))>1){
+            stop("Cannot convert the output in an array.\n",
+                 "Not all clusters have the same number of breakpoints. \n")
+        }
         out <- array(unlist(ls.table), dim = c(dim(ls.table[[1]]), length(cluster)),
                      dimnames = c(dimnames(ls.table[[1]]), list(cluster)))
     }

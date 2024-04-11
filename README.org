@@ -12,8 +12,6 @@ options(width = 100)
 
 * lmbreak: Linear Regression with Unknown Breakpoints
 
-*lmbreak*: Fit linear regression with unknown breakpoints
-
 ** Installation
 
 You can download the latest stable =GitHub= version using:
@@ -24,8 +22,15 @@ install_github("bozenne/lmbreak")
 
 ** Functionalities
 
-To illustrate the functionnalities of the package we will consider the
-following dataset:
+The functionnalities of the package:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+library(lmbreak)
+#+END_SRC
+
+#+RESULTS:
+: lmbreak version 0.0.1
+
+will be exemplified on the following dataset:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
 data(SDIpsilo, package = "lmbreak")
 SDIpsilo <- SDIpsilo[SDIpsilo$type %in% c("noise","trailing") == FALSE,]
@@ -39,33 +44,51 @@ str(SDIpsilo)
 :  $ type : chr  "signal" "signal" "signal" "signal" ...
 :  $ score: num  0 1 3 8 10 10 10 10 10 7 ...
 
-where the experience of 15 individuals is monitored over time. To
-start with consider the data of individual 2:
+where the experience of 15 individuals after drug intake is monitored
+over time. To start with consider the data of individual 13:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
-SDIpsilo2 <- SDIpsilo[SDIpsilo$id==13,]
+SDIpsilo13 <- SDIpsilo[SDIpsilo$id==13,]
 #+END_SRC
 
 #+RESULTS:
 
-We can model his experience using a breakpoint model:
-- with 2 breakpoints and three slopes ("111")
-- with 2 breakpoints: one slope, one plateau, one slope ("101")
-- with 1 breakpoint: two slopes ("11")
+The =lmbreak= function can be used to model his experience by
+breakpoint model:
+- with 2 breakpoints and three slopes ("111" pattern)
+- with 2 breakpoints: one slope, one plateau, one slope ("101" pattern)
+- with 1 breakpoint: two slopes ("11" pattern)
 #+BEGIN_SRC R :exports code :results silent :session *R* :cache no
-e.XP111 <- lmbreak(score ~ 0 + bp(time, "111"), data = SDIpsilo2)
-e.XP101 <- lmbreak(score ~ 0 + bp(time, "101"), data = SDIpsilo2)
-e.XP11 <- lmbreak(score ~ 0 + bp(time, "11"), data = SDIpsilo2)
-plot(e.XP111, ylim = c(0,10)) ## left panel
-plot(e.XP101, ylim = c(0,10)) ## middle panel
-plot(e.XP11, ylim = c(0,10)) ## right panel
+e.XP111 <- lmbreak(score ~ 0 + bp(time, "111"), data = SDIpsilo13)
+e.XP101 <- lmbreak(score ~ 0 + bp(time, "101"), data = SDIpsilo13)
+e.XP11 <- lmbreak(score ~ 0 + bp(time, "11"), data = SDIpsilo13)
 #+END_SRC
 
+
+The call to =lmbreak= is similar to the =lm= function except that the
+breakpoint variable (i.e. variable whose relationship with the
+response variable is to be modeled using broken lines) should be
+wrapper by =bp()= and indicate the number of breakpoints and possible
+constrains on the slopes (pattern). The function will then estimate
+the the position of the breakpoint and slopes. The method =plot= can
+then be applied to the output of =lmbreak= to visualize the model fit:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+plot(e.XP111, ylim = c(0,12)) ## left panel
+plot(e.XP101, ylim = c(0,12)) ## middle panel
+plot(e.XP11, ylim = c(0,12)) ## right panel
 #+END_SRC
+
+#+RESULTS:
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
-gg12 <- ggpubr::ggarrange(ggplot2::autoplot(e.XP111, ylim = c(0,10))$plot + ggplot2::ggtitle("Pattern 111"),
-                          ggplot2::autoplot(e.XP101, ylim = c(0,10))$plot + ggplot2::ggtitle("Pattern 101"),
-                          ggplot2::autoplot(e.XP11, ylim = c(0,10))$plot + ggplot2::ggtitle("Pattern 11"),
+gg12 <- ggpubr::ggarrange(ggplot2::autoplot(e.XP111, ylim = c(0,12))$plot + ggplot2::ggtitle("Pattern 111"),
+                          ggplot2::autoplot(e.XP101, ylim = c(0,12))$plot + ggplot2::ggtitle("Pattern 101"),
+                          ggplot2::autoplot(e.XP11, ylim = c(0,12))$plot + ggplot2::ggtitle("Pattern 11"),
                           common.legend = TRUE, legend = "bottom", nrow = 1)
 ggplot2::ggsave(gg12, width = 10, height = 4, file = "inst/figures/gg-indiv-example.png")
 #+END_SRC
@@ -82,14 +105,141 @@ ggplot2::ggsave(gg12, width = 10, height = 4, file = "inst/figures/gg-indiv-exam
 #+END_HTML
 
 
+ The method =model.tables= can be used to obtain a concise output of
+the estimates in a =data.frame= format:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+model.tables(e.XP101)
+#+END_SRC
 
+#+RESULTS:
+:        time  duration intercept  slope
+: 1   0.00000  87.87879  0.000000  0.110
+: 2  87.87879 142.78788  9.666667  0.000
+: 3 230.66667  69.33333  9.666667 -0.125
+: 4 300.00000        NA  1.000000     NA
+
+When specifying a pattern that does not fit the data, the estimation
+procedure may fail to find reliable estimates and will output a
+warning message:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+e.XP01 <- lmbreak(score ~ 0 + bp(time, "01"), data = SDIpsilo13)
+#+END_SRC
+
+#+RESULTS:
+: Advarselsbesked:
+: I lmbreak(score ~ 0 + bp(time, "01"), data = SDIpsilo13) :
+:   The optimizer did not converge to a stable solution.
+
+It is possible to specify alternative patterns that will only be
+investigated if the previous one(s) had convergence issues:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+e.XPrescue <- lmbreak(score ~ 0 + bp(time, c("01","11")), data = SDIpsilo13)
+coef(e.XPrescue,c("pattern","breakpoint"))
+#+END_SRC
+
+#+RESULTS:
+:   pattern breakpoint
+: 1      11   126.9093
+
+This is especially useful when using the =mlmbreak= function to fit
+(separate) breakpoint models on several individuals:
 #+BEGIN_SRC R :exports code :results output :session *R* :cache no
-e.XPall <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo)
+e.XPall <- mlmbreak(score ~ 0 + bp(time, c("101","11")), cluster = "id", data = SDIpsilo,
+                    trace = FALSE)
+e.XPall
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+  |                                                  | 0 % ~calculating    |++++                                              | 7 % ~01s            |+++++++                                           | 13% ~01s            |++++++++++                                        | 20% ~01s            |++++++++++++++                                    | 27% ~01s            |+++++++++++++++++                                 | 33% ~01s            |++++++++++++++++++++                              | 40% ~01s            |++++++++++++++++++++++++                          | 47% ~01s            |+++++++++++++++++++++++++++                       | 53% ~01s            |++++++++++++++++++++++++++++++                    | 60% ~01s            |++++++++++++++++++++++++++++++++++                | 67% ~01s            |+++++++++++++++++++++++++++++++++++++             | 73% ~01s            |++++++++++++++++++++++++++++++++++++++++          | 80% ~00s            |++++++++++++++++++++++++++++++++++++++++++++      | 87% ~00s            |+++++++++++++++++++++++++++++++++++++++++++++++   | 93% ~00s            |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=02s
+
+Call:
+mlmbreak(formula = score ~ 0 + bp(time, c("101", "11")), data = SDIpsilo, 
+    cluster = "id")
+
+Breakpoints:
+   id pattern   cv continuity      breakpoint   maxVs
+1   1     101 TRUE       TRUE 84.507, 162.051 < 1e-05
+2   2      11 TRUE       TRUE          59.086 < 1e-05
+3   3     101 TRUE       TRUE 65.143, 166.481 < 1e-05
+4   4     101 TRUE       TRUE  103.12, 180.51 < 1e-05
+5   5     101 TRUE       TRUE 49.123, 173.913 < 1e-05
+6   6     101 TRUE       TRUE         70, 150 < 1e-05
+7   7     101 TRUE       TRUE 46.032, 101.549 < 1e-05
+8   8     101 TRUE       TRUE 86.957, 129.533 < 1e-05
+9   9     101 TRUE       TRUE 49.123, 115.938 < 1e-05
+10 10     101 TRUE       TRUE 65.116, 195.238 < 1e-05
+11 11     101 TRUE       TRUE  44.737, 93.294 < 1e-05
+12 12     101 TRUE       TRUE 43.478, 150.992 < 1e-05
+13 13     101 TRUE       TRUE 87.879, 230.667 < 1e-05
+14 14     101 TRUE       TRUE  157.89, 248.02 < 1e-05
+15 15     101 TRUE       TRUE  157.30, 234.74 < 1e-05
+#+end_example
+
+Here an upslope, plateau, normalization (101 pattern) could be fitted
+for all individuals but the second one which did not exhibit a
+plateau. Thus the 11 pattern was fitted to this individual. Once more
+key summary statistics can be extracted using the =model.tables=
+method:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+model.tables(e.XPall, format = "array")[,,1:3]
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+, , 1
+
+       time  duration intercept       slope
+1   0.00000  84.50704         0  0.11833333
+2  84.50704  77.54424        10  0.00000000
+3 162.05128 157.94872        10 -0.06964286
+4 320.00000        NA        -1          NA
+
+, , 2
+
+       time   duration   intercept     slope
+1   0.00000 200.914286  3.13636364   0.00000
+2  59.08571         NA  0.13500000  65.14286
+3 260.00000   0.000000 -0.02409091 166.48148
+4  59.08571   7.976571          NA 280.00000
+
+, , 3
+
+       time duration   intercept    slope
+1  65.14286 0.000000  0.11666667   0.0000
+2 101.33862 7.600000  0.00000000 103.1250
+3 113.51852 7.600000 -0.05142857 180.5118
+4        NA 1.761905          NA 420.0000
+#+end_example
+
+and a graphical display of the model fit can be obtained using the =plot= method:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
 plot(e.XPall, ylim = c(0,10))
 #+END_SRC
 
 #+RESULTS:
-:   |                                                  | 0 % ~calculating    |++++                                              | 7 % ~01s            |+++++++                                           | 13% ~01s            |++++++++++                                        | 20% ~01s            |++++++++++++++                                    | 27% ~01s            |+++++++++++++++++                                 | 33% ~01s            |++++++++++++++++++++                              | 40% ~01s            |++++++++++++++++++++++++                          | 47% ~01s            |+++++++++++++++++++++++++++                       | 53% ~01s            |++++++++++++++++++++++++++++++                    | 60% ~01s            |++++++++++++++++++++++++++++++++++                | 67% ~01s            |+++++++++++++++++++++++++++++++++++++             | 73% ~01s            |++++++++++++++++++++++++++++++++++++++++          | 80% ~00s            |++++++++++++++++++++++++++++++++++++++++++++      | 87% ~00s            |+++++++++++++++++++++++++++++++++++++++++++++++   | 93% ~00s            |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=02s
 : Advarselsbesked:
 : [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
 
+
+#+BEGIN_SRC R :exports none :results output :session *R* :cache no
+ggplot2::ggsave(ggplot2::autoplot(e.XPall, ylim = c(0,10))$plot, width = 8, height = 8, file = "inst/figures/gg-all-example.png")
+#+END_SRC
+
+#+RESULTS:
+: Advarselsbesked:
+: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+
+#+BEGIN_HTML
+<img src="./inst/figures/gg-all-example.png" title="101/11 pattern - all patient" alt="101/11 pattern - all patient" width="100%" style="display: block; margin: auto;" />
+#+END_HTML
+
+** Limitations & alternative
+
+Currently the package is limited to a single continous response
+variable and a single breakpoint variable without interaction with
+other covariates. No tools for uncertainty quantification or
+statistical inference is implemented.
+
+See the [[https://cran.r-project.org/web/packages/segmented/][segmented]] package for an alternative and more mature
+implementation of breakpoint models.

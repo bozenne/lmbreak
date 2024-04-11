@@ -8,9 +8,9 @@
 lmbreak(
   formula,
   data,
-  n.iter = 50,
-  tol = 0.001,
-  enforce.continuity = TRUE,
+  n.iter = NULL,
+  tol = NULL,
+  enforce.continuity = NULL,
   init.gam = TRUE,
   init.quantile = NULL,
   trace = FALSE,

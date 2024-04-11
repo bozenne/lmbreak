@@ -1,8 +1,8 @@
 Package: lmbreak
 Type: Package
 Title: Linear Regression with Unknown Breakpoints
-Version: 0.0.0
-Date: 2024-04-10
+Version: 0.0.1
+Date: 2024-04-11
 Authors@R: c(
     person("Brice", "Ozenne", role = c("aut", "cre"), email = "brice.mh.ozenne@gmail.com", comment = c(ORCID = "0000-0001-9694-2956"))
 	)
@@ -26,3 +26,21 @@ Suggests:
     segmented,    
     testthat    
 RoxygenNote: 7.2.3
+Collate: 
+    '0-onload.R'
+    'as.lmbreak.R'
+    'autoplot.R'
+    'coef.R'
+    'doc-data.R'
+    'fitted.R'
+    'lmbreak-package.R'
+    'lmbreak.R'
+    'lmbreak.options.R'
+    'mlmbreak.R'
+    'model.frame.R'
+    'model.tables.R'
+    'plot.R'
+    'predict.R'
+    'print.R'
+    'simBreak.R'
+    'summary.R'
