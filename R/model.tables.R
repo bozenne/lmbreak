@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (11:38) 
 ## Version: 
-## Last-Updated: apr 11 2024 (09:48) 
+## Last-Updated: apr 11 2024 (10:13) 
 ##           By: Brice Ozenne
-##     Update #: 29
+##     Update #: 32
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -74,7 +74,7 @@ model.tables.mlmbreak <- function(x, cluster = NULL, format = "data.frame", ...)
         iOut <- model.tables(as.lmbreak(x, cluster = iC))
         if(format == "data.frame"){
             return(cbind(iC,iOut))
-        }else if(format == "array"){
+        }else{
             return(iOut)
         }
     })    
@@ -90,6 +90,8 @@ model.tables.mlmbreak <- function(x, cluster = NULL, format = "data.frame", ...)
         }
         out <- array(unlist(ls.table), dim = c(dim(ls.table[[1]]), length(cluster)),
                      dimnames = c(dimnames(ls.table[[1]]), list(cluster)))
+    }else if(format == "list"){
+        out <- ls.table
     }
     return(out)
 

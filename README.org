@@ -151,11 +151,10 @@ e.XPall
 
 #+RESULTS:
 #+begin_example
-  |                                                  | 0 % ~calculating    |++++                                              | 7 % ~01s            |+++++++                                           | 13% ~01s            |++++++++++                                        | 20% ~01s            |++++++++++++++                                    | 27% ~01s            |+++++++++++++++++                                 | 33% ~01s            |++++++++++++++++++++                              | 40% ~01s            |++++++++++++++++++++++++                          | 47% ~01s            |+++++++++++++++++++++++++++                       | 53% ~01s            |++++++++++++++++++++++++++++++                    | 60% ~01s            |++++++++++++++++++++++++++++++++++                | 67% ~01s            |+++++++++++++++++++++++++++++++++++++             | 73% ~01s            |++++++++++++++++++++++++++++++++++++++++          | 80% ~00s            |++++++++++++++++++++++++++++++++++++++++++++      | 87% ~00s            |+++++++++++++++++++++++++++++++++++++++++++++++   | 93% ~00s            |++++++++++++++++++++++++++++++++++++++++++++++++++| 100% elapsed=02s
 
 Call:
 mlmbreak(formula = score ~ 0 + bp(time, c("101", "11")), data = SDIpsilo, 
-    cluster = "id")
+    cluster = "id", trace = FALSE)
 
 Breakpoints:
    id pattern   cv continuity      breakpoint   maxVs
@@ -182,34 +181,23 @@ plateau. Thus the 11 pattern was fitted to this individual. Once more
 key summary statistics can be extracted using the =model.tables=
 method:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
-model.tables(e.XPall, format = "array")[,,1:3]
+model.tables(e.XPall, format = "list")[1:2]
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
-, , 1
-
+[[1]]
        time  duration intercept       slope
 1   0.00000  84.50704         0  0.11833333
 2  84.50704  77.54424        10  0.00000000
 3 162.05128 157.94872        10 -0.06964286
 4 320.00000        NA        -1          NA
 
-, , 2
-
-       time   duration   intercept     slope
-1   0.00000 200.914286  3.13636364   0.00000
-2  59.08571         NA  0.13500000  65.14286
-3 260.00000   0.000000 -0.02409091 166.48148
-4  59.08571   7.976571          NA 280.00000
-
-, , 3
-
-       time duration   intercept    slope
-1  65.14286 0.000000  0.11666667   0.0000
-2 101.33862 7.600000  0.00000000 103.1250
-3 113.51852 7.600000 -0.05142857 180.5118
-4        NA 1.761905          NA 420.0000
+[[2]]
+       time  duration intercept       slope
+1   0.00000  59.08571  0.000000  0.13500000
+2  59.08571 200.91429  7.976571 -0.02409091
+3 260.00000        NA  3.136364          NA
 #+end_example
 
 and a graphical display of the model fit can be obtained using the =plot= method:
