@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 11 2024 (10:36) 
+## Last-Updated: apr 11 2024 (10:43) 
 ##           By: Brice Ozenne
-##     Update #: 12
+##     Update #: 13
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -42,9 +42,16 @@ if(FALSE){
     model.tables(e.mlmbreak1010, format = "list")
 
     library(segmented)
-    ls.lm <- dtL.SERT[,.(.(lm(score ~ time.num, data = .SD))), by = "PatientID"]$V1
+    ls.lm <- dtL.SERT[,.(.(lm(score ~ 0 + time.num, data = .SD))), by = "PatientID"]$V1
 
-    segmented(ls.lm[[1]], seg.Z=~time.num, npsi = 2)
+    ls.segmented <- mapply(nbreak = table(e.mlmbreak1010$breakpoint$PatientID),
+                           lm = ls.lm,
+                           FUN = function(nbreak, lm){
+                               segmented(lm, seg.Z=~time.num, npsi = nbreak)
+                           }, SIMPLIFY = FALSE)
+    dev.new()
+    par(mfrow = c(5,5), mar = c(1,1,1,1))
+    lapply(ls.segmented,plot)
 }
 
 

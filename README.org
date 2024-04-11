@@ -1,6 +1,6 @@
 #+BEGIN_HTML
 <a href="https://ci.appveyor.com/project/bozenne/lmbreak"><img src="https://ci.appveyor.com/api/projects/status/github/bozenne/lmbreak?svg=true" alt="Build status"></a>
-<a href="https://github.com/bozenne/lmbreak/actions"><img src="https://github.com/bozenne/lmbreak/workflows/r/badge.svg" alt="Build status"></a>
+<a href="https://github.com/bozenne/lmbreak/actions"><img src="https://github.com/bozenne/lmbreak/actions/workflows/r.yml/badge.svg" alt="Build status"></a>
 <a href="http://www.gnu.org/licenses/gpl-3.0.html"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License"></a>
 #+END_HTML
 
@@ -186,14 +186,14 @@ model.tables(e.XPall, format = "list")[1:2]
 
 #+RESULTS:
 #+begin_example
-[[1]]
+$`1`
        time  duration intercept       slope
 1   0.00000  84.50704         0  0.11833333
 2  84.50704  77.54424        10  0.00000000
 3 162.05128 157.94872        10 -0.06964286
 4 320.00000        NA        -1          NA
 
-[[2]]
+$`2`
        time  duration intercept       slope
 1   0.00000  59.08571  0.000000  0.13500000
 2  59.08571 200.91429  7.976571 -0.02409091

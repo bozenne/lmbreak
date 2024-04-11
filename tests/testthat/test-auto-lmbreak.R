@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:19) 
 ## Version: 
-## Last-Updated: apr 10 2024 (17:17) 
+## Last-Updated: apr 11 2024 (10:43) 
 ##           By: Brice Ozenne
-##     Update #: 29
+##     Update #: 30
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -18,7 +18,6 @@
 if(FALSE){
     library(testthat)
     library(segmented)   
-    library(lava)   
     library(ggplot2) 
 
     library(lmbreak)
