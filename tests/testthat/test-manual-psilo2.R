@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 10 2024 (17:31) 
+## Last-Updated: apr 11 2024 (10:36) 
 ##           By: Brice Ozenne
-##     Update #: 11
+##     Update #: 12
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -39,10 +39,12 @@ if(FALSE){
     e.mlmbreak1010 <- mlmbreak(score ~ 0 + bp(time.num, c("1010","101","11")), cluster = "PatientID", data = dtL.SERT)
     e.mlmbreak1010
     plot(e.mlmbreak1010, labeller = label_value, scales = "free", ylim = c(0,100))
-    model.tables(e.mlmbreak1010, format = "array")
-    
-    ## e21.lmbreak1010 <- lmbreak(score ~ 0 + bp(time.num, c("1010"), c(150,175,210)), data = dtL.SERT[!is.na(dtL.SERT$score) & dtL.SERT$PatientID=="SERT-Psilo-021",])
-    ## plot(e21.lmbreak1010)
+    model.tables(e.mlmbreak1010, format = "list")
+
+    library(segmented)
+    ls.lm <- dtL.SERT[,.(.(lm(score ~ time.num, data = .SD))), by = "PatientID"]$V1
+
+    segmented(ls.lm[[1]], seg.Z=~time.num, npsi = 2)
 }
 
 
