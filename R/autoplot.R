@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: apr 12 2024 (13:07) 
+## Last-Updated: apr 12 2024 (18:32) 
 ##           By: Brice Ozenne
-##     Update #: 145
+##     Update #: 147
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -75,7 +75,7 @@ autoplot.lmbreak <- function(object, xlim = NULL, ylim = NULL,
     if(all(!is.na(breakpoint))){
         ls.X <- mapply(xxx = c(xlim[1], breakpoint),
                        yyy = c(breakpoint-1e-10, xlim[2]),
-                       FUN = function(xxx, yyy){seq(xxx,yyy, length.out = 3)},
+                       FUN = function(xxx, yyy){seq(xxx,yyy, length.out = 25)},
                        SIMPLIFY = FALSE)
 
         if(length(Z.var)>0){

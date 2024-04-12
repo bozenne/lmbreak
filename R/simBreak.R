@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:37) 
 ## Version: 
-## Last-Updated: apr 10 2024 (15:52) 
+## Last-Updated: apr 12 2024 (15:15) 
 ##           By: Brice Ozenne
-##     Update #: 41
+##     Update #: 42
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -73,7 +73,7 @@ simBreak <- function(n, breakpoint, slope, sigma = 1,
         stop("Argument \'breakpoint\' should have length greater or equal to 1. \n")
     }
     if((n.breakpoint-1)!=length(slope)){
-        stop("Argument \'slope\' should have the same length as argument \'breakpoint\'. \n")
+        stop("Argument \'slope\' should have length ",n.breakpoint-1,", i.e. length of the argument \'breakpoint\' minus 1. \n")
     }
     
     if((n.breakpoint-1)!=length(sigma)){

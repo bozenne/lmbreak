@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 12 2024 (13:45) 
+## Last-Updated: apr 12 2024 (15:13) 
 ##           By: Brice Ozenne
-##     Update #: 43
+##     Update #: 47
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -67,6 +67,7 @@ if(FALSE){
     
     ## e.GS <- segmented(lm(score ~ time.num, data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",]), npsi = 4)
     
+
     ## ** Analyse only L-LPS individuals
     dtL.LLPS <- dtL[grep("^L-LPS",dtL$PatientID),,drop=FALSE]
     ggTraj %+% dtL.LLPS
@@ -117,9 +118,27 @@ if(FALSE){
     plot(e12.LPM)
 }
 
+
 ## * Dataset 2
 if(FALSE){
 
+    ## ** load data
+    dtW <- as.data.table(read_excel("source/28_09_2018_Intensitetsratings_18_fp.xlsx"))
+    dtW.red <- dtW[which(rowSums(!is.na(dtW.red))>0),.SD,.SDcols = c("CIMBI ID","0 minutes/adm.",seq(20,440,by=20))]
+    names(dtW.red)[1:2] <- c("id","0")
+    dtL <- melt(dtW.red, id.vars = c("id"), variable.name = "time", value.name = "score")
+    dtL$time.num <- as.numeric(as.character(dtL$time))
+
+    ## ** display
+    ggTraj <- ggplot(dtL, aes(x = time.num, y = score, group = id))
+    ggTraj <- ggTraj + geom_line() + geom_point()
+    ggTraj <- ggTraj + facet_wrap(~id)
+    ggTraj
+
+    ## ** trajectory model
+    e.mbp <- mlmbreak(score ~ 0 + bp(time.num, c("1010","0110","110","101","11")), cluster = "id", data = dtL)
+    plot(e.mbp)
+    model.tables(e.mbp, format = "list")
 }
 
 
