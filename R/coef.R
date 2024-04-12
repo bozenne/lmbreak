@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:23) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:28) 
+## Last-Updated: apr 11 2024 (20:02) 
 ##           By: Brice Ozenne
-##     Update #: 89
+##     Update #: 97
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -29,6 +29,10 @@
 ##' \item Vs: discontinuity terms in the linear regression model used to estimates the parameters.
 ##' \item intercept: expected outcome value at each breakpoint value.
 ##' \item lm: regression coefficients of the linear regression model used to estimates the parameters.
+##' \item R2: coefficient of determination of the model fit.
+##' \item pattern: pattern used.
+##' \item cv: convergence of the optimization algorithm.
+##' \item continuity: continuity at the breakpoints of the model fit.
 ##' }
 ##' @param simplify [logical] simplify the data format from a list to a vector or a data.frame.
 ##' @param ... Not used. For compatibility with the generic method.
@@ -48,7 +52,7 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
     valid.types <- c("breakpoint","breakpoint.range","duration",
                      "Us","slope",
                      "Vs","intercept",
-                     "lm",
+                     "lm", "R2",
                      "pattern","cv","continuity")
     if(any(type %in% valid.types == FALSE)){
         stop("Incorrect value for argument \'type\'. \n",
@@ -69,6 +73,9 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
 
     if(any(c("pattern") %in% type)){
         out$pattern <- object.opt$pattern
+    }
+    if(any(c("R2") %in% type)){
+        out$R2 <- object.opt$R2
     }
     if(any(c("cv") %in% type)){
         out$cv <- object.opt$cv
@@ -97,8 +104,10 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
         Us2slope <- stats::setNames(table.breakpoint$sign,table.breakpoint$Us)
         if(vec.pattern[1]=="1"){
             Us2slope <- c(stats::setNames(1,names(out$Us)[1]),Us2slope)
+            out$slope <- unname(cumsum(Us2slope * out$Us[names(Us2slope)]))
+        }else{
+            out$slope <- c(0,cumsum(Us2slope * out$Us[names(Us2slope)]))
         }
-        out$slope <- unname(cumsum(Us2slope * out$Us[names(Us2slope)]))
     }
     if(any(c("Vs") %in% type)){
         out$Vs <- coef(model)[table.breakpoint$Vs]
@@ -127,11 +136,12 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
     }
 }
 
-## * coef.lmbreak (documentation)
+## * coef.mlmbreak (documentation)
 ##' @title Extract Summary Statistics From Multiple Breakpoint Model
 ##' @description Extract summary statistics from each breakpoint model
 ##'
 ##' @param object output of \code{\link{mlmbreak}}.
+##' @param type [character vector] summary statistic to be output. See argument \code{type} in \code{\link{coef.lmbreak}}.
 ##' @param cluster [vector] cluster relative to which the summary statistics should be extracted..
 ##' @param format [character] should the output be a data.frame (with cluster as a column) or a list (with one element for each cluster)?
 ##' @param ... additional arguments passed to \code{\link{coef.lmbreak}}.
@@ -140,7 +150,7 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
 ##'  
 ##' @keywords methods
 ##' @export
-coef.mlmbreak <- function(object, cluster = NULL, format = "data.frame", ...){
+coef.mlmbreak <- function(object, type = "breakpoint", cluster = NULL, format = "data.frame", ...){
 
     ## ** extract from object
     var.cluster <- object$args$cluster
@@ -157,7 +167,7 @@ coef.mlmbreak <- function(object, cluster = NULL, format = "data.frame", ...){
 
     ## ** extract
     ls.table <- lapply(cluster, function(iC){ ## iC <- cluster[1]
-        iOut <- coef(as.lmbreak(object, cluster = iC), simplify = FALSE,...)
+        iOut <- coef(as.lmbreak(object, cluster = iC), type = type, simplify = FALSE,...)
         if(length(unique(lengths(iOut)))!=1){
             iMax.size <- max(lengths(iOut))
             iOut <- lapply(iOut, function(ii){c(ii,rep(NA, iMax.size-length(ii)))})

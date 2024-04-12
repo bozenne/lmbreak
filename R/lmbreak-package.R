@@ -10,7 +10,7 @@
 #' @importFrom mgcv gam s
 #' @importFrom pbapply pblapply
 #' @importFrom rlang .data
-#' @importFrom stats coef model.frame model.tables predict rnorm
+#' @importFrom stats coef logLik model.frame model.tables predict rnorm
 NULL
 
 

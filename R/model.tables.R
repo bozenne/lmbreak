@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (11:38) 
 ## Version: 
-## Last-Updated: apr 11 2024 (10:30) 
+## Last-Updated: apr 11 2024 (20:00) 
 ##           By: Brice Ozenne
-##     Update #: 33
+##     Update #: 38
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -70,7 +70,7 @@ model.tables.mlmbreak <- function(x, cluster = NULL, format = "data.frame", ...)
     format <- match.arg(format, c("data.frame","array","list"))
 
     ## ** extract
-    ls.table <- lapply(cluster, function(iC){ ## iC <- cluster[1]
+    ls.table <- lapply(cluster, function(iC){ ## iC <- cluster[6]
         iOut <- model.tables(as.lmbreak(x, cluster = iC))
         if(format == "data.frame"){
             return(cbind(iC,iOut))

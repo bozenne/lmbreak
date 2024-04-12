@@ -28,7 +28,7 @@ library(lmbreak)
 #+END_SRC
 
 #+RESULTS:
-: lmbreak version 0.0.1
+: lmbreak version 0.0.2
 
 will be exemplified on the following dataset:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -146,7 +146,7 @@ This is especially useful when using the =mlmbreak= function to fit
 #+BEGIN_SRC R :exports code :results output :session *R* :cache no
 e.XPall <- mlmbreak(score ~ 0 + bp(time, c("101","11")), cluster = "id", data = SDIpsilo,
                     trace = FALSE)
-e.XPall
+summary(e.XPall)
 #+END_SRC
 
 #+RESULTS:
@@ -157,22 +157,22 @@ mlmbreak(formula = score ~ 0 + bp(time, c("101", "11")), data = SDIpsilo,
     cluster = "id", trace = FALSE)
 
 Breakpoints:
-   id pattern   cv continuity      breakpoint   maxVs
-1   1     101 TRUE       TRUE 84.507, 162.051 < 1e-05
-2   2      11 TRUE       TRUE          59.086 < 1e-05
-3   3     101 TRUE       TRUE 65.143, 166.481 < 1e-05
-4   4     101 TRUE       TRUE  103.12, 180.51 < 1e-05
-5   5     101 TRUE       TRUE 49.123, 173.913 < 1e-05
-6   6     101 TRUE       TRUE         70, 150 < 1e-05
-7   7     101 TRUE       TRUE 46.032, 101.549 < 1e-05
-8   8     101 TRUE       TRUE 86.957, 129.533 < 1e-05
-9   9     101 TRUE       TRUE 49.123, 115.938 < 1e-05
-10 10     101 TRUE       TRUE 65.116, 195.238 < 1e-05
-11 11     101 TRUE       TRUE  44.737, 93.294 < 1e-05
-12 12     101 TRUE       TRUE 43.478, 150.992 < 1e-05
-13 13     101 TRUE       TRUE 87.879, 230.667 < 1e-05
-14 14     101 TRUE       TRUE  157.89, 248.02 < 1e-05
-15 15     101 TRUE       TRUE  157.30, 234.74 < 1e-05
+   id pattern   cv continuity      R2      breakpoint   maxVs
+1   1     101 TRUE       TRUE 0.98332 84.507, 162.051 < 1e-05
+2   2      11 TRUE       TRUE 0.99258          59.086 < 1e-05
+3   3     101 TRUE       TRUE 0.99150 65.143, 166.481 < 1e-05
+4   4     101 TRUE       TRUE 0.98075  103.13, 180.51 < 1e-05
+5   5     101 TRUE       TRUE 0.98385 49.123, 173.913 < 1e-05
+6   6     101 TRUE       TRUE 0.99337         70, 150 < 1e-05
+7   7     101 TRUE       TRUE 0.98355 46.032, 101.549 < 1e-05
+8   8     101 TRUE       TRUE 0.98558 86.957, 129.533 < 1e-05
+9   9     101 TRUE       TRUE 0.97533 49.123, 115.937 < 1e-05
+10 10     101 TRUE       TRUE 0.99615 65.116, 195.238 < 1e-05
+11 11     101 TRUE       TRUE 0.98245  44.737, 93.294 < 1e-05
+12 12     101 TRUE       TRUE 0.96547 43.478, 150.992 < 1e-05
+13 13     101 TRUE       TRUE 0.99443 87.879, 230.667 < 1e-05
+14 14     101 TRUE       TRUE 0.97773  157.89, 248.02 < 1e-05
+15 15     101 TRUE       TRUE 0.99110  157.30, 234.74 < 1e-05
 #+end_example
 
 Here an upslope, plateau, normalization (101 pattern) could be fitted

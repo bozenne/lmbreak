@@ -4,10 +4,12 @@
 \alias{coef.mlmbreak}
 \title{Extract Summary Statistics From Multiple Breakpoint Model}
 \usage{
-\method{coef}{mlmbreak}(object, cluster = NULL, format = "data.frame", ...)
+\method{coef}{mlmbreak}(object, type = "breakpoint", cluster = NULL, format = "data.frame", ...)
 }
 \arguments{
 \item{object}{output of \code{\link{mlmbreak}}.}
+
+\item{type}{[character vector] summary statistic to be output. See argument \code{type} in \code{\link{coef.lmbreak}}.}
 
 \item{cluster}{[vector] cluster relative to which the summary statistics should be extracted..}
 

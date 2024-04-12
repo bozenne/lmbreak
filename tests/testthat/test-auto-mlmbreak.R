@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (18:40) 
 ## Version: 
-## Last-Updated: apr 10 2024 (14:01) 
+## Last-Updated: apr 11 2024 (19:29) 
 ##           By: Brice Ozenne
-##     Update #: 20
+##     Update #: 22
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -47,6 +47,8 @@ test_that("mlmbreak with NA", {
 
     SDIpsilo.red <- SDIpsilo[SDIpsilo$type %in% c("signal","added"),]
     e.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, trace = FALSE)
+    ## ee.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, trace = TRUE, optimize.step = 0.5)
+    expect_equal(logLik(e.mlmbreak), -267.2544, tol = 1e-3)
     suppressWarnings(plot(e.mlmbreak, ylim = c(0,10)))
 
     SDIpsilo.redNNA <- SDIpsilo.red[!is.na(SDIpsilo.red$score),]
@@ -55,6 +57,7 @@ test_that("mlmbreak with NA", {
     test <- model.tables(e.mlmbreak, format = "array")
     GS <- model.tables(eNNA.mlmbreak, format = "array")
     expect_equal(test,GS, tol = 1e-6)
+    expect_equal(logLik(e.mlmbreak), logLik(eNNA.mlmbreak), tol = 1e-3)
    
 })
 

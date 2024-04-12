@@ -18,6 +18,10 @@
 \item Vs: discontinuity terms in the linear regression model used to estimates the parameters.
 \item intercept: expected outcome value at each breakpoint value.
 \item lm: regression coefficients of the linear regression model used to estimates the parameters.
+\item R2: coefficient of determination of the model fit.
+\item pattern: pattern used.
+\item cv: convergence of the optimization algorithm.
+\item continuity: continuity at the breakpoints of the model fit.
 }}
 
 \item{simplify}{[logical] simplify the data format from a list to a vector or a data.frame.}

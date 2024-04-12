@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:35) 
+## Last-Updated: apr 12 2024 (13:07) 
 ##           By: Brice Ozenne
-##     Update #: 123
+##     Update #: 145
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -56,7 +56,7 @@ autoplot.lmbreak <- function(object, xlim = NULL, ylim = NULL,
 
     ## xlim
     if(is.null(xlim)){
-        xlim <- range(data[[breakpoint.var]], na.rm = TRUE)
+        xlim <- range(data[[breakpoint.var]], na.rm = TRUE)        
     }else{
         if(!is.numeric(xlim) || length(xlim)!=2){
             stop("Argument \'xlim\' should be a numeric vector of length 2. \n")
@@ -64,8 +64,13 @@ autoplot.lmbreak <- function(object, xlim = NULL, ylim = NULL,
         if(xlim[1]>=xlim[2]){
             stop("The first element of argument \'xlim\' should be strictly smaller than the second. \n")
         }
-    }
+    }    
 
+    ## ylim
+    if(is.null(ylim) && ("ylim" %in% names(match.call()) == FALSE)){
+        ylim <- range(data[[response.var]], na.rm = TRUE)
+    }
+    
     ## ** design matrix
     if(all(!is.na(breakpoint))){
         ls.X <- mapply(xxx = c(xlim[1], breakpoint),
@@ -104,7 +109,6 @@ autoplot.lmbreak <- function(object, xlim = NULL, ylim = NULL,
     if(length(Z.var)>0){
         out <- out + ggplot2::facet_wrap(stats::as.formula(paste0("~",paste0(Z.var,collapse="+"))), scales = scales)
     }
-
     if(!is.null(ylim)){
         out <- out + ggplot2::coord_cartesian(ylim = ylim)
     }else if(alpha<1e-10 && "ylim" %in% names(match.call()) == FALSE){
@@ -171,6 +175,15 @@ autoplot.mlmbreak <- function(object, cluster = NULL, xlim = NULL, ylim = NULL,
         stop("Cannot provide a graphical disply for mlmbreak object with covariate(s). \n")
     }
 
+    ## ylim
+    if(is.null(ylim) && ("ylim" %in% names(match.call()) == FALSE)){
+        ylim <- range(data[[response.var]], na.rm = TRUE)
+    }
+    if(is.null(xlim) && ("xlim" %in% names(match.call()) == FALSE)){
+        xlim <- range(data[[breakpoint.var]], na.rm = TRUE)
+    }
+    
+
     ## ** fitted values
     ls.ggdata <- lapply(cluster, function(iC){
         iOut <- autoplot(as.lmbreak(object, cluster = iC), xlim = xlim)$data
@@ -185,12 +198,12 @@ autoplot.mlmbreak <- function(object, cluster = NULL, xlim = NULL, ylim = NULL,
     newdataA <- do.call(rbind,ls.ggdata)
     names(newdataA)[1] <- var.cluster
 
-    if(subtitle>0 & subtitle<1){
-        old2new <- paste0(U.cluster," (cv=",as.numeric(opt$cv),")")
+    if(subtitle>1){
+        old2new <- paste0(U.cluster," (cv = ",opt$cv,",",opt$continuity,")")
         newdataA[[var.cluster]] <- factor(newdataA[[var.cluster]], levels = U.cluster, labels = old2new)
         data[[var.cluster]] <- factor(data[[var.cluster]], levels = U.cluster, labels = old2new)
-    }else if(subtitle>=1){
-        old2new <- paste0(U.cluster," (cv = ",opt$cv,",",opt$continuity,")")
+    }else if(subtitle>0){
+        old2new <- paste0(U.cluster," (cv=",as.numeric(opt$cv),")")
         newdataA[[var.cluster]] <- factor(newdataA[[var.cluster]], levels = U.cluster, labels = old2new)
         data[[var.cluster]] <- factor(data[[var.cluster]], levels = U.cluster, labels = old2new)
     }else{
@@ -209,9 +222,9 @@ autoplot.mlmbreak <- function(object, cluster = NULL, xlim = NULL, ylim = NULL,
     out <- out + ggplot2::facet_wrap(stats::as.formula(paste0("~",var.cluster)), scales = scales, labeller = labeller)
 
     if(!is.null(ylim)){
-        out <- out + ggplot2::coord_cartesian(ylim = ylim)
+        out <- out + ggplot2::coord_cartesian(xlim = xlim, ylim = ylim)
     }else if(alpha<1e-10 && "ylim" %in% names(match.call()) == FALSE){
-        out <- out + ggplot2::coord_cartesian(ylim = range(newdataA$estimate))
+        out <- out + ggplot2::coord_cartesian(xlim = xlim, ylim = range(newdataA$estimate))
     }
     
     ## ** export

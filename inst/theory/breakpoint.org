@@ -1,41 +1,63 @@
 #+TITLE: Breakpoint model
 #+Author: 
 
-* No covariate, no plateau
+* The problem
 
-Consider:
-- a response variable \(Y\)
-- a explanatory variable \(X\) taking values in the interval
-  \([x_{\min};x_{\max}]\).
+Consider a response variable \(Y\) and an explanatory variable \(X\)
+related by the following equation:
+#+BEGIN_EXPORT latex
+\begin{align*}
+Y = \beta X + \gamma (X - \psi)_+ + \varepsilon
+\end{align*}
+#+END_EXPORT
+
+where \((\beta,\gamma,\psi) \in \Real^3\), \(\varepsilon
+\sim \Gaus[0,\sigma^2]\), and \((x)_+=x\) if \(x>0\) and 0 otherwise.
 
 \bigskip
 
-\noindent Solving \(a+b x_{\min}=-1\) and \(a+b x_{\max}=-1\) leads to
-  \(b = \frac{2}{x_{\max}-x_{\min}}\) and \(a = -
-  \frac{x_{\max}+x_{\min}}{x_{\max}-x_{\min}}\). \newline Therefore
-  the transformation \(f(.):=\tanh^{-1}(a+b.)\) moves from the
-  constrained to the unconstrained scaled. We will thus consider the
-  following broken line model for the mean:
+Denote by \(\Theta = (\beta,\gamma,\psi,\sigma^2)\), we can
+express the likelihood relative to \(n\) iid observations as:
 #+BEGIN_EXPORT latex
 \begin{align*}
-\Esp[Y] &= \alpha + \beta_1 X + \beta_2 (X-\psi)_{+} \\
-&= \alpha + \beta_1 X + \beta_2 (X-\tanh^{-1}(a+b \phi))_{+}
- \end{align*}
-#+END_EXPORT
-
-We have that at the true breakpoint value \(\psi_0\) and for \(X \neq \psi_0\)
-#+BEGIN_EXPORT latex
-\begin{align*}
-(X-\psi)_{+} = f(\psi) = f(\psi_0) + (\psi-\psi_0)f'(\psi_0) = (X-\psi_0)_{+}  - (\psi-\psi_0)\Ind[X>\psi_0]
+\Likelihood(\Theta) = \prod_{i=1} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2}{2\sigma^2}\right)
 \end{align*}
 #+END_EXPORT
-Now with transformation:
+So maximizing the likelihood with respect to \(\Theta_\mu =
+(\beta,\gamma,\psi)\) is equivalent to minimizing the mean
+squared error:
 #+BEGIN_EXPORT latex
 \begin{align*}
-(X-\tanh^{-1}(a+b \phi))_{+} = f(\phi) = f(\phi_0) + (\phi-\phi_0)f'(\phi_0) = (X-\psi_0)_{+}  - (\phi-\phi_0)\frac{b\Ind[X>\psi_0]}{1-\psi_0^2}
+\likelihood(\Theta_\mu) = \sum_{i=1} (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2
 \end{align*}
 #+END_EXPORT
+One difficulty is that this objective function is not differientiable
+in \(\psi\) at \(\left(X_i\right)_{i=1}^n\). 
 
+* Proximal gradient method
+
+\(\likelihood(\Theta_\mu)\) might not be strictly convex but it is
+convex. So we can try applying a proximal gradient algorithm. This
+means updating the estimate by:
+#+BEGIN_EXPORT latex
+\begin{align*}
+\Theta_{\mu,k+1} &= \text{prox}_{\alpha_k \likelihood}(\Theta_{\mu,k}) = \argmin_{\Theta_\mu \in \Real^2} \left( \likelihood(\Theta_\mu) + \frac{1}{2\alpha_k}||\Theta_\mu-\Theta_{\mu,k}||^2 \right) \\
+&= \argmin_{\Theta_\mu \in \Real^3} \left( \sum_{i=1} (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2 + \frac{(\beta - \beta_k)^2+(\gamma - \gamma_k)^2+(\psi - \psi_k)^2}{2\alpha_k} \right) 
+&= \argmin_{\psi \in \Real} \left((I - Z)(\trans{Z}Z)^{-1}ZY + \frac{(\beta - \beta_k)^2+(\gamma - \gamma_k)^2+(\psi - \psi_k)^2}{2\alpha_k}  \right)
+\end{align*}
+#+END_EXPORT
+where \(\alpha_k\) is a pre-defined stricly positive real value.
+
+
+# However we can re-write
+# the objective function as:
+# #+BEGIN_EXPORT latex
+# \begin{align*}
+# \likelihood(\Theta_\mu) &= \textcolor{\darkblue}{\sum_{i=1} (Y_i - \alpha - \beta X_i)^2} + \textcolor{\darkred}{\gamma^2 \sum_{i=1} (X_i - \psi)_+^2 - 2 \gamma (Y_i - \alpha - \beta X_i)(X_i - \psi)_+} \\
+# &= \textcolor{\darkblue}{f(\alpha,\beta)} + \textcolor{\darkred}{g(\alpha,\beta,\psi)}
+# \end{align*}
+# #+END_EXPORT
+# where \(f\) is differientable and \(g\) is not differentiable.
 
 # @@latex:any arbitrary LaTeX code@@
 
@@ -195,6 +217,7 @@ Now with transformation:
 #+LATEX_HEADER: \newcommandx\Gaus[2][1=,2=]{\defOperator{#1}{#2}{N}{}{(}{)}{\mathcal}}
 #+LATEX_HEADER: \newcommandx\Wishart[2][1=,2=]{\defOperator{#1}{#2}{W}{ishart}{(}{)}{\mathcal}}
 #+LATEX_HEADER: \newcommandx\Likelihood[2][1=,2=]{\defOperator{#1}{#2}{L}{}{(}{)}{\mathcal}}
+#+LATEX_HEADER: \newcommandx\likelihood[2][1=,2=]{\defOperator{#1}{#2}{\ell}{}{(}{)}{}}
 #+LATEX_HEADER: \newcommandx\Information[2][1=,2=]{\defOperator{#1}{#2}{I}{}{(}{)}{\mathcal}}
 #+LATEX_HEADER: \newcommandx\Score[2][1=,2=]{\defOperator{#1}{#2}{S}{}{(}{)}{\mathcal}}
 **** Operators
@@ -241,3 +264,5 @@ Now with transformation:
 #+LaTeX_HEADER: \newcommand\half{\frac{1}{2}}
 #+LaTeX_HEADER: \newcommand\normMax[1]{\left|\left|#1\right|\right|_{max}}
 #+LaTeX_HEADER: \newcommand\normTwo[1]{\left|\left|#1\right|\right|_{2}}
+#+LaTeX_HEADER: \DeclareMathOperator*{\argmax}{arg\,max}
+#+LaTeX_HEADER: \DeclareMathOperator*{\argmin}{arg\,min}

@@ -1,4 +1,4 @@
-% Created 2024-04-08 Mon 11:15
+% Created 2024-04-11 to 11:43
 % Intended LaTeX compiler: pdflatex
 \documentclass[12pt]{article}
 
@@ -171,6 +171,7 @@ and (1.75,0.4) .. cycle;
 \newcommandx\Gaus[2][1=,2=]{\defOperator{#1}{#2}{N}{}{(}{)}{\mathcal}}
 \newcommandx\Wishart[2][1=,2=]{\defOperator{#1}{#2}{W}{ishart}{(}{)}{\mathcal}}
 \newcommandx\Likelihood[2][1=,2=]{\defOperator{#1}{#2}{L}{}{(}{)}{\mathcal}}
+\newcommandx\likelihood[2][1=,2=]{\defOperator{#1}{#2}{\ell}{}{(}{)}{}}
 \newcommandx\Information[2][1=,2=]{\defOperator{#1}{#2}{I}{}{(}{)}{\mathcal}}
 \newcommandx\Score[2][1=,2=]{\defOperator{#1}{#2}{S}{}{(}{)}{\mathcal}}
 \newcommandx\Vois[2][1=,2=]{\defOperator{#1}{#2}{V}{}{(}{)}{\mathcal}}
@@ -215,6 +216,8 @@ and (1.75,0.4) .. cycle;
 \newcommand\half{\frac{1}{2}}
 \newcommand\normMax[1]{\left|\left|#1\right|\right|_{max}}
 \newcommand\normTwo[1]{\left|\left|#1\right|\right|_{2}}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 \date{}
 \title{Breakpoint model}
 \hypersetup{
@@ -223,42 +226,50 @@ and (1.75,0.4) .. cycle;
  pdftitle={Breakpoint model},
  pdfkeywords={},
  pdfsubject={},
- pdfcreator={Emacs 27.1 (Org mode 9.4.6)},
+ pdfcreator={Emacs 27.2 (Org mode 9.5.2)},
  pdflang={English}
  }
 \begin{document}
 
 \maketitle
 
-\section{No covariate, no plateau}
-\label{sec:org750df01}
+\section{The problem}
+\label{sec:org82c5f22}
 
-Consider:
-\begin{itemize}
-\item a response variable \(Y\)
-\item a explanatory variable \(X\) taking values in the interval
-\([x_{\min};x_{\max}]\).
-\end{itemize}
+Consider a response variable \(Y\) and an explanatory variable \(X\)
+related by the following equation:
+\begin{align*}
+Y = \beta X + \gamma (X - \psi)_+ + \varepsilon
+\end{align*}
+
+where \((\beta,\gamma,\psi) \in \Real^3\), \(\varepsilon
+\sim \Gaus[0,\sigma^2]\), and \((x)_+=x\) if \(x>0\) and 0 otherwise.
 
 \bigskip
 
-\noindent Solving \(a+b x_{\min}=-1\) and \(a+b x_{\max}=-1\) leads to
-  \(b = \frac{2}{x_{\max}-x_{\min}}\) and \(a = -
-  \frac{x_{\max}+x_{\min}}{x_{\max}-x_{\min}}\). \newline Therefore
-  the transformation \(f(.):=\tanh^{-1}(a+b.)\) moves from the
-  constrained to the unconstrained scaled. We will thus consider the
-  following broken line model for the mean:
+Denote by \(\Theta = (\beta,\gamma,\psi,\sigma^2)\), we can
+express the likelihood relative to \(n\) iid observations as:
 \begin{align*}
-\Esp[Y] &= \alpha + \beta_1 X + \beta_2 (X-\psi)_{+} \\
-&= \alpha + \beta_1 X + \beta_2 (X-\tanh^{-1}(a+b \phi))_{+}
- \end{align*}
+\Likelihood(\Theta) = \prod_{i=1} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2}{2\sigma^2}\right)
+\end{align*}
+So maximizing the likelihood with respect to \(\Theta_\mu =
+(\beta,\gamma,\psi)\) is equivalent to minimizing the mean
+squared error:
+\begin{align*}
+\likelihood(\Theta_\mu) = \sum_{i=1} (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2 \\
+\end{align*}
+One difficulty is that this objective function is not differientiable
+in \(\psi\) at \(\left(X_i\right)_{i=1}^n\). 
 
-We have that at the true breakpoint value \(\psi_0\) and for \(X \neq \psi_0\)
+\section{Proximal gradient method}
+\label{sec:org2f9f9f3}
+
+\(\likelihood(\Theta_\mu)\) might not be strictly convex but it is
+convex. So we can try applying a proximal gradient algorithm. This
+means updating the estimate by:
 \begin{align*}
-(X-\psi)_{+} = f(\psi) = f(\psi_0) + (\psi-\psi_0)f'(\psi_0) = (X-\psi_0)_{+}  - (\psi-\psi_0)\Ind[X>\psi_0]
+\Theta_{\mu,k+1} &= \text{prox}_{\alpha_k \likelihood}(\Theta_{\mu,k}) = \argmin_{\Theta_\mu \in \Real^2} \left( \likelihood(\Theta_\mu) + \frac{1}{2\alpha_k}||\Theta_\mu-\Theta_{\mu,k}||^2 \right) \\
+&= \argmin_{\Theta_\mu \in \Real^3} \left( \sum_{i=1} (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2 + \frac{(\beta - \beta_k)^2+(\gamma - \gamma_k)^2+(\psi - \psi_k)^2}{2\alpha_k} \right) 
 \end{align*}
-Now with transformation:
-\begin{align*}
-(X-\tanh^{-1}(a+b \phi))_{+} = f(\phi) = f(\phi_0) + (\phi-\phi_0)f'(\phi_0) = (X-\psi_0)_{+}  - (\phi-\phi_0)\frac{b\Ind[X>\psi_0]}{1-\psi_0^2}
-\end{align*}
+where \(\alpha_k\) is a pre-defined stricly positive real value.
 \end{document}

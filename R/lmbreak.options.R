@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 16 2021 (12:01) 
 ## Version: 
-## Last-Updated: apr 11 2024 (09:20) 
+## Last-Updated: apr 12 2024 (12:36) 
 ##           By: Brice Ozenne
-##     Update #: 159
+##     Update #: 175
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -27,8 +27,14 @@
 #' @details The options are: \itemize{
 #' \item n.iter [integer, >0] the maximum number of iterations used to estimates the breakpoints. Used by \code{lmbreak}.
 #' \item tol [numeric, >0] the maximum accpetable difference between two consecutive estimates of the breakpoints. Used by \code{lmbreak}.
+#' Can have an optional second element used to assess the continuity of the estimated fit at the breakpoint (i.e. maximal acceptable magnitude of the Vs terms).
 #' \item enforce.continuity [logical]: enforce.continuity [logical] in the case where no continuous solution could be found,
 #' should a non-continuous breakpoint model be kept (\code{FALSE}) or a continuous breakpoint model be enforced (\code{TRUE}, refiting without the Vs terms). Used by \code{lmbreak}.
+#' \item optimize.step [logical]: should a full update of the breakpoint value be performed at each step (\code{FALSE})
+#' or a partial update minimizing the sum of residual absolute value of the model without Vs terms.
+#' \item minR2 [numeric,0-1]: minimum R2 when selecting the pattern for qualifying the convergence as satisfactory.
+#' \item init.gam [logical]: should a spline model be used to define initialization points (where the first derivative of the spline changes sign).
+#' \item init.quantile [integer]: number of quantiles used to try different initializations.
 #' }
 #'
 #' @return A list containing the default options.
@@ -41,9 +47,13 @@
 #' @export
 lmbreak.options <- function(..., reinitialise = FALSE){
 
-    default <- list(n.iter = 50,
-                    tol = 1e-3,
-                    enforce.continuity = TRUE)
+    default <- list(n.iter = 20,
+                    tol = c(1e-3,1e-2),
+                    enforce.continuity = TRUE,
+                    optimize.step = 0,
+                    minR2 = 0.01,
+                    init.gam = TRUE,
+                    init.quantile = 0.5)
 
     if (reinitialise == TRUE) {
         assign(".lmbreak-options", value = default, envir = lmbreak.env)
@@ -76,10 +86,19 @@ lmbreak.options <- function(..., reinitialise = FALSE){
               stop("Argument \'n.iter\' must be a strictly positive integer. \n")
           }
           if("tol" %in% names(args) && (!is.numeric(args$tol) || args$tol <= 0)){
-              stop("Argument \'enforce.continuity\' must be a strictly positive numeric value. \n")
+              stop("Argument \'tol\' must be a strictly positive numeric value. \n")
+          }
+          if("tol" %in% names(args) && length(args$tol)!=2){
+              stop("Argument \'tol\' must be have length 2. \n")
           }
           if("enforce.continuity" %in% names(args) && !is.logical(args$enforce.continuity)){
               stop("Argument \'enforce.continuity\' must be of type logical. \n")
+          }
+          if("optimize.step" %in% names(args) && !is.logical(args$optimize.step)){
+              stop("Argument \'optimize.step\' must be of type logical. \n")
+          }
+          if("init.gam" %in% names(args) && !is.logical(args$init.gam)){
+              stop("Argument \'init.gam\' must be of type logical. \n")
           }
           object[names(args)] <- args
       

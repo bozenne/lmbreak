@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (12:22) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:42) 
+## Last-Updated: apr 12 2024 (13:40) 
 ##           By: Brice Ozenne
-##     Update #: 82
+##     Update #: 91
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -19,7 +19,7 @@
 ##' @title Fit Multiple Breakpoint models
 ##' @description Fit a linear regression with breakpoints separately on each cluster of data.
 ##' Observations are independent between cluster but can be correlated within cluster.
-##' @name mlmBreak
+##' @name mlmbreak
 ##'
 ##' @param formula a formula where the breakpoint variable appears on the right hand side
 ##' with an argument pattern specifying the number of breakpoints and possible constrains. See details section of \code{\link{lmbreak}}.
@@ -47,10 +47,16 @@
 ##' e.mlmbreak1010 <- mlmbreak(Y ~ 0 + bp(X, "1010"), cluster = "id", data = df1)
 ##' ## expect 2 warnings
 ##' plot(e.mlmbreak1010, scales = "free")
+##' plot(e.mlmbreak1010, scales = "free", subtitle = 0)
 ##'
 ##' ## inspect results for a specific breakpoint
 ##' e4.lmbreak1010 <- as.lmbreak(e.mlmbreak1010, cluster = 4)
 ##' summary(e4.lmbreak1010)
+##'
+##' ## re-run with adpative step 
+##' e4.lmbreak1010 <- lmbreak(Y ~ 0 + bp(X, "1010"), data = df1[df1$id==4,],
+##'                           control = list(optimize.step = TRUE))
+##' plot(e4.lmbreak1010)
 
 ## * mlmbreak (code)
 ##' @export
