@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (12:22) 
 ## Version: 
-## Last-Updated: apr 12 2024 (13:40) 
+## Last-Updated: apr 13 2024 (19:41) 
 ##           By: Brice Ozenne
-##     Update #: 91
+##     Update #: 95
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -79,7 +79,7 @@ mlmbreak <- function(formula, data, cluster, trace = 1, cpus = 1, ...){
 
     ## ** run lmbreak on each cluster
     if(is.factor(data[[cluster]])){
-        U.cluster <- levels(data[[cluster]])
+        U.cluster <- levels(droplevels(data[[cluster]]))
     }else{
         U.cluster <- levels(as.factor(data[[cluster]]))
     }

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (18:40) 
 ## Version: 
-## Last-Updated: apr 11 2024 (19:29) 
+## Last-Updated: apr 13 2024 (20:23) 
 ##           By: Brice Ozenne
-##     Update #: 22
+##     Update #: 23
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -47,7 +47,7 @@ test_that("mlmbreak with NA", {
 
     SDIpsilo.red <- SDIpsilo[SDIpsilo$type %in% c("signal","added"),]
     e.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, trace = FALSE)
-    ## ee.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, trace = TRUE, optimize.step = 0.5)
+    ## eDESCENT.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, control = list(optimizer = "L-BFGS-B"))
     expect_equal(logLik(e.mlmbreak), -267.2544, tol = 1e-3)
     suppressWarnings(plot(e.mlmbreak, ylim = c(0,10)))
 

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 12 2024 (15:13) 
+## Last-Updated: apr 13 2024 (21:26) 
 ##           By: Brice Ozenne
-##     Update #: 47
+##     Update #: 50
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -42,7 +42,11 @@ if(FALSE){
     ggTraj %+% dtL.SERT
 
     e.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("01010","1010","101","011","11")), cluster = "PatientID", data = dtL.SERT)
-    expect_equal(logLik(e.SERT), -1019.248, tol = 1e-3)
+    eDESCENT.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("01010","1010","101","011","11")), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "L-BFGS-B"))
+    
+    eDESCENT.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("011")), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "L-BFGS-B"))
+
+expect_equal(logLik(e.SERT), -1019.248, tol = 1e-3)
     e.SERT
     plot(e.SERT, labeller = label_value)
     model.tables(e.SERT, format = "list")
@@ -61,10 +65,13 @@ if(FALSE){
     model.tables(e.LPS, format = "list")
 
     ## manual solution
-    ## e012.LPS <- lmbreak(score ~ 0 + bp(time.num, c("01010")), data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",], control = list(optimize.step = 0.5))
-    e012.LPS <- lmbreak(score ~ 0 + bp(time.num, c("01010"), c(30,100,200,450)), data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",], control = list(optimize.step = 0.5))
+    e012.LPS <- lmbreak(score ~ 0 + bp(time.num, c("01010")), data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",], control = list(optimizer = "nlminb"))
     plot(e012.LPS)
+    e012.LPS <- lmbreak(score ~ 0 + bp(time.num, c("01010")), data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",], control = list(optimizer = "L-BFGS-B"))
+    plot(e012.LPS)
+    ## lmbreak(score ~ 0 + bp(time.num, c("01010")), data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",])
     
+    ## plot(lmbreak(score ~ 0 + bp(time.num, c("11111")), data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",], control = list(optimizer = "nlminb")))
     ## e.GS <- segmented(lm(score ~ time.num, data = dtL.LPS[dtL.LPS$PatientID == "LPS-012",]), npsi = 4)
     
 
@@ -110,7 +117,7 @@ if(FALSE){
     expect_equal(logLik(e.LPM), -2008.148, tol = 1e-3)
     summary(e.LPM)
     coef(e.LPM, "R2")
-    plot(e.LPM, labeller = label_value, scales = "free", ylim = c(0,100))
+    plot(e.LPM, labeller = label_value)
     model.tables(e.LPM, format = "list")
 
     dtL12.LPM <- dtL.LPM[dtL.LPM$PatientID=="LPM-012",]
@@ -124,9 +131,9 @@ if(FALSE){
 
     ## ** load data
     dtW <- as.data.table(read_excel("source/28_09_2018_Intensitetsratings_18_fp.xlsx"))
-    dtW.red <- dtW[which(rowSums(!is.na(dtW.red))>0),.SD,.SDcols = c("CIMBI ID","0 minutes/adm.",seq(20,440,by=20))]
+    dtW.red <- dtW[which(rowSums(!is.na(dtW))>0),.SD,.SDcols = c("CIMBI ID","0 minutes/adm.",seq(20,440,by=20))]
     names(dtW.red)[1:2] <- c("id","0")
-    dtL <- melt(dtW.red, id.vars = c("id"), variable.name = "time", value.name = "score")
+    dtL <- suppressWarnings(melt(dtW.red, id.vars = c("id"), variable.name = "time", value.name = "score"))
     dtL$time.num <- as.numeric(as.character(dtL$time))
 
     ## ** display
