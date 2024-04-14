@@ -19,16 +19,21 @@ Update or select global options for the lmbreak package.
 }
 \details{
 The options are: \itemize{
-\item n.iter [integer, >0] the maximum number of iterations used to estimates the breakpoints. Used by \code{lmbreak}.
-\item tol [numeric, >0] the maximum accpetable difference between two consecutive estimates of the breakpoints. Used by \code{lmbreak}.
-Can have an optional second element used to assess the continuity of the estimated fit at the breakpoint (i.e. maximal acceptable magnitude of the Vs terms).
 \item enforce.continuity [logical]: enforce.continuity [logical] in the case where no continuous solution could be found,
 should a non-continuous breakpoint model be kept (\code{FALSE}) or a continuous breakpoint model be enforced (\code{TRUE}, refiting without the Vs terms). Used by \code{lmbreak}.
-\item optimize.step [logical]: should a full update of the breakpoint value be performed at each step (\code{FALSE})
-or a partial update minimizing the sum of residual absolute value of the model without Vs terms.
-\item minR2 [numeric,0-1]: minimum R2 when selecting the pattern for qualifying the convergence as satisfactory.
+\item optimizer [character]: breakpoints are estimated using direct minimisation of the residual sum of squares (\code{"optim"}) or using the approach proposed by Muggeo et al. in 2003 (\code{"Muggeo"}).
 \item init.gam [logical]: should a spline model be used to define initialization points (where the first derivative of the spline changes sign).
 \item init.quantile [integer]: number of quantiles used to try different initializations.
+\item minR2 [numeric,0-1]: minimum R2 when selecting the pattern for qualifying the convergence as satisfactory.
+\item n.iter [integer, >0] the maximum number of iterations used to estimates the breakpoints. Used by \code{lmbreak}.
+\item optimize.step [logical]: should a full update of the breakpoint value be performed at each step (\code{FALSE})
+or a partial update minimizing the sum of residual absolute value of the model without Vs terms.
+\item tol [numeric, >0] the maximum accpetable difference between two consecutive estimates of the breakpoints. Used by \code{lmbreak}.
+Can have an optional second element used to assess the continuity of the estimated fit at the breakpoint (i.e. maximal acceptable magnitude of the Vs terms).
 }
+}
+\references{
+Muggeo, V. M. R. Estimating regression models with unknown break-points.
+Statistics in medicine 2003; 22:3055-3071.
 }
 \keyword{utilities}
