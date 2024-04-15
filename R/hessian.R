@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 14 2024 (20:18) 
 ## Version: 
-## Last-Updated: Apr 15 2024 (00:28) 
+## Last-Updated: Apr 15 2024 (22:52) 
 ##           By: Brice Ozenne
-##     Update #: 48
+##     Update #: 50
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -40,7 +40,7 @@
     }
 
     ## model fit
-    iLM <- lm(formula, data = data)
+    iLM <- stats::lm(formula, data = data)
     iXX.M1 <- stats::vcov(iLM) / stats::sigma(iLM)^2
     iX <- stats::model.matrix(iLM)
     iXXX.M1 <- iX %*% iXX.M1
@@ -63,7 +63,7 @@
         ## term3: t(iDD) %*% (iX-1) + t(iX) %*% iDD)
 
         ## derivative of the contrast matrix
-        iDD <- dX.skeleton[[iPoint]] * (M.dpsi[,iPoint]>0) * runif(n.data, min = 1-exp(-abs(M.dpsi[,iPoint])/tol), max = 1)
+        iDD <- dX.skeleton[[iPoint]] * (M.dpsi[,iPoint]>0) * stats::runif(n.data, min = 1-exp(-abs(M.dpsi[,iPoint])/tol), max = 1)
         iDD2 <- t(iDD) %*% iX + t(iX) %*% iDD
         ## score terms (not yet defined, i.e. involving derivatives)
         iTerm3.score <- t(iDD) %*% (iX-1) + t(iX) %*% iDD

@@ -2,7 +2,7 @@ Package: lmbreak
 Type: Package
 Title: Linear Regression with Unknown Breakpoints
 Version: 0.0.2
-Date: 2024-04-14
+Date: 2024-04-15
 Authors@R: c(
     person("Brice", "Ozenne", role = c("aut", "cre"), email = "brice.mh.ozenne@gmail.com", comment = c(ORCID = "0000-0001-9694-2956"))
 	)
@@ -32,6 +32,7 @@ Collate:
     'coef.R'
     'doc-data.R'
     'fitted.R'
+    'hessian.R'
     'lmbreak-package.R'
     'lmbreak.R'
     'lmbreak.options.R'
@@ -42,6 +43,8 @@ Collate:
     'plot.R'
     'predict.R'
     'print.R'
+    'score.R'
     'simBreak.R'
     'summary.R'
+    'transformPsi.R'
     'utils.R'

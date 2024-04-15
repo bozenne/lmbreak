@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 14 2024 (10:41) 
 ## Version: 
-## Last-Updated: Apr 14 2024 (22:32) 
+## Last-Updated: Apr 15 2024 (22:52) 
 ##           By: Brice Ozenne
-##     Update #: 40
+##     Update #: 42
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -40,7 +40,7 @@
     }
 
     ## model fit
-    iLM <- lm(formula, data = data)
+    iLM <- stats::lm(formula, data = data)
     iXX.M1 <- stats::vcov(iLM) / stats::sigma(iLM)^2
     iX <- stats::model.matrix(iLM)
     iXXX.M1 <- iX %*% iXX.M1
@@ -49,7 +49,7 @@
     ## derivative of the model matrix
     ## minus times minus -> +
     iOut <- 2 * sapply(1:n.breakpoint, function(iPoint){ ## iPoint <- 1
-        iDD <- dX.skeleton[[iPoint]] * (M.dpsi[,iPoint]>0) * runif(n.data, min = 1-exp(-abs(M.dpsi[,iPoint])/tol), max = 1) ## if very close to breakpoint use subgradient
+        iDD <- dX.skeleton[[iPoint]] * (M.dpsi[,iPoint]>0) * stats::runif(n.data, min = 1-exp(-abs(M.dpsi[,iPoint])/tol), max = 1) ## if very close to breakpoint use subgradient
         idRSS <- sum((iDD + iXXX.M1 %*% (t(iDD) %*% (iX-1) + t(iX) %*% iDD)) * iBetaRes)
         return(idRSS)
     })
