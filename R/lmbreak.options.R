@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 16 2021 (12:01) 
 ## Version: 
-## Last-Updated: apr 12 2024 (17:17) 
+## Last-Updated: Apr 20 2024 (18:52) 
 ##           By: Brice Ozenne
-##     Update #: 177
+##     Update #: 178
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -54,7 +54,7 @@ lmbreak.options <- function(..., reinitialise = FALSE){
     default <- list(enforce.continuity = TRUE,
                     init.gam = TRUE,
                     init.quantile = 0.5,
-                    optimizer = "Muggeo",
+                    optimizer = "BFGS",
                     minR2 = 0.01,
                     n.iter = 20,
                     optimize.step = 0,

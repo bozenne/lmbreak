@@ -6,6 +6,7 @@
 #' 
 #' @importFrom doSNOW registerDoSNOW
 #' @importFrom ggplot2 autoplot
+#' @importFrom lava score
 #' @importFrom mgcv gam s
 #' @importFrom pbapply pblapply
 #' @importFrom rlang .data

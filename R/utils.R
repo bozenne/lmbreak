@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr 12 2024 (10:19) 
 ## Version: 
-## Last-Updated: Apr 14 2024 (11:45) 
+## Last-Updated: Apr 20 2024 (18:39) 
 ##           By: Brice Ozenne
-##     Update #: 59
+##     Update #: 63
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -77,9 +77,9 @@ transformFree <- function(value, min, max, jacobian = FALSE){
 
     ## ** transformation
     if(!is.infinite(min) && !is.infinite(max)){
-        out <- atanh(2*value/(max - min) - 1)
+        out <- atanh(2*(value - min)/(max - min) - 1)
         if(jacobian){
-            attr(out,"jacobian") <- 2/((1 - (2*value/(max - min) - 1)^2)*(max - min))
+            attr(out,"jacobian") <- 2/((1 - (2*(value - min)/(max - min) - 1)^2)*(max - min))
         }
     }else if(!is.infinite(min)){
         out <- log(value - min)

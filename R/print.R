@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (10:00) 
 ## Version: 
-## Last-Updated: apr 11 2024 (19:31) 
+## Last-Updated: Apr 20 2024 (16:00) 
 ##           By: Brice Ozenne
-##     Update #: 53
+##     Update #: 54
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -23,7 +23,7 @@ print.lmbreak <- function(x, digits = options()$digits, ...){
     object$call <- x$call
     print(object)
     cat("Breakpoints: \n", paste0(round(x$breakpoint$value, digits = digits), collapse = ", "))
-    cat("\n\nConvergence: ", x$opt$cv, ", continuity: ",x$opt$continuity,"\n",sep="")
+    cat("\n\nConvergence: ", x$opt$cv, ", continuity: ",x$opt$continuity,", regularity: ",x$opt$regularity,"\n",sep="")
 
     return(invisible(TRUE))
 }

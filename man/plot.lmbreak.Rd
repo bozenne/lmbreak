@@ -7,9 +7,10 @@
 \usage{
 \method{autoplot}{lmbreak}(
   object,
+  y = NULL,
   xlim = NULL,
   ylim = NULL,
-  color = grDevices::palette.colors(2),
+  color = grDevices::palette.colors(3),
   size = c(1.5, 2.5),
   linewidth = 1,
   alpha = 1,
@@ -18,16 +19,18 @@
   ...
 )
 
-\method{plot}{lmbreak}(x, ...)
+\method{plot}{lmbreak}(x, y = NULL, ...)
 }
 \arguments{
-\item{object, x}{output of \code{\link{lmbreak}}.}
+\item{object, x}{[lmbreak] output of \code{\link{lmbreak}}.}
+
+\item{y}{[lmbreak] another model whose fit is to be compared with the first one.}
 
 \item{xlim}{[numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).}
 
 \item{ylim}{[numeric vector of length 2] range of displayed values for the y-axis (response variable).}
 
-\item{color}{[character vector of length 2] colors used to display the observations and the model fit.}
+\item{color}{[character vector of length 2 or 3] colors used to display the observations and the model fit.}
 
 \item{size}{[numeric vector of length 2] size of the points representing the observations and size of the points representing the breakpoints.}
 

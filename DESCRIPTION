@@ -1,8 +1,8 @@
 Package: lmbreak
 Type: Package
 Title: Linear Regression with Unknown Breakpoints
-Version: 0.0.2
-Date: 2024-04-15
+Version: 0.0.3
+Date: 2024-04-20
 Authors@R: c(
     person("Brice", "Ozenne", role = c("aut", "cre"), email = "brice.mh.ozenne@gmail.com", comment = c(ORCID = "0000-0001-9694-2956"))
 	)
@@ -17,6 +17,7 @@ Imports:
     doSNOW,
     foreach,
     ggplot2,
+    lava,
     mgcv,
     pbapply,
     rlang
@@ -27,6 +28,7 @@ Suggests:
 RoxygenNote: 7.3.1
 Collate: 
     '0-onload.R'
+    'anova.R'
     'as.lmbreak.R'
     'autoplot.R'
     'coef.R'
@@ -40,6 +42,7 @@ Collate:
     'mlmbreak.R'
     'model.frame.R'
     'model.tables.R'
+    'optimizer.R'
     'plot.R'
     'predict.R'
     'print.R'

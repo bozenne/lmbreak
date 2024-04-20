@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (08:25) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:41) 
+## Last-Updated: Apr 20 2024 (12:17) 
 ##           By: Brice Ozenne
-##     Update #: 6
+##     Update #: 9
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -18,8 +18,8 @@
 ## * plot.lmbreak
 ##' @rdname plot.lmbreak
 ##' @export
-plot.lmbreak <- function(x, ...){
-    out <- autoplot.lmbreak(x, ...)
+plot.lmbreak <- function(x, y = NULL, ...){
+    out <- autoplot.lmbreak(x, y = y, ...)
     print(out$plot)
     return(invisible(out))
 
@@ -28,8 +28,8 @@ plot.lmbreak <- function(x, ...){
 ## * plot.mlmbreak 
 ##' @rdname plot.mlmbreak
 ##' @export
-plot.mlmbreak <- function(x, ...){
-    out <- autoplot.mlmbreak(x, ...)
+plot.mlmbreak <- function(x, y = NULL, ...){
+    out <- autoplot.mlmbreak(x, y = y, ...)
     print(out$plot)
     return(invisible(out))
 

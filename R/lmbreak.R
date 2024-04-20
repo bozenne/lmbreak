@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: Apr 15 2024 (00:49) 
+## Last-Updated: Apr 20 2024 (18:58) 
 ##           By: Brice Ozenne
-##     Update #: 1105
+##     Update #: 1294
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -23,6 +23,10 @@
 #' @param formula a formula where the breakpoint variable appears on the right hand side
 #' with an argument pattern specifying the number of breakpoints and possible constrains. See the section details.
 #' @param data [data.frame] dataset
+#' @param range [numeric vector of length 2] minimum and maximum outcome value at the breakpoints.
+#' @param pattern [character or character vector] alternative way to specify the pattern.
+#' @param start [numeric vector] starting values when estimating the breakpoints.
+#' @param se [logical] should the uncertainty about the breakpoint position be quantified (EXPERIMENTAL).
 #' @param control [list] parameters to be passed to the optimizer (n.iter,tol,enforce.continuity,optimize.step).
 #' See the section details of \code{\link{lmbreak.options}}.
 #' @param trace [0,1,2] trace the execution of the function.
@@ -91,7 +95,9 @@
 ## * lmbreak (code)
 #' @rdname breakpoint
 #' @export
-lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL){
+lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL, 
+                    se = FALSE,
+                    control = NULL, trace = FALSE, digits = NULL){
 
     ## ** normalize user input
     options <- lmbreak.options()        
@@ -163,12 +169,19 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
 
     ## *** find pattern
     term.bp <- attr(terms.formula,"variables")[[formula.bp+1]]
-    if(length(term.bp)<3){
-        stop("The number breakpoints and possible constrained should be specified in argument \'formula\'. \n",
-             "Something like: Y ~ bp(X, pattern = \"111\") for 2 breakpoints \n",
-             "                Y ~ bp(X, pattern = \"101\") for 2 breakpoints with a plateau. \n")
+    if(!is.null(pattern)){
+        if(length(term.bp)>=3 && is.character(eval(term.bp[[3]]))){
+            message("The pattern specified via the argument \'formula\' are ignored since argument \'pattern\' is not NULL. \n")
+        }
+    }else{
+        if(length(term.bp)<3){
+            stop("The number breakpoints and possible constrained should be specified in argument \'formula\'. \n",
+                 "Something like: Y ~ bp(X, pattern = \"111\") for 2 breakpoints \n",
+                 "                Y ~ bp(X, pattern = \"101\") for 2 breakpoints with a plateau. \n")
+        }
+        pattern <- eval(term.bp[[3]])
     }
-    pattern <- eval(term.bp[[3]])
+
     if(is.list(pattern)){
         if(any(!sapply(pattern,is.character)) || any(unlist(lapply(pattern,nchar))<2)){
             stop("The number breakpoints and possible constrained should be specified in argument \'formula\' using character strings of length at least 2. \n",
@@ -229,13 +242,43 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
     attr(data.fit, "min.var.bp") <- data.fit[[var.bp]][1]
     attr(data.fit, "max.var.bp") <- data.fit[[var.bp]][NROW(data.fit)]
     attr(data.fit, "min.diff.bp") <- min(diff(data.fit[[var.bp]]))
+    attr(data.fit, "min.bp") <- 0.5*(data.fit[[var.bp]][1]+data.fit[[var.bp]][2])
+    attr(data.fit, "max.bp") <- 0.5*(data.fit[[var.bp]][NROW(data.fit)]+data.fit[[var.bp]][NROW(data.fit)-1])
+    
+    ## *** find range
+    if(!is.null(range)){
+        if(!is.numeric(range)){
+            stop("Argument \'range\' should be a numeric vector. \n")
+        }
+        if(length(range)!=2){
+            stop("Argument \'range\' should have length 2. \n")
+        }
+        if(any(is.na(range))){
+            stop("Argument \'range\' should not contain NAs. \n")
+        }
+        if(range[1]>=range[2]){
+            stop("The first element of argument \'range\' should be strictly superior to the second element. \n")
+        }
+    }else{
+        range <- c(-Inf,Inf)
+    }
 
     ## ** initialization
 
     ## *** breakpoint
-    if(length(term.bp)==4){
+    if(length(term.bp)==3 && is.numeric(eval(term.bp[[3]])) || length(term.bp)==4 || !is.null(start)){
 
-        term.init <- cbind(as.double(eval(term.bp[[4]])))
+        if(!is.null(start)){
+            term.init <- start
+            if(length(term.bp)==3 && is.numeric(eval(term.bp[[3]])) || length(term.bp)==4){
+                message("The starting specified via the argument \'formula\' are ignored since argument \'start\' is not NULL. \n")
+            }
+        }else if(is.numeric(eval(term.bp[[3]]))){
+            term.init <- cbind(as.double(eval(term.bp[[3]])))
+        }else{
+            term.init <- cbind(as.double(eval(term.bp[[4]])))
+        }
+
         if(length(term.init) < nMax.breakpoint){
             stop("Insufficient number of initialization values: should be at least ",nMax.breakpoint,"\n")
         }
@@ -257,7 +300,8 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
 
         ## via gam
         if(control$init.gam>0){
-            breakpoint.prepare$gam <- .init_gam(formula = terms.nobp, data = data.fit, var.bp = var.bp)
+            outInit.gam <- .init_gam(formula = terms.nobp, data = data.fit, var.bp = var.bp)
+            breakpoint.prepare$gam <- outInit.gam[outInit.gam >= attr(data.fit, "min.bp") & outInit.gam <= attr(data.fit, "max.bp")]
             if(length(breakpoint.prepare$gam)<nMax.breakpoint && control$init.quantile<=0){
                 stop("Cannot initialize breakpoint position using gam. \n",
                      "Consider setting the argument \'init.quantile\' to TRUE or providing starting values, e.g. ~pb(X, \"111\", c(1,2)).")
@@ -267,7 +311,8 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
         ## via quantiles
         ## if((control$optimizer == "Muggeo") && (control$init.quantile>0)){
         if(control$init.quantile>0){
-            breakpoint.prepare$quantile <- .init_quantile(init = control$init.quantile, data = data.fit, var.bp = var.bp, n.breakpoint = nMax.breakpoint)
+            outInit.quantile <- .init_quantile(init = control$init.quantile, data = data.fit, var.bp = var.bp, n.breakpoint = nMax.breakpoint)
+            breakpoint.prepare$gam <- outInit.quantile[outInit.quantile >= attr(data.fit, "min.bp") & outInit.quantile <= attr(data.fit, "max.bp")]
         }
 
         ## if(control$optimizer == "Muggeo"){
@@ -297,7 +342,7 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
                            pattern = unlist(mapply(x = pattern, times = sapply(breakpoint.init,NCOL),rep, SIMPLIFY = FALSE)),                           
                            init = unlist(lapply(breakpoint.init, function(iM){1:NCOL(iM)})),
                            init.type = factor(unlist(lapply(breakpoint.init, colnames)), names(name.order)),
-                           cv = NA, continuity = NA, continuity2 = NA, R2 = NA
+                           cv = NA, continuity = NA, regularity = NA, R2 = NA
                            )
     rownames(grid.fit) <- NULL
     pattern2hierarchy <- stats::setNames(paste0(hierarchy.pattern,".",sapply(patternUsVs, "[[", "n.param")), pattern)
@@ -312,11 +357,11 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
     ## ** fit pattern(s)
     ls.fit <- vector(mode = "list", length = NROW(grid.fit))
     for(iGrid in 1:NROW(grid.fit)){ ## iGrid <- 3
-        ## select
+        ## *** select pattern and initialization
         iPattern <- grid.fit[iGrid,"pattern"]
         iInit <- breakpoint.init[[iPattern]][,grid.fit[iGrid,"init"]]
 
-        ## display
+        ## *** display
         if(trace>0){
             if(trace>=2){
                 cat(" - (",iGrid,") pattern ",iPattern,", initialization ",paste0(round(iInit, digits[1]),collapse = ", "),if(trace>=3){" "},if(trace>=4){"\n"}, sep="")
@@ -331,30 +376,39 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
             }
         }
 
-        ## optimize
-        if(control$optimizer=="Muggeo"){
-            ls.fit[[iGrid]] <- lmbreak.fitMuggeo(formula = patternUsVs[[iPattern]]$formula, pattern = iPattern,
-                                                 Us.label = patternUsVs[[iPattern]]$Us.label, Us.sign = patternUsVs[[iPattern]]$Us.sign, Vs.label = patternUsVs[[iPattern]]$Vs.label,
-                                                 var.response = var.response, var.bp = var.bp, data = data.fit,
-                                                 n.iter = control$n.iter, tol = control$tol, initialization = iInit, enforce.continuity = control$enforce.continuity, optimize.step = control$optimize.step,
-                                                 trace = trace-1.999999, digits = digits)
+        ## *** optimize
+        if((control$n.iter == 0) || control$optimizer=="Muggeo"){
+            ls.fit[[iGrid]] <- optim.lmbreak_Muggeo(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
+                                                    Us.label = patternUsVs[[iPattern]]$Us.label, Us.sign = patternUsVs[[iPattern]]$Us.sign, Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                                    var.response = var.response, var.bp = var.bp, data = data.fit,
+                                                    n.iter = control$n.iter, tol = control$tol, initialization = iInit, optimize.step = control$optimize.step,
+                                                    trace = trace-1.999999, digits = digits)
         }else if(control$optimizer=="nlminb"){
-            ls.fit[[iGrid]] <- lmbreak.fitNLMINB(formula = patternUsVs[[iPattern]]$formula, pattern = iPattern,
-                                             Us.label = patternUsVs[[iPattern]]$Us.label, Us.sign = patternUsVs[[iPattern]]$Us.sign, Vs.label = patternUsVs[[iPattern]]$Vs.label,
-                                             var.response = var.response, var.bp = var.bp, data = data.fit,
-                                             n.iter = control$n.iter, tol = control$tol, initialization = iInit, enforce.continuity = control$enforce.continuity, 
-                                             trace = trace-1.999999, digits = digits)
+            ls.fit[[iGrid]] <- optim.lmbreak_NLMINB(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
+                                                    Us.label = patternUsVs[[iPattern]]$Us.label, Us.sign = patternUsVs[[iPattern]]$Us.sign, Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                                    var.response = var.response, var.bp = var.bp, data = data.fit,
+                                                    n.iter = control$n.iter, tol = control$tol, initialization = iInit, 
+                                                    trace = trace-1.999999, digits = digits)
         }else if(control$optimizer %in% c("BFGS","L-BFGS-B")){
-            ls.fit[[iGrid]] <- lmbreak.fitBFGS(formula = patternUsVs[[iPattern]]$formula, pattern = iPattern, transform = control$optimizer == "BFGS",
-                                               Us.label = patternUsVs[[iPattern]]$Us.label, Us.sign = patternUsVs[[iPattern]]$Us.sign, Vs.label = patternUsVs[[iPattern]]$Vs.label,
-                                               var.response = var.response, var.bp = var.bp, data = data.fit,
-                                               n.iter = control$n.iter, tol = control$tol, initialization = iInit, enforce.continuity = control$enforce.continuity, 
-                                               trace = trace-1.999999, digits = digits)
+            ls.fit[[iGrid]] <- optim.lmbreak_BFGS(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern, transform = control$optimizer == "BFGS",
+                                                  Us.label = patternUsVs[[iPattern]]$Us.label, Us.sign = patternUsVs[[iPattern]]$Us.sign, Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                                  var.response = var.response, var.bp = var.bp, data = data.fit,
+                                                  n.iter = control$n.iter, tol = control$tol, initialization = iInit, 
+                                                  trace = trace-1.999999, digits = digits)
         }
-        grid.fit[iGrid,c("cv","continuity","continuity2","R2")] <- as.double(ls.fit[[iGrid]]$opt[c("cv","continuity","continuity2","R2")])
 
-        ## do not try other patterns or other initializations if a satisfactory solution is found
-        if(grid.fit[iGrid,"check.cv"] && any(rowSums(grid.fit[1:iGrid,c("cv","continuity","continuity2")])==3)){
+        ## *** check convergence
+        iCheckCV <- .checkCV.lmbreak(object = ls.fit[[iGrid]], data = data.fit,
+                                     formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, Us.label = patternUsVs[[iPattern]]$Us.label, Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                     var.bp = var.bp, tol =  control$tol, enforce.continuity = control$enforce.continuity, range = range)
+        ls.fit[[iGrid]]$model <- iCheckCV$lm
+        ls.fit[[iGrid]]$opt$continuity <- iCheckCV$continuity
+        ls.fit[[iGrid]]$opt$regularity <- iCheckCV$regularity
+        ls.fit[[iGrid]]$opt$R2 <- iCheckCV$R2
+        grid.fit[iGrid,c("cv","continuity","regularity","R2")] <- unlist(ls.fit[[iGrid]]$opt[c("cv","continuity","regularity","R2")])
+
+        ## *** do not try other patterns or other initializations if a satisfactory solution is found
+        if(grid.fit[iGrid,"check.cv"] && any(rowSums(grid.fit[1:iGrid,c("cv","continuity","regularity")])==3 & grid.fit[1:iGrid,"R2"]>control$minR2)){
             break
         }
     }
@@ -364,34 +418,40 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
 
     ## ** select best fitting model
     if(iGrid==1){
-        out <- ls.fit[[1]]
+        index.opt <- 1
     }else{
-        out <- ls.fit[[which.max(2*(grid.fit[1:iGrid,"cv"] & grid.fit[1:iGrid,"R2"]>control$minR2) + grid.fit[1:iGrid,"continuity2"]+grid.fit[1:iGrid,"R2"])]]
-        attr(out$opt,"all") <- do.call(rbind,lapply(ls.fit[1:iGrid],"[[","opt"))
-
-        ls.allbreakpoint <- lapply(ls.fit[1:iGrid], function(iM){iM$breakpoint$value})
-        attr(out$breakpoint,"all") <- tapply(ls.allbreakpoint,factor(lengths(ls.allbreakpoint),unique(lengths(ls.allbreakpoint))),function(iLS){do.call(rbind, iLS)})
+        index.opt <- which.max(2*(grid.fit[1:iGrid,"cv"] & grid.fit[1:iGrid,"R2"]>control$minR2) + grid.fit[1:iGrid,"regularity"]+grid.fit[1:iGrid,"R2"])
     }
+    out <- ls.fit[[index.opt]]
+    out$formula.pattern <- patternUsVs[[grid.fit[index.opt,"pattern"]]]$formula
+    attr(out$formula.pattern,"noVs") <- patternUsVs[[grid.fit[index.opt,"pattern"]]]$formula.noVs
+
+    attr(out$opt,"all") <- do.call(rbind,lapply(ls.fit[1:iGrid],"[[","opt"))
+    ls.allbreakpoint <- lapply(ls.fit[1:iGrid], function(iM){iM$breakpoint$value})
+    attr(out$breakpoint,"all") <- tapply(ls.allbreakpoint,factor(lengths(ls.allbreakpoint),unique(lengths(ls.allbreakpoint))),function(iLS){do.call(rbind, iLS)}, simplify = FALSE)
 
     ## ** standard error
-    ## if(out$opt$cv){
-    ##     vcov.bp <- stats::vcov(out$model)
-    ##     beta.Us <- coef(out$model)[out$breakpoint$Us]
-    ##     beta.Vs <- coef(out$model)[out$breakpoint$Vs]
-    
-    ##     term1 <- diag(vcov.bp)[out$breakpoint$Us] / beta.Us^2
-    ##     term2 <- diag(vcov.bp)[out$breakpoint$Vs] * (beta.Vs/beta.Us^2)^2
-    ##     term3 <- -2 * out$breakpoint$sign * diag(vcov.bp[out$breakpoint$Us,out$breakpoint$Vs,drop=FALSE]) * beta.Vs / beta.Us^3
-    ##     out$breakpoint$se <- sqrt(term1+term2+term3)
-    ## }else{
-        ## out$breakpoint$se <- NA
-    ## }
+    if(se && out$opt$cv && all(!is.na(out$breakpoint))){
+        ## SANITY CHECK
+        ## GS <- numDeriv::jacobian(.score.lmbreak, out$breakpoint$value, indiv = FALSE, transform = FALSE, formula = attr(out$formula.pattern,"noVs"), data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = NULL, tol = options$tol[1])
+        out$hessian <- .hessian.lmbreak(psi = out$breakpoint$value, transform = FALSE, formula = attr(out$formula.pattern,"noVs"),
+                                        data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = NULL, tol = options$tol[1])
+        if(all(!is.na(out$hessian)) && (det(out$hessian)>options$tol[1])){
+            out$breakpoint$se <- sqrt(diag(solve(out$hessian)))
+        }else{
+            out$breakpoint$se <- as.numeric(NA)
+        }
+    }else{
+        out$breakpoint$se <- as.numeric(NA)
+    }
     
     ## ** export
     if(out$opt$cv == FALSE){
         warning("The optimizer did not converge to a stable solution. \n")
+    }else if(out$opt$regularity == FALSE){
+        warning("The solution found by the optimizer has invalid breakpoint positions. \n")
     }else if(out$opt$continuity == FALSE){
-        warning("The optimizer did not converge to a continuous solution (non-0 Vs terms). \n")
+        ## warning("The solution found by the optimizer is not continuous (non-0 Vs terms). \n")
     }
     out$call <- match.call()
     out$args <- list(breakpoint.var = var.bp,
@@ -404,7 +464,10 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
     return(out)
 }
 
-## * .pattern2UsVs (Us,Vs)
+## * helpers
+## ** .pattern2UsVs (Us,Vs)
+##' @description Re-express formual Y~bp(X, "11") into a formula with Vs and Us terms.
+##' @noRd 
 .pattern2UsVs <- function(pattern, terms){
 
     ## *** read input
@@ -426,7 +489,7 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
 
     terms.formula <- stats::terms(formula)
     index.gamma <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint)
-    attr(index.gamma,"index") <- utils::tail(1:length(attr(terms.formula,"term.labels")), n.breakpoint)
+    formula.noVs <- stats::formula(stats::drop.terms(terms.formula, utils::tail(1:length(attr(terms.formula, "term.labels")), n.breakpoint), keep.response = TRUE))
     terms.beta <- utils::tail(attr(terms.formula,"term.labels"), n.breakpoint + sum(pattern == "1"))[1:sum(pattern == "1")] ## 0.1.0, 0.1.1, 1.0.1, 1.1.0, 1.1.1
     patten.beta <- paste(pattern[1:n.breakpoint],pattern[2:(n.breakpoint+1)],c(pattern,1)[3:(n.breakpoint+2)], sep=".")
     index.beta <- terms.beta[patten.beta[1] %in% c("1.1.1","1.1.0","1.0.1")+ cumsum(patten.beta != "1.0.1")]
@@ -434,6 +497,7 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
 
     ## *** export
     return(list(formula = formula,
+                formula.noVs = formula.noVs,
                 Us.label = index.beta,
                 Vs.label = index.gamma,
                 Us.sign = sign.beta,
@@ -442,8 +506,9 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
 
 }
 
-## * Muggeo fitter 
 ## ** .init_gam (initialization)
+##' @description Find initialization values for breakpoints based on the change of sign of the first derivative of a fitted regression spline
+##' @noRd 
 .init_gam <- function(formula, data, var.bp, n.points = 1e3){
 
     ## *** fit spline
@@ -471,7 +536,9 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
     return(out)
 }
 
-## ** .init_quantile (initialization)
+## ** .init_quantile
+##' @description Find initialization values for breakpoints based on the quantiles of the variable
+##' @noRd 
 .init_quantile <- function(init, data, var.bp, n.breakpoint){
 
     ## *** decide on the number of quantiles
@@ -502,373 +569,82 @@ lmbreak <- function(formula, data, control = NULL, trace = FALSE, digits = NULL)
     return(out)
 }
 
+## ** .checkCV.lmbreak
+##' @description Check the properties of the estimated breakpoints
+##' @noRd 
+.checkCV.lmbreak <- function(object, formula, formula.noVs, Us.label, Vs.label, data, var.bp, tol, enforce.continuity, range){
 
-
-## ** .lmbreak.fitMuggeo
-## fit using muggeo algo
-lmbreak.fitMuggeo <- function(formula, pattern, Us.label, Us.sign, Vs.label,
-                              var.response, var.bp, data,
-                              n.iter, tol, optimize.step, initialization, enforce.continuity,
-                              trace, digits){
-
-    ## *** prepare
-    n.breakpoint <- length(initialization)
-    bp.range <- c(attr(data, "min.var.bp"),attr(data, "max.var.bp"))
-    formula.noVs <-  stats::formula(stats::drop.terms(stats::terms(formula), attr(Vs.label,"index"), keep.response = TRUE))
-
-    fit.fun <- function(step){ ## step <- 0.5
-        for(iPoint in 1:n.breakpoint){ ## iPoint <- 2
-            iData[[paste0("Us",iPoint)]] <- pmax(0,iData[[var.bp]] - (step * iChange[iPoint] + Hist.breakpoint[iIter,iPoint]))
-        }
-        iiLM <- stats::lm.fit(iData[[var.response]], x = stats::model.matrix(formula,iData))
-        ## sum of absolute deviations 
-        return(sum(abs(iiLM$residuals)))        
-        ## return(sum(iiLM$residuals^2))
-    }
-
-    ## *** loop
-    Hist.breakpoint <- matrix(NA, nrow = n.iter, ncol = n.breakpoint)        
-    iBreakpoint <- initialization
-    cv <- FALSE
-    escape <- FALSE
-    step <- 1
-
-    for(iIter in 1:n.iter){ ## iIter <- 1
-
-        if(n.iter>0){ ## handle special case of no iteration
-            Hist.breakpoint[iIter,] <- iBreakpoint
-        }
-
-        ## **** update design
-        iData <- model.frame.lmbreak(list(breakpoint.var = var.bp, breakpoint = iBreakpoint),
-                                     newdata = data)
+    breakpoint <- object$breakpoint$value
+    out <- list()
+    
+    ## *** test Vs terms
+    if(is.na(tol[2]) || any(is.na(breakpoint)) || any(is.infinite(breakpoint))){
+        out$continuity <- TRUE
+        out$R2 <- NA
+        out$lm <- NULL
+    }else{
+        data.UsVs <- model.frame.lmbreak(list(breakpoint.var = var.bp, breakpoint = breakpoint), newdata = data)
+        out$lm <- stats::lm(formula, data = data.UsVs)
+        param.UsVs <- stats::coef(out$lm)
         
-        ## **** estimate model coefficients
-        iE.lm <- stats::lm.fit(iData[[var.response]], x = stats::model.matrix(formula,iData))
-
-        ## **** update breakpoint
-        iCoef <- iE.lm$coef
-        if(n.iter==0){
-            iDiff <- rep(0, length(iBreakpoint))
-            break
-        }
-        iChange <- unname(Us.sign * iCoef[Vs.label]/iCoef[Us.label])
-        if(all(!is.infinite(iChange)) && all(!is.na(iChange)) && optimize.step>0 && (optimize.step>=1 || fit.fun(1)>=fit.fun(0))){
-            optim.step <- stats::optimize(f = fit.fun, lower = 0, upper = 1, tol = min(tol))
-            if(optim.step$objective < fit.fun(0)){
-                iStep <- optim.step$minimum
-            }else{
-                iStep <- 0
-            }
+        if(any(is.na(param.UsVs))){
+            out$continuity <- FALSE
         }else{
-            iStep <- 1
+            out$continuity <- all(abs(param.UsVs[Vs.label])<tol[2])
         }
-        iBreakpoint <- iStep * iChange + Hist.breakpoint[iIter,]
-    
-        ## **** display
-        if(trace>=2){
-            cat("    iteration ",iIter," (step=",round(iStep,digits=digits),"): breakpoint/Vs = ",paste(paste(round(iBreakpoint, digits = digits),round(iCoef[Vs.label], digits = digits), sep = "/"),
-                                                                                                       collapse = ", "), ") \n",
-                sep = "")
-        }else if(trace>=1){
-            cat("*")
-        }
-
-        ## **** cv
-        iDiff <- abs(iBreakpoint-Hist.breakpoint[iIter,])
-        if(any(is.na(iBreakpoint)) || iBreakpoint[1]<bp.range[1] || iBreakpoint[n.breakpoint]>bp.range[2] || is.unsorted(iBreakpoint) ){
-            ## case where one breakpoint is outside the domain
-            ## or when the breakpoints are not in increasing order
-            if(any(is.na(iBreakpoint))){
-                if(trace>=2){
-                    cat("    no convergence: some breakpoint were estimated to be NAs\n")
-                }else if(trace>0){
-                    cat(" (no cv: NA breakpoint)")
-                }
-            }else if(is.unsorted(iBreakpoint)){
-                if(trace>=2){
-                    cat("    no convergence: breakpoint were more ordered\n")
-                }else if(trace>0){
-                    cat(" (no cv: unordered breakpoint)")
-                }
-            }else if(iBreakpoint[1]<bp.range[1] || iBreakpoint[n.breakpoint]>bp.range[2]){
-                if(trace>=2){
-                    cat("    no convergence: breakpoints outside the range of observed values\n")
-                }else if(trace>0){
-                    cat(" (no cv: breakpoint range)")
-                }
-            }
-            escape <- TRUE
-            break            
-
-        }else if(all(iDiff<tol[1])){
-            cv <- TRUE
-            if(trace>=2){
-                cat("    convergence\n")
-            }else if(trace>0){
-                cat(" (cv)")
-            }
-            escape <- TRUE
-            break
-        }
-        
-    }
-
-    if(trace>0){
-        if(escape==FALSE){
-            if(trace>=2){
-                cat("    no convergence: maximum number of iterations reached\n")
-            }else if(trace>0){
-                cat(" (no cv: n.iter)")
-            }            
-        }
-        cat("\n")
-    }
-
-    ## *** enforce continuity
-    ## continuity: Vs terms
-    iE.lm <- stats::lm(formula, data = iData)
-    if(is.na(tol[2])){
-        test.continuity <- TRUE        
-    }else{
-        test.continuity <- all(abs(iCoef[Vs.label])<tol[2]) && (min(c(iBreakpoint,Inf),na.rm=TRUE) - bp.range[1] > tol[1]) && (bp.range[2] - max(c(iBreakpoint,-Inf),na.rm=TRUE) > tol[1])
-        if(enforce.continuity && !test.continuity && (cv || escape == FALSE)){
-            attr(iE.lm,"continuity") <- stats::lm(formula.noVs, data = iData)                
-        }
-    }
-
-    ## continuity: non-consecutive breakpoint (avoid staircase)
-    if(cv && test.continuity){
-        ## NOTE: data is already sorted according to the breakpoint variable
-        test.staircase <- sapply(iBreakpoint, function(iBreak){which.min(abs(data[[var.bp]]-iBreak))})
-        test.continuity2 <- all(diff(test.staircase)>1)
-    }else{
-        test.continuity2 <- FALSE
-    }
-    
-
-    ## *** export
-    df.opt <- data.frame(initialization = NA,
-                         n.iter = iIter,
-                         cv = cv,
-                         tol = NA,
-                         pattern = pattern,
-                         continuity = ifelse(is.na(test.continuity),FALSE,test.continuity),
-                         continuity2 = test.continuity2,
-                         diff = NA,
-                         R2 = summary(iE.lm)$r.squared
-                         )
-    df.opt$tol <- list(tol)
-    df.opt$initialization <- list(initialization)
-    df.opt$diff <- list(iDiff)
-    return(list(model = iE.lm,
-                breakpoint = data.frame(value = iBreakpoint, Us = Us.label, Vs = Vs.label, sign = Us.sign),
-                opt = df.opt))
-}
-
-## * grid search fitter 
-## ** .lmbreak.fitGS
-lmbreak.fitNLMINB <- function(formula, pattern, Us.label, Us.sign, Vs.label,
-                          var.response, var.bp, data,
-                          n.iter, tol, initialization, enforce.continuity,
-                          trace, digits){
-
-    ## *** prepare
-    n.breakpoint <- length(Us.label)
-    formula.noVs <-  stats::formula(stats::drop.terms(stats::terms(formula), attr(Vs.label,"index"), keep.response = TRUE))
-    bp.range <- c(attr(data,"min.var.bp"),attr(data,"max.var.bp"))
-    bp.min.diff <- attr(data,"min.diff.bp")
-    Id <- diag(1,NROW(data))
-    data$Us0 <- data[[var.bp]]
-
-    ## *** grid search
-    res.optim <- stats::nlminb(start = initialization,
-                               objective = .RRS.lmbreak, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, 
-                               lower = rep(bp.range[1] + bp.min.diff, n.breakpoint),
-                               upper = rep(bp.range[2]- bp.min.diff, n.breakpoint),
-                               control = list(abs.tol = tol[1], eval.max = 10*n.iter, iter.max = 7.5*n.iter))
-    iBreakpoint <- res.optim$par
-    cv <- res.optim$convergence==0
-
-    ## *** check fit
-    for(iPoint in 1:n.breakpoint){ ## iPoint <- 2
-        data[[paste0("Vs",iPoint)]] <- as.numeric(data[[var.bp]] > iBreakpoint[iPoint])
-        data[[paste0("Us",iPoint)]] <- (data[[var.bp]] - iBreakpoint[iPoint])*(data[[var.bp]] > iBreakpoint[iPoint])
-    }        
-
-    iE.lm <- stats::lm(formula, data = data)
-    iCoef <- coef(iE.lm)
-
-    if(is.na(tol[2])){
-        test.continuity <- TRUE        
-    }else{
-        if(any(is.na(iCoef))){
-            test.continuity <- FALSE
+        if(out$continuity){
+            out$R2 <- summary(out$lm)$r.squared
+        }else if(enforce.continuity){
+            attr(out$lm,"continuity") <- stats::lm(formula.noVs, data = data.UsVs)
+            out$R2 <- summary(attr(out$lm,"continuity"))$r.squared
         }else{
-            test.continuity <- all(abs(iCoef[Vs.label])<tol[2]) && (min(c(iBreakpoint,Inf),na.rm=TRUE) - bp.range[1] > tol[1]) && (bp.range[2] - max(c(iBreakpoint,-Inf),na.rm=TRUE) > tol[1])
-        }
-        if(enforce.continuity && !test.continuity && cv){
-            attr(iE.lm,"continuity") <- stats::lm(formula.noVs, data = data)                
+            out$R2 <- NA
         }
     }
 
-    ## continuity: non-consecutive breakpoint (avoid staircase)
-    if(cv && test.continuity){
-        ## NOTE: data is already sorted according to the breakpoint variable
-        test.staircase <- sapply(iBreakpoint, function(iBreak){which.min(abs(data[[var.bp]]-iBreak))})
-        test.continuity2 <- all(diff(test.staircase)>1)
+    ## *** regularity: breakpoint non-consecutive (avoid staircase) and different from starting and ending values
+    if(any(is.na(breakpoint))){
+        out$regularity <- FALSE
     }else{
-        test.continuity2 <- FALSE
-    }
 
-    ## *** export
-    df.opt <- data.frame(initialization = NA,
-                         n.iter = res.optim$iteration,
-                         cv = cv,
-                         tol = NA,
-                         pattern = pattern,
-                         continuity = ifelse(is.na(test.continuity),FALSE,test.continuity),
-                         continuity2 = test.continuity2,
-                         diff = NA,
-                         R2 = summary(iE.lm)$r.squared
-                         )
-    df.opt$tol <- list(tol)
-    df.opt$initialization <- list(initialization)
-    df.opt$diff <- list(NULL)
-    return(list(model = iE.lm,
-                breakpoint = data.frame(value = iBreakpoint, Us = Us.label, Vs = Vs.label, sign = Us.sign),
-                opt = df.opt))
-}
-
-
-## * BFGS with subgradient
-## ** .lmbreak.fitSG
-lmbreak.fitBFGS <- function(formula, pattern, Us.label, Us.sign, Vs.label, transform,
-                            var.response, var.bp, data,
-                            n.iter, tol, initialization, enforce.continuity,
-                            trace, digits){
-
-    
-    ## *** prepare
-    n.breakpoint <- length(Us.label)
-    formula.noVs <-  stats::formula(stats::drop.terms(stats::terms(formula), attr(Vs.label,"index"), keep.response = TRUE))
-    bp.range <- c(attr(data,"min.var.bp"),attr(data,"max.var.bp"))
-    bp.min.diff <- attr(data,"min.diff.bp")
-    Id <- diag(1,NROW(data))
-    data$Us0 <- data[[var.bp]]
-
-    dX.skeleton <-lapply(1:n.breakpoint, function(iPoint){ ## iPoint <- 2
-        ddata <- data
-        ddata[,paste0("Us",0:n.breakpoint)] <- matrix(as.numeric(0:n.breakpoint == iPoint), byrow = TRUE, nrow = NROW(data), ncol = n.breakpoint+1)
-        iX <- stats::model.matrix(formula.noVs, ddata)
-        if("(Intercept)" %in% colnames(iX)){
-            iX[,"(Intercept)"] <- 0
-        }
-        return(iX)
-    })
-
-    ## *** gradient descent
-    if(transform){
-        initialization.trans <- transformPsi(initialization, min = bp.range[1], max = bp.range[2], mindiff = bp.min.diff, jacobian = FALSE)
-        attr(transform,"range") <- bp.range
-        attr(transform,"mindiff") <- bp.min.diff
-
-        ## SANITY CHECK
-        ## .RRS.lmbreak(initialization, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
-        ## .RRS.lmbreak(initialization.trans, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
-        
-        ## numDeriv::jacobian(.RRS.lmbreak, initialization.trans, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
-        ## .score.lmbreak(initialization.trans, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-        res.optim <- stats::optim(par = initialization.trans, method = "BFGS",
-                                  fn = function(psi){.RRS.lmbreak(psi, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
-                                  gr = function(psi){.score.lmbreak(psi, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
-                                  control = list(maxit = 5*n.iter))
-        iBreakpoint <- backtransformPsi(res.optim$par, min = bp.range[1], max = bp.range[2], mindiff = bp.min.diff, jacobian = FALSE)
-    }else{       
-         
-        ## SANITY CHECK
-        ## numDeriv::jacobian(.RRS.lmbreak, initialization, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
-        ## .score.lmbreak(initialization, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-        res.optim <- stats::optim(par = initialization, method = "L-BFGS-B",
-                                  fn = function(psi){.RRS.lmbreak(psi, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
-                                  gr = function(psi){.score.lmbreak(psi, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
-                                  lower = rep(bp.range[1], n.breakpoint) + bp.min.diff/2,
-                                  upper = rep(bp.range[2], n.breakpoint) - bp.min.diff/2,
-                                  control = list(maxit = 5*n.iter))
-        iBreakpoint <- res.optim$par
-    }
-    cv <- res.optim$convergence==0
-
-    ## *** uncertainty quantification
-    ## SANITY CHECK
-    ## GS <- numDeriv::jacobian(.score.lmbreak, iBreakpoint, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-    if(cv && all(!is.na(iBreakpoint))){
-        iHessian <- .hessian.lmbreak(iBreakpoint, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-        if(all(!is.na(iHessian)) && (det(iHessian)>tol[1])){
-            iBreakpoint.se <- sqrt(diag(solve(iHessian)))
-        }else{
-            iBreakpoint.se <- rep(NA, n.breakpoint)
-        }
-    }else{
-        iBreakpoint.se <- rep(NA, n.breakpoint)
-    }
-    
-    ## *** check fit
-    for(iPoint in 1:n.breakpoint){ ## iPoint <- 2
-        data[[paste0("Vs",iPoint)]] <- as.numeric(data[[var.bp]] > iBreakpoint[iPoint])
-        data[[paste0("Us",iPoint)]] <- (data[[var.bp]] - iBreakpoint[iPoint])*(data[[var.bp]] > iBreakpoint[iPoint])
-    }        
-
-    iE.lm <- stats::lm(formula, data = data)
-    iCoef <- coef(iE.lm)
-
-    ## test Vs terms
-    if(is.na(tol[2])){
-        test.continuity <- TRUE        
-    }else{
-        if(any(is.na(iCoef))){
-            test.continuity <- FALSE
-        }else{
-            test.continuity <- all(abs(iCoef[Vs.label])<tol[2])
-        }
-        if(enforce.continuity && !test.continuity && cv){
-            attr(iE.lm,"continuity") <- stats::lm(formula.noVs, data = data)                
-        }
-    }
-
-    ## continuity: non-consecutive breakpoint (avoid staircase)
-    if(cv && test.continuity){
-        test.BPinRange <- (min(c(iBreakpoint,Inf),na.rm=TRUE) - bp.range[1] > tol[1]) && (bp.range[2] - max(c(iBreakpoint,-Inf),na.rm=TRUE) > tol[1])
-        if(test.BPinRange==FALSE){
-            test.continuity2 <- FALSE
+        if(min(breakpoint) < attr(data, "min.bp") || max(breakpoint) > attr(data, "max.bp")){
+            out$regularity <- FALSE
+        }else if(length(breakpoint)==1){
+            out$regularity <- TRUE
         }else{
             ## NOTE: data is already sorted according to the breakpoint variable
-            test.staircase <- sapply(iBreakpoint, function(iBreak){which(sign(data[[var.bp]]-iBreak)==1)[1]})
-            test.continuity2 <- all(diff(test.staircase)>1)
-        }        
-    }else{
-        test.continuity2 <- FALSE
+            test.staircase <- sapply(breakpoint, function(iBreak){which(sign(data[[var.bp]]-iBreak)==1)[1]})
+            out$regularity <- all(diff(test.staircase)>=1) & all(diff(breakpoint)>attr(data, "min.diff.bp"))
+        }
+
+        if(out$regularity && any(!is.infinite(range))){
+            ## duration
+            duration.bp <- diff(c(attr(data,"min.var.bp"),breakpoint,attr(data,"max.var.bp")))
+            ## slope
+            if(is.null(attr(out$lm,"continuity"))){
+                wlm <- out$lm
+            }else{
+                wlm <- attr(out$lm,"continuity")
+            }
+            Us <- stats::coef(wlm)[stats::na.omit(c(ifelse("Us0" %in% names(stats::coef(wlm)),"Us0",NA),object$breakpoint$Us))]
+            Us2slope <- stats::setNames(object$breakpoint$sign,object$breakpoint$Us)
+            if(substring(object$opt$pattern,1,1)=="1"){
+                Us2slope <- c(stats::setNames(1,names(Us)[1]),Us2slope)
+                slope <- unname(cumsum(Us2slope * Us[names(Us2slope)]))
+            }else{
+                slope <- c(0,cumsum(Us2slope * Us[names(Us2slope)]))
+            }
+            y.bp <- cumsum(c(0,slope*duration.bp))
+            if(any(y.bp<range[1] | y.bp>range[2])){
+                out$regularity <- FALSE
+            }
+        }
     }
 
     ## *** export
-    df.opt <- data.frame(initialization = NA,
-                         n.iter = res.optim$counts[1],
-                         cv = cv,
-                         tol = NA,
-                         pattern = pattern,
-                         continuity = ifelse(is.na(test.continuity),FALSE,test.continuity),
-                         continuity2 = test.continuity2,
-                         diff = NA,
-                         R2 = summary(iE.lm)$r.squared
-                         )
-    df.opt$tol <- list(tol)
-    df.opt$initialization <- list(initialization)
-    df.opt$diff <- list(NULL)
-    return(list(model = iE.lm,
-                breakpoint = data.frame(value = iBreakpoint, se = iBreakpoint.se, Us = Us.label, Vs = Vs.label, sign = Us.sign),
-                opt = df.opt))
-}
+    return(out)
 
+}
 
 
 ##----------------------------------------------------------------------
