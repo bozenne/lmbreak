@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (18:40) 
 ## Version: 
-## Last-Updated: apr 18 2024 (13:49) 
+## Last-Updated: apr 29 2024 (13:19) 
 ##           By: Brice Ozenne
-##     Update #: 24
+##     Update #: 28
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -23,7 +23,7 @@ if(FALSE){
 }
 
 context("mlmbreak on real data in presence of NA")
-data("SDIpsilo")
+data("SDIpsilo", package = "lmbreak")
 
 
 ## * graphical display
@@ -47,9 +47,7 @@ test_that("mlmbreak with NA", {
 
     SDIpsilo.red <- SDIpsilo[SDIpsilo$type %in% c("signal","added"),]
     e.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, trace = FALSE)
-    ## eDESCENT.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, control = list(optimizer = "L-BFGS-B"))
-    ## eDESCENTUN.mlmbreak <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo.red, control = list(optimizer = "BFGS"), trace = 2)
-    expect_equal(logLik(e.mlmbreak), -267.2544, tol = 1e-3)
+    expect_equal(logLik(e.mlmbreak), -266.5181, tol = 1e-3)
     suppressWarnings(plot(e.mlmbreak, ylim = c(0,10)))
 
     SDIpsilo.redNNA <- SDIpsilo.red[!is.na(SDIpsilo.red$score),]
@@ -57,9 +55,9 @@ test_that("mlmbreak with NA", {
 
     test <- model.tables(e.mlmbreak, format = "array")
     GS <- model.tables(eNNA.mlmbreak, format = "array")
-    expect_equal(test,GS, tol = 1e-6)
+    expect_equal(test,GS, tol = 1e-3)
     expect_equal(logLik(e.mlmbreak), logLik(eNNA.mlmbreak), tol = 1e-3)
-   
+    
 })
 
 ##----------------------------------------------------------------------

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:19) 
 ## Version: 
-## Last-Updated: apr 12 2024 (13:43) 
+## Last-Updated: Apr 20 2024 (19:02) 
 ##           By: Brice Ozenne
-##     Update #: 42
+##     Update #: 48
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -75,7 +75,10 @@ test_that("Pattern 1111", {
     ## expect_equal(coef(test.3bp, "breakpoint"), as.double(GS.3bp$psi[,"Est."]), tol = 1e-3)
     expect_equal(test.3bp$breakpoint$Us,c("Us1","Us2","Us3"))
     expect_equal(test.3bp$breakpoint$sign,c(1,1,1))
-    expect_equal(-254.4459, logLik(test.3bp), tol = 1e-3)
+    expect_equal(-252.9418, logLik(test.3bp), tol = 1e-3)
+    expect_true(logLik(test.3bp)>logLik(GS.3bp))
+
+    ## 
 
     ## model fit
     plot(test.3bp)
@@ -128,10 +131,10 @@ test_that("Pattern 010", {
 
     ## estimation
     test.010 <- lmbreak(y~bp(x,"010"), data = dati)
-    expect_equal(coef(test.010, "breakpoint"), c(33.78736,70.10277), tol = 1e-3)
+    expect_equal(coef(test.010, "breakpoint"), c(34.27776, 70.00000), tol = 1e-3)
     expect_equal(test.010$breakpoint$Us,c("I(Us1 - Us2)","I(Us1 - Us2)"))
     expect_equal(test.010$breakpoint$sign,c(1,-1))
-    expect_equal(logLik(test.010), -258.4485, tol = 1e-3)
+    expect_equal(logLik(test.010), -258.3099, tol = 1e-3)
 
     ## model fit
     plot(test.010)
@@ -141,7 +144,7 @@ test_that("Pattern 011", {
 
     ## estimation
     test.011 <- lmbreak(y~bp(x,"011"), data = dati)
-    expect_equal(coef(test.011, "breakpoint"), c(33.67924, 71.77749), tol = 1e-3)
+    expect_equal(coef(test.011, "breakpoint"), c(33.67895, 71.77681), tol = 1e-3)
     expect_equal(test.011$breakpoint$Us,c("Us1","Us2"))
     expect_equal(test.011$breakpoint$sign,c(1,1))
     expect_equal(logLik(test.011), -256.6648, tol = 1e-3)
@@ -155,10 +158,10 @@ test_that("Pattern 110", {
 
     ## estimation
     test.110 <- lmbreak(y~bp(x,"110"), data = dati)
-    expect_equal(coef(test.110, "breakpoint"), c(32.68963, 70.27439), tol = 1e-3)
+    expect_equal(coef(test.110, "breakpoint"), c(33.41794, 70.10277), tol = 1e-3)
     expect_equal(test.110$breakpoint$Us,c("I(Us1 - Us2)","I(Us1 - Us2)"))
     expect_equal(test.110$breakpoint$sign,c(1,-1))
-    expect_equal(logLik(test.110), -258.3312, tol = 1e-3)
+    expect_equal(logLik(test.110), -258.2943, tol = 1e-3)
 
     ## model fit
     plot(test.110)
@@ -170,7 +173,7 @@ test_that("Pattern 101", {
     set.seed(1)
     df.101 <- simBreak(c(20,50), breakpoint = c(0,1,2,3), slope = c(1,0,-1), sigma = 0.1)
     test.101 <- lmbreak(Y~bp(X,"101"), data = df.101)
-    expect_equal(coef(test.101, type = "breakpoint"), c(0.9898938, 1.9811977), tol = 1e-3)
+    expect_equal(coef(test.101, type = "breakpoint"), c(0.9899228, 1.9812083), tol = 1e-3)
 
     expect_equal(test.101$breakpoint$Us,c("I(Us0 - Us1)","Us2"))
     expect_equal(test.101$breakpoint$sign,c(-1,1))
@@ -191,7 +194,7 @@ test_that("Pattern 1010", {
     set.seed(10)
     df.1010 <- simBreak(c(20,50), breakpoint = c(0,1,2,3,4), slope = c(1,0,-0.9,0), sigma = 0.05)
     test.1010 <- lmbreak(Y~bp(X,"1010"), data = df.1010)
-    expect_equal(coef(test.1010, type = "breakpoint"), c(1.009588, 1.991627, 3.011256), tol = 1e-3)
+    expect_equal(coef(test.1010, type = "breakpoint"), c(1.009588, 1.991624, 3.011259), tol = 1e-3)
     expect_equal(logLik(test.1010), 1556.475, tol = 1e-3)
 
     plot(test.1010)
@@ -199,7 +202,7 @@ test_that("Pattern 1010", {
     set.seed(10)
     df.1010 <- simBreak(c(20,50), breakpoint = c(0,1,2,3,4), slope = c(1,0,-0.9,0), sigma = 0.1)
     test.1010 <- lmbreak(Y~bp(X,"1010", init = 1:3), data = df.1010)
-    expect_equal(coef(test.1010, type = "breakpoint"), c(1.019542, 1.982325, 3.021334), tol = 1e-3)
+    expect_equal(coef(test.1010, type = "breakpoint"), c(1.019544, 1.982313, 3.021306), tol = 1e-3)
 
 })
 ##----------------------------------------------------------------------

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (17:58) 
 ## Version: 
-## Last-Updated: apr 11 2024 (19:30) 
+## Last-Updated: Apr 20 2024 (16:01) 
 ##           By: Brice Ozenne
-##     Update #: 108
+##     Update #: 113
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -39,7 +39,7 @@ summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
     model$call <- object$call
     print(summary(model))
     
-    cat("Optmisation: convergence ", object.opt$cv, ", continuity: ",object.opt$continuity,"\n",sep="")
+    cat("Optmisation: convergence ", object.opt$cv, ", continuity: ",object.opt$continuity, ", regularity: ",object.opt$regularity,"\n",sep="")
     if(!is.null(objectAll.opt)){        
 
         index.pattern <- which(sapply(objectAll.breakpoint,NCOL)==n.breakpoint)
@@ -47,8 +47,8 @@ summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
 
         M.diff <- objectAll.breakpoint[[index.pattern]]- matrix(object.breakpoint$value, nrow = NROW(objectAll.breakpoint[[index.pattern]]), ncol = n.breakpoint, byrow = TRUE)
         cat("             ",sum(objectAll.opt$cv)," (",round(100*sum(objectAll.opt$cv)/n.init,digits[2]),"%) sucessfull convergence", sep="")
-        
-        if(object.opt$cv){
+
+        if(object.opt$cv & NROW(objectAll.opt)>1){
             if(all(abs(M.diff[objectAll.opt$cv[index.pattern2],,drop=FALSE])<object.opt$tol[[1]][1])){
                 cat(", all to the same breakpoint",ifelse(n.breakpoint>1,"s",""),".\n", sep = "")
             }else{

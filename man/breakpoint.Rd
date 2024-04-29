@@ -4,13 +4,31 @@
 \alias{lmbreak}
 \title{Fit Breakpoint model}
 \usage{
-lmbreak(formula, data, control = NULL, trace = FALSE, digits = NULL)
+lmbreak(
+  formula,
+  data,
+  pattern = NULL,
+  start = NULL,
+  range = NULL,
+  se = FALSE,
+  control = NULL,
+  trace = FALSE,
+  digits = NULL
+)
 }
 \arguments{
 \item{formula}{a formula where the breakpoint variable appears on the right hand side
 with an argument pattern specifying the number of breakpoints and possible constrains. See the section details.}
 
 \item{data}{[data.frame] dataset}
+
+\item{pattern}{[character or character vector] alternative way to specify the pattern.}
+
+\item{start}{[numeric vector] starting values when estimating the breakpoints.}
+
+\item{range}{[numeric vector of length 2] minimum and maximum outcome value at the breakpoints.}
+
+\item{se}{[logical] should the uncertainty about the breakpoint position be quantified (EXPERIMENTAL).}
 
 \item{control}{[list] parameters to be passed to the optimizer (n.iter,tol,enforce.continuity,optimize.step).
 See the section details of \code{\link{lmbreak.options}}.}

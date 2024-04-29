@@ -28,7 +28,7 @@ library(lmbreak)
 #+END_SRC
 
 #+RESULTS:
-: lmbreak version 0.0.2
+: lmbreak version 0.0.3
 
 will be exemplified on the following dataset:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -78,12 +78,12 @@ plot(e.XP11, ylim = c(0,12)) ## right panel
 #+END_SRC
 
 #+RESULTS:
-: Advarselsbesked:
-: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
-: Advarselsbesked:
-: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
-: Advarselsbesked:
-: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: Warning message:
+: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
+: Warning message:
+: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
+: Warning message:
+: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
 gg12 <- ggpubr::ggarrange(ggplot2::autoplot(e.XP111, ylim = c(0,12))$plot + ggplot2::ggtitle("Pattern 111"),
@@ -94,11 +94,11 @@ ggplot2::ggsave(gg12, width = 10, height = 4, file = "inst/figures/gg-indiv-exam
 #+END_SRC
 
 #+RESULTS:
-: Advarselsbeskeder:
-: 1: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
-: 2: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
-: 3: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
-: 4: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: Warning messages:
+: 1: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`). 
+: 2: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`). 
+: 3: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`). 
+: 4: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
 
 #+BEGIN_HTML
 <img src="./inst/figures/gg-indiv-example.png" title="101 pattern - patient 1" alt="101 pattern - patient 1" width="100%" style="display: block; margin: auto;" />
@@ -113,10 +113,10 @@ model.tables(e.XP101)
 
 #+RESULTS:
 :        time  duration intercept  slope
-: 1   0.00000  87.87879  0.000000  0.110
-: 2  87.87879 142.78788  9.666667  0.000
-: 3 230.66667  69.33333  9.666667 -0.125
-: 4 300.00000        NA  1.000000     NA
+: 1   0.00000  87.88131  0.000000  0.110
+: 2  87.88131 142.78560  9.666944  0.000
+: 3 230.66691  69.33309  9.666944 -0.125
+: 4 300.00000        NA  1.000307     NA
 
 When specifying a pattern that does not fit the data, the estimation
 procedure may fail to find reliable estimates and will output a
@@ -126,9 +126,9 @@ e.XP01 <- lmbreak(score ~ 0 + bp(time, "01"), data = SDIpsilo13)
 #+END_SRC
 
 #+RESULTS:
-: Advarselsbesked:
-: I lmbreak(score ~ 0 + bp(time, "01"), data = SDIpsilo13) :
-:   The optimizer did not converge to a stable solution.
+: Warning message:
+: In lmbreak(score ~ 0 + bp(time, "01"), data = SDIpsilo13) :
+:   The solution found by the optimizer has invalid breakpoint positions.
 
 It is possible to specify alternative patterns that will only be
 investigated if the previous one(s) had convergence issues:
@@ -139,7 +139,7 @@ coef(e.XPrescue,c("pattern","breakpoint"))
 
 #+RESULTS:
 :   pattern breakpoint
-: 1      11   126.9093
+: 1      11   126.9094
 
 This is especially useful when using the =mlmbreak= function to fit
 (separate) breakpoint models on several individuals:
@@ -157,47 +157,49 @@ mlmbreak(formula = score ~ 0 + bp(time, c("101", "11")), data = SDIpsilo,
     cluster = "id", trace = FALSE)
 
 Breakpoints:
-   id pattern   cv continuity      R2      breakpoint   maxVs
-1   1     101 TRUE       TRUE 0.98332 84.507, 162.051 < 1e-05
-2   2      11 TRUE       TRUE 0.99258          59.086 < 1e-05
-3   3     101 TRUE       TRUE 0.99150 65.143, 166.481 < 1e-05
-4   4     101 TRUE       TRUE 0.98075  103.13, 180.51 < 1e-05
-5   5     101 TRUE       TRUE 0.98385 49.123, 173.913 < 1e-05
-6   6     101 TRUE       TRUE 0.99337         70, 150 < 1e-05
-7   7     101 TRUE       TRUE 0.98355 46.032, 101.549 < 1e-05
-8   8     101 TRUE       TRUE 0.98558 86.957, 129.533 < 1e-05
-9   9     101 TRUE       TRUE 0.97533 49.123, 115.937 < 1e-05
-10 10     101 TRUE       TRUE 0.99615 65.116, 195.238 < 1e-05
-11 11     101 TRUE       TRUE 0.98245  44.737, 93.294 < 1e-05
-12 12     101 TRUE       TRUE 0.96547 43.478, 150.992 < 1e-05
-13 13     101 TRUE       TRUE 0.99443 87.879, 230.667 < 1e-05
-14 14     101 TRUE       TRUE 0.97773  157.89, 248.02 < 1e-05
-15 15     101 TRUE       TRUE 0.99110  157.30, 234.74 < 1e-05
+   id pattern   cv continuity      R2      breakpoint      maxVs
+1   1     101 TRUE       TRUE 0.98332 84.507, 162.051    < 1e-05
+2   2     101 TRUE       TRUE 0.99213  55.556, 87.525 4.2779e-05
+3   3     101 TRUE       TRUE 0.99150 65.143, 166.481    < 1e-05
+4   4     101 TRUE       TRUE 0.98110  105.77, 169.81    < 1e-05
+5   5     101 TRUE       TRUE 0.98385 49.123, 173.913    < 1e-05
+6   6     101 TRUE       TRUE 0.99337         70, 150    < 1e-05
+7   7     101 TRUE       TRUE 0.98399  47.619, 87.912    < 1e-05
+8   8     101 TRUE       TRUE 0.98558 86.957, 129.533    < 1e-05
+9   9     101 TRUE       TRUE 0.97533 49.123, 115.938    < 1e-05
+10 10     101 TRUE       TRUE 0.99615 65.116, 195.238    < 1e-05
+11 11     101 TRUE      FALSE 0.98285 32.514, 100.000    0.35968
+12 12     101 TRUE       TRUE 0.96547 43.477, 150.997 0.00040012
+13 13     101 TRUE       TRUE 0.99443 87.881, 230.667  0.0002774
+14 14     101 TRUE       TRUE 0.97773  157.89, 248.02    < 1e-05
+15 15     101 TRUE       TRUE 0.99110  157.30, 234.74    < 1e-05
 #+end_example
 
 Here an upslope, plateau, normalization (101 pattern) could be fitted
-for all individuals but the second one which did not exhibit a
-plateau. Thus the 11 pattern was fitted to this individual. Once more
-key summary statistics can be extracted using the =model.tables=
-method:
+for all individuals but had it not been the case, the pattern =11=
+would have been used instead. Once more key summary statistics can be extracted using
+the =model.tables= method:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
-model.tables(e.XPall, format = "list")[1:2]
+model.tables(e.XPall, format = "array")[,,1:2]
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
-$`1`
+, , 1
+
        time  duration intercept       slope
 1   0.00000  84.50704         0  0.11833333
 2  84.50704  77.54424        10  0.00000000
 3 162.05128 157.94872        10 -0.06964286
 4 320.00000        NA        -1          NA
 
-$`2`
+, , 2
+
        time  duration intercept       slope
-1   0.00000  59.08571  0.000000  0.13500000
-2  59.08571 200.91429  7.976571 -0.02409091
-3 260.00000        NA  3.136364          NA
+1   0.00000  55.55577  0.000000  0.13500000
+2  55.55577  31.96946  7.500029  0.00000000
+3  87.52523 172.47477  7.500029 -0.02583333
+4 260.00000        NA  3.044431          NA
 #+end_example
 
 and a graphical display of the model fit can be obtained using the =plot= method:
@@ -206,8 +208,8 @@ plot(e.XPall, ylim = c(0,10))
 #+END_SRC
 
 #+RESULTS:
-: Advarselsbesked:
-: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+: Warning message:
+: [1m[22mRemoved 89 rows containing missing values or values outside the scale range (`geom_point()`).
 
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
@@ -215,8 +217,8 @@ ggplot2::ggsave(ggplot2::autoplot(e.XPall, ylim = c(0,10))$plot, width = 8, heig
 #+END_SRC
 
 #+RESULTS:
-: Advarselsbesked:
-: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+: Warning message:
+: [1m[22mRemoved 89 rows containing missing values or values outside the scale range (`geom_point()`).
 
 #+BEGIN_HTML
 <img src="./inst/figures/gg-all-example.png" title="101/11 pattern - all patient" alt="101/11 pattern - all patient" width="100%" style="display: block; margin: auto;" />

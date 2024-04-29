@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 14 2024 (20:18) 
 ## Version: 
-## Last-Updated: Apr 15 2024 (22:52) 
+## Last-Updated: Apr 20 2024 (09:12) 
 ##           By: Brice Ozenne
-##     Update #: 50
+##     Update #: 55
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -30,6 +30,17 @@
     }
 
     ## ** update dataset & design matrix
+    if(is.null(dX.skeleton)){
+        dX.skeleton <-lapply(1:n.breakpoint, function(iPoint){ ## iPoint <- 2
+            ddata <- data
+            ddata[,paste0("Us",0:n.breakpoint)] <- matrix(as.numeric(0:n.breakpoint == iPoint), byrow = TRUE, nrow = NROW(data), ncol = n.breakpoint+1)
+            iX <- stats::model.matrix(formula, ddata)
+            if("(Intercept)" %in% colnames(iX)){
+                iX[,"(Intercept)"] <- 0
+            }
+            return(iX)
+        })
+    }
     if("Us0" %in% names(data) == FALSE){
         data$Us0 <- data[[var.bp]]
     }
@@ -90,11 +101,13 @@
     }
 
     ## off-diagonal terms
-    for(iPoint1 in 2:n.breakpoint){ ## iPoint1 <- 2
-        for(iPoint2 in 1:(iPoint1-1)){ ## iPoint2 <- 1
-            iOut[iPoint1,iPoint2] <- 2 * sum( (ls.dterm2.score[[iPoint2]] %*% ls.term3.score[[iPoint1]] + iXXX.M1 %*% ls.dterm3.score[[iPoint2]]) * iBetaRes + ls.term123.score[[iPoint1]] * ls.dbetares[[iPoint2]])
-            iOut[iPoint2,iPoint1] <- iOut[iPoint1,iPoint2]
-            ## 2 * sum( (ls.dterm2.score[[iPoint1]] %*% ls.term3.score[[iPoint2]] + iXXX.M1 %*% ls.dterm3.score[[iPoint1]]) * iBetaRes + ls.term123.score[[iPoint2]] * ls.dbetares[[iPoint1]])            
+    if(n.breakpoint>1){
+        for(iPoint1 in 2:n.breakpoint){ ## iPoint1 <- 2
+            for(iPoint2 in 1:(iPoint1-1)){ ## iPoint2 <- 1
+                iOut[iPoint1,iPoint2] <- 2 * sum( (ls.dterm2.score[[iPoint2]] %*% ls.term3.score[[iPoint1]] + iXXX.M1 %*% ls.dterm3.score[[iPoint2]]) * iBetaRes + ls.term123.score[[iPoint1]] * ls.dbetares[[iPoint2]])
+                iOut[iPoint2,iPoint1] <- iOut[iPoint1,iPoint2]
+                ## 2 * sum( (ls.dterm2.score[[iPoint1]] %*% ls.term3.score[[iPoint2]] + iXXX.M1 %*% ls.dterm3.score[[iPoint1]]) * iBetaRes + ls.term123.score[[iPoint2]] * ls.dbetares[[iPoint1]])            
+            }
         }
     }
 
