@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: Apr 15 2024 (00:49) 
+## Last-Updated: apr 19 2024 (08:50) 
 ##           By: Brice Ozenne
-##     Update #: 1105
+##     Update #: 1118
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -667,7 +667,7 @@ lmbreak.fitMuggeo <- function(formula, pattern, Us.label, Us.sign, Vs.label,
 }
 
 ## * grid search fitter 
-## ** .lmbreak.fitGS
+## ** lmbreak.fitNLMINB
 lmbreak.fitNLMINB <- function(formula, pattern, Us.label, Us.sign, Vs.label,
                           var.response, var.bp, data,
                           n.iter, tol, initialization, enforce.continuity,
@@ -742,7 +742,7 @@ lmbreak.fitNLMINB <- function(formula, pattern, Us.label, Us.sign, Vs.label,
 
 
 ## * BFGS with subgradient
-## ** .lmbreak.fitSG
+## ** lmbreak.fitBFGS
 lmbreak.fitBFGS <- function(formula, pattern, Us.label, Us.sign, Vs.label, transform,
                             var.response, var.bp, data,
                             n.iter, tol, initialization, enforce.continuity,
@@ -779,6 +779,7 @@ lmbreak.fitBFGS <- function(formula, pattern, Us.label, Us.sign, Vs.label, trans
         
         ## numDeriv::jacobian(.RRS.lmbreak, initialization.trans, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## .score.lmbreak(initialization.trans, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
+
         res.optim <- stats::optim(par = initialization.trans, method = "BFGS",
                                   fn = function(psi){.RRS.lmbreak(psi, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
                                   gr = function(psi){.score.lmbreak(psi, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
@@ -789,6 +790,7 @@ lmbreak.fitBFGS <- function(formula, pattern, Us.label, Us.sign, Vs.label, trans
         ## SANITY CHECK
         ## numDeriv::jacobian(.RRS.lmbreak, initialization, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## .score.lmbreak(initialization, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
+
         res.optim <- stats::optim(par = initialization, method = "L-BFGS-B",
                                   fn = function(psi){.RRS.lmbreak(psi, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
                                   gr = function(psi){.score.lmbreak(psi, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
@@ -804,7 +806,8 @@ lmbreak.fitBFGS <- function(formula, pattern, Us.label, Us.sign, Vs.label, trans
     ## GS <- numDeriv::jacobian(.score.lmbreak, iBreakpoint, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
     if(cv && all(!is.na(iBreakpoint))){
         iHessian <- .hessian.lmbreak(iBreakpoint, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-        if(all(!is.na(iHessian)) && (det(iHessian)>tol[1])){
+
+        if(all(!is.na(iHessian)) && all(abs(iHessian)<1e10) && (det(iHessian)>tol[1])){
             iBreakpoint.se <- sqrt(diag(solve(iHessian)))
         }else{
             iBreakpoint.se <- rep(NA, n.breakpoint)

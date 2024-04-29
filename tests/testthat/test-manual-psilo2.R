@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 13 2024 (21:26) 
+## Last-Updated: apr 19 2024 (08:45) 
 ##           By: Brice Ozenne
-##     Update #: 50
+##     Update #: 51
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -42,7 +42,8 @@ if(FALSE){
     ggTraj %+% dtL.SERT
 
     e.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("01010","1010","101","011","11")), cluster = "PatientID", data = dtL.SERT)
-    eDESCENT.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("01010","1010","101","011","11")), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "L-BFGS-B"))
+    eDESCENT.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("01010","1010","101","011","11")), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "L-BFGS-B"), trace = 2)
+    eDESCENTUN.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("01010","1010","101","011","11")), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "BFGS"))
     
     eDESCENT.SERT <- mlmbreak(score ~ 0 + bp(time.num, c("011")), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "L-BFGS-B"))
 
