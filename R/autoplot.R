@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (18:55) 
+## Last-Updated: jun 10 2024 (16:12) 
 ##           By: Brice Ozenne
-##     Update #: 196
+##     Update #: 209
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -187,6 +187,7 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
 #' @param linewidth [numeric] width of the line representing the model fit
 #' @param alpha [numeric] transparency of the points representing the observations. Can be set to 0 to hide the observations and only display the fitted broken lines.
 #' @param scales [character] argument passed to \code{ggplot2::facet_wrap} when displaying covariate specific model fit.
+#' Can be \code{"none"} to display all trajectories on the same plot.
 #' @param labeller [character] function used to label each facet. Passed to \code{ggplot2::facet_wrap}.
 #' @param subtitle [logical] should the subtitle include information about convergence of the model.
 #' @param ... not used. For compatibility with the generic function.
@@ -227,12 +228,26 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, xlim = NULL, yli
         stop("Incorrect argument \'y\': should inherit of mlmbreak. \n")
     }
 
+    ## scales
+    if(is.null(scales) || any(is.na(scales))){
+        scales <- "none"
+    }
+    scales <- match.arg(scales, c("none","fixed","free","free_x","free_y"))
+    
     ## ylim
     if(is.null(ylim) && ("ylim" %in% names(match.call()) == FALSE)){
-        ylim <- range(data[[response.var]], na.rm = TRUE)
+        if(scales == "fixed"){
+            ylim <- range(data[[response.var]], na.rm = TRUE)
+        }else{
+            ylim <- NULL
+        }
     }
     if(is.null(xlim) && ("xlim" %in% names(match.call()) == FALSE)){
-        xlim <- range(data[[breakpoint.var]], na.rm = TRUE)
+        if(scales == "fixed"){
+            xlim <- range(data[[breakpoint.var]], na.rm = TRUE)
+        }else{
+            xlim <- NULL
+        }
     }
     
 
@@ -267,13 +282,19 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, xlim = NULL, yli
 
     ## ** graphical display
     out <- ggplot2::ggplot()
-    out <- out + ggplot2::geom_point(data = cbind(data, model = "observation"), ggplot2::aes(x = .data[[breakpoint.var]], y = .data[[response.var]], color = .data$model), alpha = alpha, size = size[1])
+    out <- out + ggplot2::geom_point(data = cbind(data, model = "observation"), ggplot2::aes(x = .data[[breakpoint.var]], y = .data[[response.var]], color = .data$model),
+                                     alpha = alpha, size = size[1])
     if(!is.na(size[2])){
         out <- out + ggplot2::geom_point(data = newdataB, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), size = size[2])
     }
-    out <- out + ggplot2::geom_line(data = newdataA, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), linewidth = linewidth)
-    out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataB$model))))
-    out <- out + ggplot2::facet_wrap(stats::as.formula(paste0("~",var.cluster)), scales = scales, labeller = labeller)
+    if(scales == "none"){
+        out <- out + ggplot2::geom_line(data = newdataA, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model, group = .data[[var.cluster]]), linewidth = linewidth)
+        out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataB$model))))
+    }else{
+        out <- out + ggplot2::geom_line(data = newdataA, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), linewidth = linewidth)
+        out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataB$model))))
+        out <- out + ggplot2::facet_wrap(stats::as.formula(paste0("~",var.cluster)), scales = scales, labeller = labeller)
+    }
 
     if(!is.null(ylim)){
         out <- out + ggplot2::coord_cartesian(xlim = xlim, ylim = ylim)
