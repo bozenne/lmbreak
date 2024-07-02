@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 20 2024 (15:24) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (18:41) 
+## Last-Updated: jul  2 2024 (15:25) 
 ##           By: Brice Ozenne
-##     Update #: 34
+##     Update #: 35
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -144,7 +144,7 @@ optim.lmbreak_Muggeo <- function(formula, formula.noVs, pattern, Us.label, Us.si
                          tol = NA,
                          pattern = pattern,
                          diff = NA,
-                         R2 = NA
+                         r2 = NA
                          )
     df.opt$tol <- list(tol)
     df.opt$initialization <- list(initialization)
@@ -186,7 +186,7 @@ optim.lmbreak_NLMINB <- function(formula, formula.noVs, pattern, Us.label, Us.si
                          tol = NA,
                          pattern = pattern,
                          diff = NA,
-                         R2 = NA
+                         r2 = NA
                          )
     df.opt$tol <- list(tol)
     df.opt$initialization <- list(initialization)
@@ -265,7 +265,7 @@ optim.lmbreak_BFGS <- function(formula, formula.noVs, pattern, Us.label, Us.sign
                          tol = NA,
                          pattern = pattern,
                          diff = NA,
-                         R2 = NA
+                         r2 = NA
                          )
     df.opt$tol <- list(tol)
     df.opt$initialization <- list(initialization)

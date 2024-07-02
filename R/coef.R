@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:23) 
 ## Version: 
-## Last-Updated: apr 11 2024 (20:02) 
+## Last-Updated: jul  2 2024 (15:33) 
 ##           By: Brice Ozenne
-##     Update #: 97
+##     Update #: 125
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -21,6 +21,7 @@
 ##'
 ##' @param object output of \code{\link{lmbreak}}.
 ##' @param type [vector of character] summary statistic to be output: \itemize{
+##' \item auc: area under the curve
 ##' \item breakpoint: position of the breakpoint
 ##' \item breakpoint.range: position of the breakpoint, minimum and maximum X values.
 ##' \item duration: duration (in term of X values) of each broken line.
@@ -34,6 +35,8 @@
 ##' \item cv: convergence of the optimization algorithm.
 ##' \item continuity: continuity at the breakpoints of the model fit.
 ##' }
+##' @param interval [numeric vector of length 2] values from where to start and to stop calculating the area under the curve.
+##' Only relevant when \code{type="auc"}.
 ##' @param simplify [logical] simplify the data format from a list to a vector or a data.frame.
 ##' @param ... Not used. For compatibility with the generic method.
 ##'
@@ -41,26 +44,10 @@
 ##'  
 ##' @keywords methods
 ##' @export
-coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
+coef.lmbreak <- function(object, type = "breakpoint", interval, simplify = TRUE, ...){
 
-    ## ** normalize user input
-    dots <- list(...)
-    if(length(dots)>0){
-        stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
-    }
 
-    valid.types <- c("breakpoint","breakpoint.range","duration",
-                     "Us","slope",
-                     "Vs","intercept",
-                     "lm", "R2",
-                     "pattern","cv","continuity")
-    if(any(type %in% valid.types == FALSE)){
-        stop("Incorrect value for argument \'type\'. \n",
-             "Invalid values: \"",paste(setdiff(type,valid.types), collapse = "\", \""),"\". \n",
-             "Valid values: \"",paste(setdiff(valid.types,type), collapse = "\", \""),"\". \n")
-    }
-
-    ## ** extract coefficient
+    ## ** extract from object
     data <- object$data
     breakpoint.var <- object$args$breakpoint.var
     response.var <- object$args$response.var
@@ -69,13 +56,54 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
     model <- object$model
     object.opt <- object$opt
     vec.pattern <- object$args$pattern[[object.opt$pattern]]
+    
+    ## ** normalize user input
+    dots <- list(...)
+    if(length(dots)>0){
+        stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
+    }
+
+    valid.types <- c("auc",
+                     "breakpoint","breakpoint.range","duration",
+                     "Us","slope",
+                     "Vs","intercept",
+                     "lm", "R2",
+                     "pattern","cv","continuity")
+    names(valid.types) <- tolower(valid.types)
+    type <- tolower(type)
+    if(any(type %in% names(valid.types) == FALSE)){
+        stop("Incorrect value for argument \'type\'. \n",
+             "Invalid values: \"",paste(setdiff(type,valid.types), collapse = "\", \""),"\". \n",
+             "Valid values: \"",paste(setdiff(valid.types,type), collapse = "\", \""),"\". \n")
+    }
+
+    if("auc" %in% type){
+        if(missing(interval)){
+            stop("Argument \'interval\' should be specifying when argument \'type\' contains \"auc\". \n")
+        }
+        if(length(interval)!=2 & !is.numeric(interval)){
+            stop("Argument \'interval\' should be a numeric vector of length 2. \n")
+        }
+
+        range.obs <- range(data[[breakpoint.var]], na.rm=TRUE)
+        if(min(interval)<range.obs[1] || max(interval)>range.obs[2]){
+            stop("Argument \'interval\' should take value between ",range.obs[1]," and ",range.obs[2],". \n")
+        }
+    }
+
+    ## ** extract coefficient
     out <- list()
 
+    if(any(c("auc") %in% type)){
+        ggdata <- autoplot(object)$data
+        out$auc <- AUC(x = ggdata[[breakpoint.var]], y = ggdata$estimate, from = interval[1], to = interval[2],
+                       method = "trapezoid", na.rm = TRUE)
+    }
     if(any(c("pattern") %in% type)){
         out$pattern <- object.opt$pattern
     }
-    if(any(c("R2") %in% type)){
-        out$R2 <- object.opt$R2
+    if(any(c("r2") %in% type)){
+        out$R2 <- object.opt$r2
     }
     if(any(c("cv") %in% type)){
         out$cv <- object.opt$cv
@@ -92,7 +120,7 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
     if(any(c("duration","intercept") %in% type)){
         out$duration <- diff(out$breakpoint.range)
     }
-    if(any(c("Us","slope","intercept") %in% type)){
+    if(any(c("us","slope","intercept") %in% type)){
         name.Us <- stats::na.omit(c(ifelse("Us0" %in% names(coef(model)),"Us0",NA),table.breakpoint$Us))
         if(continuity == FALSE && !is.null(attr(model,"continuity"))){
             out$Us <- coef(attr(model,"continuity"))[name.Us]
@@ -109,7 +137,7 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
             out$slope <- c(0,cumsum(Us2slope * out$Us[names(Us2slope)]))
         }
     }
-    if(any(c("Vs") %in% type)){
+    if(any(c("vs") %in% type)){
         out$Vs <- coef(model)[table.breakpoint$Vs]
     }
     if(any(c("intercept") %in% type)){
@@ -123,16 +151,17 @@ coef.lmbreak <- function(object, type = "breakpoint", simplify = TRUE, ...){
     }
 
     ## ** output
+    ## use valid.types[type] to handle upper/lower case
     if(simplify){
         if(length(type) == 1){
-            return(out[[type]])
-        }else if(length(unique(lengths(out[type])))==1){
+            return(out[[valid.types[type]]])
+        }else if(length(unique(lengths(out[valid.types[type]])))==1){
             return(as.data.frame(out))
         }else{
-            return(out[type])
+            return(out[valid.types[type]])
         }
     }else{
-        return(out[type])
+        return(out[valid.types[type]])
     }
 }
 

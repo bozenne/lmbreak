@@ -8,6 +8,9 @@
 \method{autoplot}{lmbreak}(
   object,
   y = NULL,
+  breaks = 25,
+  extrapolate = FALSE,
+  breakpoint = TRUE,
   xlim = NULL,
   ylim = NULL,
   color = grDevices::palette.colors(3),
@@ -25,6 +28,12 @@
 \item{object, x}{[lmbreak] output of \code{\link{lmbreak}}.}
 
 \item{y}{[lmbreak] another model whose fit is to be compared with the first one.}
+
+\item{breaks}{[integer or numeric vector] number or vector of points to be used to display the fit.}
+
+\item{extrapolate}{[logical] should values before the first or beyond the last observation be displayed?}
+
+\item{breakpoint}{[logical] should the breakpoints be displayed?}
 
 \item{xlim}{[numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).}
 

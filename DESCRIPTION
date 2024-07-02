@@ -1,8 +1,8 @@
 Package: lmbreak
 Type: Package
 Title: Linear Regression with Unknown Breakpoints
-Version: 0.0.3
-Date: 2024-04-20
+Version: 0.0.4
+Date: 2024-07-02
 Authors@R: c(
     person("Brice", "Ozenne", role = c("aut", "cre"), email = "brice.mh.ozenne@gmail.com", comment = c(ORCID = "0000-0001-9694-2956"))
 	)

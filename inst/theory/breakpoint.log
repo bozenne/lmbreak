@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.23 (MiKTeX 21.8) (preloaded format=pdflatex 2021.8.26)  11 APR 2024 11:43
+This is pdfTeX, Version 3.141592653-2.6-1.40.23 (MiKTeX 21.8) (preloaded format=pdflatex 2021.8.26)  18 JUN 2024 13:59
 entering extended mode
 **c:/Users/hpl802/Documents/Github/lmbreak/inst/theory/breakpoint.tex
 (c:/Users/hpl802/Documents/Github/lmbreak/inst/theory/breakpoint.tex
@@ -1321,13 +1321,55 @@ LaTeX Font Info:    Trying to load font information for U+stmry on input line 2
 LaTeX Warning: No \author given.
 
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <12> on input line 239.
+(Font)              <12> on input line 242.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <8> on input line 239.
+(Font)              <8> on input line 242.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <6> on input line 239.
+(Font)              <6> on input line 242.
+LaTeX Font Info:    Trying to load font information for U+dsrom on input line 2
+71.
+(C:\Users\hpl802\AppData\Roaming\MiKTeX\2.9\tex/latex/doublestroke\udsrom.fd
+File: Udsrom.fd 1995/08/01 v0.1 Double stroke roman font definitions
+)
+Overfull \hbox (27.17807pt too wide) detected at line 286
+[]
+ []
 
-Overfull \hbox (10.94875pt too wide) detected at line 273
+[1
+
+{C:/Users/hpl802/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] [2]
+(C:\Program Files\MiKTeX 2.9\tex/latex/listings\lstlang1.sty
+File: lstlang1.sty 2020/03/24 1.8d listings language file
+)
+(C:\Program Files\MiKTeX 2.9\tex/latex/listings\lstlang2.sty
+File: lstlang2.sty 2020/03/24 1.8d listings language file
+)
+(C:\Program Files\MiKTeX 2.9\tex/latex/listings\lstlang3.sty
+File: lstlang3.sty 2020/03/24 1.8d listings language file
+)
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 3
+02.
+
+(C:\Program Files\MiKTeX 2.9\tex/latex/lm\t1lmtt.fd
+File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+)
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10.95> on input line 308.
+ [3
+
+] [4] [5
+
+]
+Overfull \hbox (47.9538pt too wide) detected at line 488
+[]
+ []
+
+[6] [7
+
+] [8] [9] [10
+
+]
+Overfull \hbox (379.17484pt too wide) detected at line 668
 []
  []
 
@@ -1337,38 +1379,40 @@ Overfull \hbox (10.94875pt too wide) detected at line 273
 \tf@loc=\write7
 \openout7 = `breakpoint.loc'.
 
-[1
+[11
 
-{C:/Users/hpl802/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}]
-(breakpoint.aux)
+] (breakpoint.aux)
 Package rerunfilecheck Info: File `breakpoint.out' has not changed.
-(rerunfilecheck)             Checksum: 552637AC5B051B908F722CAE6CB7EB5B;270.
+(rerunfilecheck)             Checksum: 0B3E83188A67DA5C7E0D819555A782A3;1011.
  ) 
 Here is how much of TeX's memory you used:
- 28417 strings out of 478868
- 500968 string characters out of 2856724
- 827242 words of memory out of 3000000
- 45726 multiletter control sequences out of 15000+600000
- 452511 words of font info for 82 fonts, out of 8000000 for 9000
+ 29749 strings out of 478868
+ 515393 string characters out of 2856724
+ 1307510 words of memory out of 3000000
+ 46911 multiletter control sequences out of 15000+600000
+ 463851 words of font info for 97 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 114i,10n,117p,548b,330s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 114i,16n,117p,548b,1923s stack positions out of 5000i,500n,10000p,200000b,80000s
 {C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-rm.enc}{C:/Program Files/M
-iKTeX 2.9/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/e
-nc/dvips/lm/lm-mathit.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ma
-thex.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-ec.enc}<C:/Program 
-Files/MiKTeX 2.9/fonts/type1/public/lm/lmbx12.pfb><C:/Program Files/MiKTeX 2.9/
-fonts/type1/public/lm/lmex10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/publi
-c/lm/lmmi12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi6.pfb><C
-:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi8.pfb><C:/Program Files/Mi
-KTeX 2.9/fonts/type1/public/lm/lmr12.pfb><C:/Program Files/MiKTeX 2.9/fonts/typ
-e1/public/lm/lmr17.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr6.
-pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr8.pfb><C:/Program Fil
-es/MiKTeX 2.9/fonts/type1/public/lm/lmsy10.pfb><C:/Program Files/MiKTeX 2.9/fon
-ts/type1/public/lm/lmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/am
-sfonts/symbols/msbm10.pfb>
-Output written on breakpoint.pdf (1 page, 167253 bytes).
+iKTeX 2.9/fonts/enc/dvips/lm/lm-ec.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/d
+vips/lm/lm-mathsy.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathit
+.enc}{C:/Program Files/MiKTeX 2.9/fonts/enc/dvips/lm/lm-mathex.enc}<C:/Users/hp
+l802/AppData/Roaming/MiKTeX/2.9/fonts/type1/public/doublestroke/dsrom12.pfb><C:
+/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmbx12.pfb><C:/Program Files/Mi
+KTeX 2.9/fonts/type1/public/lm/lmex10.pfb><C:/Program Files/MiKTeX 2.9/fonts/ty
+pe1/public/lm/lmmi12.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmm
+i6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmmi8.pfb><C:/Program
+ Files/MiKTeX 2.9/fonts/type1/public/lm/lmr12.pfb><C:/Program Files/MiKTeX 2.9/
+fonts/type1/public/lm/lmr17.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
+/lm/lmr6.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/lm/lmr8.pfb><C:/Pr
+ogram Files/MiKTeX 2.9/fonts/type1/public/lm/lmsy10.pfb><C:/Program Files/MiKTe
+X 2.9/fonts/type1/public/lm/lmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/
+public/lm/lmtt10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/s
+ymbols/msam10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/symb
+ols/msbm10.pfb>
+Output written on breakpoint.pdf (11 pages, 260760 bytes).
 PDF statistics:
- 91 PDF objects out of 1000 (max. 8388607)
- 4 named destinations out of 1000 (max. 500000)
- 29 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 307 PDF objects out of 1000 (max. 8388607)
+ 129 named destinations out of 1000 (max. 500000)
+ 77 words of extra memory for PDF output out of 10000 (max. 10000000)
 

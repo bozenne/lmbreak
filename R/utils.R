@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr 12 2024 (10:19) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (18:39) 
+## Last-Updated: jul  2 2024 (15:06) 
 ##           By: Brice Ozenne
-##     Update #: 63
+##     Update #: 71
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -153,5 +153,47 @@ backtransformFree <- function(value, min, max, jacobian = FALSE){
 
 }
 
+## * AUC
+## Adapter from DescTools::AUC
+AUC <- function (x, y, from, to,  method = "trapezoid", subdivisions = 100, na.rm = FALSE, ...){
+    
+    ## ** normalize user input
+    if (na.rm) {
+        idx <- stats::complete.cases(cbind(x, y))
+        x <- x[idx]
+        y <- y[idx]
+    }
+    if (length(x) < 2){
+        stop("Cannot compute an area under the curve with 2 or less timpoints. \n")
+    }
+    if(from < min(x) | to > max(x)){
+        message("Cannot compute an area under the curve w.r.t. timepoints before the first observation or after the last observation. \n")
+    }
+    method <- match.arg(method, choices = c("trapezoid", "step", "spline"))
+
+    ## ** evalute auc
+    neworder <- order(x)
+    x.order <- x[neworder]
+    y.order <- y[neworder]
+
+    if (method == "trapezoid") {
+
+        values <- stats::approx(x.order, y.order, xout = sort(unique(c(from, to, x.order[x.order > from & x.order < to]))), ...)
+        res <- 0.5 * sum(diff(values$x) * (values$y[-1] + values$y[-length(values$y)]))
+
+    }else if (method == "step") {
+
+        values <- stats::approx(x.order, y.order, xout = sort(unique(c(from, to, x.order[x.order > from & x.order < to]))), ...)
+        res <- sum(diff(values$x) * values$y[-length(values$y)])
+
+    }else if (method == "spline") {
+
+        res <- stats::integrate(stats::splinefun(x.order, y.order, method = "natural"), lower = from, upper = to, subdivisions = subdivisions)$value
+
+    }
+
+    ## ** output
+    return(res)
+}
 ##----------------------------------------------------------------------
 ### utils.R ends here

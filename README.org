@@ -20,7 +20,7 @@ library(remotes)
 install_github("bozenne/lmbreak")
 #+END_SRC
 
-** Functionalities
+** Functionalities: single pattern, single dataset
 
 The functionnalities of the package:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -28,7 +28,7 @@ library(lmbreak)
 #+END_SRC
 
 #+RESULTS:
-: lmbreak version 0.0.3
+: lmbreak version 0.0.4
 
 will be exemplified on the following dataset:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -70,20 +70,24 @@ response variable is to be modeled using broken lines) should be
 wrapper by =bp()= and indicate the number of breakpoints and possible
 constrains on the slopes (pattern). The function will then estimate
 the the position of the breakpoint and slopes. The method =plot= can
-then be applied to the output of =lmbreak= to visualize the model fit:
-#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+then be applied to the output of =lmbreak= to visualize the model
+fit:
+#+BEGIN_SRC R :exports code :results output :session *R* :cache no
 plot(e.XP111, ylim = c(0,12)) ## left panel
 plot(e.XP101, ylim = c(0,12)) ## middle panel
-plot(e.XP11, ylim = c(0,12)) ## right panel
+plot(e.XP11, ylim = c(0,12), extrapolate = TRUE) ## right panel
 #+END_SRC
 
 #+RESULTS:
-: Warning message:
-: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
-: Warning message:
-: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
-: Warning message:
-: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+
+For the last call to =plot=, the argument =extrapolate= was used to
+display the model fit beyond the observed timepoints.
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
 gg12 <- ggpubr::ggarrange(ggplot2::autoplot(e.XP111, ylim = c(0,12))$plot + ggplot2::ggtitle("Pattern 111"),
@@ -94,19 +98,19 @@ ggplot2::ggsave(gg12, width = 10, height = 4, file = "inst/figures/gg-indiv-exam
 #+END_SRC
 
 #+RESULTS:
-: Warning messages:
-: 1: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`). 
-: 2: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`). 
-: 3: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`). 
-: 4: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
+: Advarselsbeskeder:
+: 1: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
+: 2: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
+: 3: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
+: 4: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
 
 #+BEGIN_HTML
 <img src="./inst/figures/gg-indiv-example.png" title="101 pattern - patient 1" alt="101 pattern - patient 1" width="100%" style="display: block; margin: auto;" />
 #+END_HTML
 
 
- The method =model.tables= can be used to obtain a concise output of
-the estimates in a =data.frame= format:
+The method =model.tables= can be used to obtain a concise output of
+ the estimates in a =data.frame= format:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
 model.tables(e.XP101)
 #+END_SRC
@@ -117,6 +121,39 @@ model.tables(e.XP101)
 : 2  87.88131 142.78560  9.666944  0.000
 : 3 230.66691  69.33309  9.666944 -0.125
 : 4 300.00000        NA  1.000307     NA
+
+Other summary statistics of the breakpoint fit can be extracted using
+the =coef= method with the argument =type= (see the documentation
+=help(coef.lmbreak)=). For instance the area under the fitted curve
+(AUC) between time 0 and 300 can be computed running:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+coef(e.XP101, type = "auc", interval = c(0,300))
+#+END_SRC
+
+#+RESULTS:
+: [1] 2174.809
+
+The =predict= method can also be used to extract the fitted values (up
+to a certain time resolution, here 1 time unit):
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+fit.XP101 <- predict(e.XP101, newdata = data.frame(time = seq(0,440,by=1)))
+cbind(head(fit.XP101), "",tail(fit.XP101))
+#+END_SRC
+
+#+RESULTS:
+:   time estimate "" time estimate
+: 1    0     0.00     435       NA
+: 2    1     0.11     436       NA
+: 3    2     0.22     437       NA
+: 4    3     0.33     438       NA
+: 5    4     0.44     439       NA
+: 6    5     0.55     440       NA
+
+Fitted values beyond the last observed non-NA outcome will
+automatically be set to missing (i.e. =NA=), unless the argument
+=extrapolate= is set to TRUE.
+
+** Functionalities: multiple patterns
 
 When specifying a pattern that does not fit the data, the estimation
 procedure may fail to find reliable estimates and will output a
@@ -141,10 +178,14 @@ coef(e.XPrescue,c("pattern","breakpoint"))
 :   pattern breakpoint
 : 1      11   126.9094
 
-This is especially useful when using the =mlmbreak= function to fit
-(separate) breakpoint models on several individuals:
-#+BEGIN_SRC R :exports code :results output :session *R* :cache no
-e.XPall <- mlmbreak(score ~ 0 + bp(time, c("101","11")), cluster = "id", data = SDIpsilo,
+** Functionalities: mutiple datasets
+
+The =mlmbreak= function provides a convenient way to fit a (separate)
+breakpoint model to each individuals. To do so one should specify the
+=cluster= argument to flag the variable in the dataset identifying the
+individuals:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+e.XPall <- mlmbreak(score ~ 0 + bp(time, "101"), cluster = "id", data = SDIpsilo,
                     trace = FALSE)
 summary(e.XPall)
 #+END_SRC
@@ -153,32 +194,35 @@ summary(e.XPall)
 #+begin_example
 
 Call:
-mlmbreak(formula = score ~ 0 + bp(time, c("101", "11")), data = SDIpsilo, 
+mlmbreak(formula = score ~ 0 + bp(time, "101"), data = SDIpsilo, 
     cluster = "id", trace = FALSE)
 
 Breakpoints:
-   id pattern   cv continuity      R2      breakpoint      maxVs
-1   1     101 TRUE       TRUE 0.98332 84.507, 162.051    < 1e-05
-2   2     101 TRUE       TRUE 0.99213  55.556, 87.525 4.2779e-05
-3   3     101 TRUE       TRUE 0.99150 65.143, 166.481    < 1e-05
-4   4     101 TRUE       TRUE 0.98110  105.77, 169.81    < 1e-05
-5   5     101 TRUE       TRUE 0.98385 49.123, 173.913    < 1e-05
-6   6     101 TRUE       TRUE 0.99337         70, 150    < 1e-05
-7   7     101 TRUE       TRUE 0.98399  47.619, 87.912    < 1e-05
-8   8     101 TRUE       TRUE 0.98558 86.957, 129.533    < 1e-05
-9   9     101 TRUE       TRUE 0.97533 49.123, 115.938    < 1e-05
-10 10     101 TRUE       TRUE 0.99615 65.116, 195.238    < 1e-05
-11 11     101 TRUE      FALSE 0.98285 32.514, 100.000    0.35968
-12 12     101 TRUE       TRUE 0.96547 43.477, 150.997 0.00040012
-13 13     101 TRUE       TRUE 0.99443 87.881, 230.667  0.0002774
-14 14     101 TRUE       TRUE 0.97773  157.89, 248.02    < 1e-05
-15 15     101 TRUE       TRUE 0.99110  157.30, 234.74    < 1e-05
+ id pattern   cv continuity        R2          breakpoint      maxVs
+  1     101 TRUE       TRUE 0.9833193 84.50704, 162.05128 3.1378e-07
+  2     101 TRUE       TRUE 0.9921334  55.55577, 87.52523 4.2779e-05
+  3     101 TRUE       TRUE 0.9915031 65.14286, 166.48148    < 1e-07
+  4     101 TRUE       TRUE 0.9811031  105.7692, 169.8089 3.2387e-07
+  5     101 TRUE       TRUE 0.9838541 49.12281, 173.91304    < 1e-07
+  6     101 TRUE       TRUE 0.9933673             70, 150    < 1e-07
+  7     101 TRUE       TRUE 0.9839889  47.61905, 87.91219 4.3466e-06
+  8     101 TRUE       TRUE 0.9855812 86.95653, 129.53270  8.503e-07
+  9     101 TRUE       TRUE 0.9753291 49.12281, 115.93750 2.0289e-07
+ 10     101 TRUE       TRUE 0.9961527 65.11626, 195.23811  3.489e-06
+ 11     101 TRUE      FALSE 0.9828458 32.51507, 100.00000    0.35968
+ 12     101 TRUE       TRUE 0.9654704 43.47734, 150.99664 0.00040012
+ 13     101 TRUE       TRUE 0.9944311 87.88131, 230.66691  0.0002774
+ 14     101 TRUE       TRUE 0.9777323  157.8947, 248.0208 2.9936e-07
+ 15     101 TRUE       TRUE 0.9911019  157.3034, 234.7368    < 1e-07
 #+end_example
 
-Here an upslope, plateau, normalization (101 pattern) could be fitted
-for all individuals but had it not been the case, the pattern =11=
-would have been used instead. Once more key summary statistics can be extracted using
-the =model.tables= method:
+In this example an upslope, plateau, normalization (101 pattern) could
+be fitted for all individuals but we could also have specified
+alternative patterns with the syntax =bp(time, c("101","11")=. The
+pattern =11= would then have been used for any individual where the
+optimizer convergence criteria were not met with pattern =101=. Once
+more key summary statistics can be extracted using the =model.tables=
+method:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
 model.tables(e.XPall, format = "array")[,,1:2]
 #+END_SRC
@@ -203,13 +247,13 @@ model.tables(e.XPall, format = "array")[,,1:2]
 #+end_example
 
 and a graphical display of the model fit can be obtained using the =plot= method:
-#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+#+BEGIN_SRC R :exports code :results output :session *R* :cache no
 plot(e.XPall, ylim = c(0,10))
 #+END_SRC
 
 #+RESULTS:
-: Warning message:
-: [1m[22mRemoved 89 rows containing missing values or values outside the scale range (`geom_point()`).
+: Advarselsbesked:
+: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
 
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
@@ -224,12 +268,108 @@ ggplot2::ggsave(ggplot2::autoplot(e.XPall, ylim = c(0,10))$plot, width = 8, heig
 <img src="./inst/figures/gg-all-example.png" title="101/11 pattern - all patient" alt="101/11 pattern - all patient" width="100%" style="display: block; margin: auto;" />
 #+END_HTML
 
+By default a different facet is used for each individual. A single
+facet can be used by setting the argument =scales= to ="none"=:
+
+#+BEGIN_SRC R :exports code :results output :session *R* :cache no
+plot(e.XPall, ylim = c(0,10), scales = "none")
+#+END_SRC
+
+#+RESULTS:
+: Advarselsbesked:
+: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+
+#+BEGIN_SRC R :exports none :results output :session *R* :cache no
+ggplot2::ggsave(ggplot2::autoplot(e.XPall, scales = "none", ylim = c(0,10))$plot, width = 8, height = 8, file = "inst/figures/gg-all-exampleIn1.png")
+#+END_SRC
+
+#+RESULTS:
+: Advarselsbesked:
+: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+
+#+BEGIN_HTML
+<img src="./inst/figures/gg-all-exampleIn1.png" title="101/11 pattern - all patient single plot" alt="101/11 pattern - all patient single plot" width="100%" style="display: block; margin: auto;" />
+#+END_HTML
+
+The fitted values for each individual can be extract once again with the =predict= method:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+fit.XPall <- predict(e.XPall, newdata = data.frame(time = seq(0,440,by=1)), extrapolate = TRUE)
+cbind(head(fit.XPall), "", tail(fit.XPall))
+#+END_SRC
+
+#+RESULTS:
+:   id time  estimate "" id time  estimate
+: 1  1    0 0.0000000    15  435 -6.307143
+: 2  1    1 0.1183333    15  436 -6.388571
+: 3  1    2 0.2366667    15  437 -6.470000
+: 4  1    3 0.3550000    15  438 -6.551429
+: 5  1    4 0.4733333    15  439 -6.632857
+: 6  1    5 0.5916667    15  440 -6.714286
+
+Due to extrapolation some of the fitted values are estimate to be
+negative, which is not realistic in the application since the scale is
+non-negative. An add-hoc solution can be to set the negative values to 0:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+fit.XPall$estimate <- pmax(fit.XPall$estimate,0)
+#+END_SRC
+
+#+RESULTS:
+
 ** Limitations & alternative
 
 Currently the package is limited to a single continous response
 variable and a single breakpoint variable without interaction with
 other covariates. No tools for uncertainty quantification or
-statistical inference is implemented.
+statistical inference is implemented. The [[https://cran.r-project.org/web/packages/segmented/][segmented]] package is a more
+mature implementation of breakpoint models with possibilities for
+statistical inference.
 
-See the [[https://cran.r-project.org/web/packages/segmented/][segmented]] package for an alternative and more mature
-implementation of breakpoint models.
+Another limitation of the current approach is the lack of a model of
+the 'average' response. While is possible to compute the average and
+standard deviation of the fit over all individuals, e.g.:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+library(LMMstar)
+fit.XPmean <- summarize(estimate ~ time, data = fit.XPall)[,c("observed","time","mean","sd")]
+cbind(head(fit.XPmean),"",tail(fit.XPmean))
+#+END_SRC
+
+#+RESULTS:
+:   observed time      mean         sd "" observed time mean sd
+: 1       15    0 0.0000000 0.00000000          15  435    0  0
+: 2       15    1 0.1438581 0.05787849          15  436    0  0
+: 3       15    2 0.2877163 0.11575697          15  437    0  0
+: 4       15    3 0.4315744 0.17363546          15  438    0  0
+: 5       15    4 0.5754326 0.23151395          15  439    0  0
+: 6       15    5 0.7192907 0.28939243          15  440    0  0
+
+its graphical display:
+#+BEGIN_SRC R :exports both :results output :session *R* :cache no
+## aggregate the observed scores
+SDIpsilo.aggr <- summarize(score ~ score + time, data = SDIpsilo)[,c("observed","time","score")]
+
+library(ggplot2)
+gg.mean <- ggplot(mapping = aes(x = time))
+gg.mean <- gg.mean + geom_point(data = SDIpsilo.aggr, aes(y = score, size = observed, color = "Observed"))
+gg.mean <- gg.mean + geom_line(data = fit.XPall, aes(y = estimate, group = id, color = "Individual fit"))
+gg.mean <- gg.mean + geom_line(data = fit.XPmean, aes(y = mean, color = "Average of the individual fit"), linewidth = 2)
+gg.mean <- gg.mean + labs(size = "Number of individuals", colour = "")
+gg.mean
+#+END_SRC
+
+#+BEGIN_HTML
+<img src="./inst/figures/gg-all-mean.png" title="101/11 pattern - all patient mean plot" alt="101/11 pattern - all patient mean plot" width="100%" style="display: block; margin: auto;" />
+#+END_HTML
+
+#+BEGIN_SRC R :exports none :results output :session *R* :cache no
+ggplot2::ggsave(gg.mean, width = 7, height = 5, file = "inst/figures/gg-all-mean.png")
+#+END_SRC
+
+is not consistent with the individual models. Consider for instance
+the case where all individuals would have a plateau at 10. Because
+they may plateau at different timepoints, the average may always be
+below 10.
+
+
+
+
+

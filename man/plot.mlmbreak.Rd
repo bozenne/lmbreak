@@ -9,6 +9,9 @@
   object,
   cluster = NULL,
   y = NULL,
+  breaks = 25,
+  extrapolate = FALSE,
+  breakpoint = TRUE,
   xlim = NULL,
   ylim = NULL,
   color = grDevices::palette.colors(3),
@@ -30,6 +33,12 @@
 
 \item{y}{[mlmbreak] another model whose fit is to be compared with the first one.}
 
+\item{breaks}{[integer or numeric vector] number or vector of points to be used to display the fit.}
+
+\item{extrapolate}{[logical] should values before the first or beyond the last observation be displayed?}
+
+\item{breakpoint}{[logical] should the breakpoints be displayed?}
+
 \item{xlim}{[numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).}
 
 \item{ylim}{[numeric vector of length 2] range of displayed values for the y-axis (response variable).}
@@ -42,7 +51,8 @@
 
 \item{alpha}{[numeric] transparency of the points representing the observations. Can be set to 0 to hide the observations and only display the fitted broken lines.}
 
-\item{scales}{[character] argument passed to \code{ggplot2::facet_wrap} when displaying covariate specific model fit.}
+\item{scales}{[character] argument passed to \code{ggplot2::facet_wrap} when displaying covariate specific model fit.
+Can be \code{"none"} to display all trajectories on the same plot.}
 
 \item{labeller}{[character] function used to label each facet. Passed to \code{ggplot2::facet_wrap}.}
 

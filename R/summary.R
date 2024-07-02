@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (17:58) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (16:01) 
+## Last-Updated: jul  2 2024 (15:32) 
 ##           By: Brice Ozenne
-##     Update #: 113
+##     Update #: 126
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -79,9 +79,9 @@ summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
 #' @export 
 ## * print.mlmbreak (code)
 #' @export 
-summary.mlmbreak <- function(object, digits = options()$digits-2, ...){
+summary.mlmbreak <- function(object, digits = c(options()$digits,1), ...){
 
-    df.res <- coef(object, type = c("pattern","cv","continuity","R2"))
+    df.res <- coef(object, type = c("pattern","cv","continuity","r2"))
     df.res$breakpoint <- lapply(coef(object, type = c("breakpoint"), format = "list"),"[[","breakpoint")
     df.res$maxVs <- lapply(coef(object, type = c("Vs"), format = "list"),"[[","Vs")
 
@@ -91,8 +91,8 @@ summary.mlmbreak <- function(object, digits = options()$digits-2, ...){
     cat("\n")
     cat("Breakpoints:\n")
     df.res2print <- df.res
-    df.res2print$maxVs <- lapply(df.res$maxVs,function(iDf){format.pval(max(abs(iDf)), eps = 10^-digits)})
-    print(df.res2print, digits = digits)
+    df.res2print$maxVs <- lapply(df.res$maxVs,function(iDf){format.pval(max(abs(iDf)), eps = 10^-digits[1])})
+    print(df.res2print, digits = digits, row.names = FALSE)
 
     ## ** export
     return(invisible(df.res))

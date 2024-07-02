@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: jun 10 2024 (16:12) 
+## Last-Updated: jul  2 2024 (15:25) 
 ##           By: Brice Ozenne
-##     Update #: 209
+##     Update #: 242
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -22,6 +22,9 @@
 #'
 #' @param object,x [lmbreak] output of \code{\link{lmbreak}}.
 #' @param y [lmbreak] another model whose fit is to be compared with the first one.
+#' @param breaks [integer or numeric vector] number or vector of points to be used to display the fit.
+#' @param extrapolate [logical] should values before the first or beyond the last observation be displayed?
+#' @param breakpoint [logical] should the breakpoints be displayed?
 #' @param xlim [numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).
 #' @param ylim [numeric vector of length 2] range of displayed values for the y-axis (response variable).
 #' @param color [character vector of length 2 or 3] colors used to display the observations and the model fit.
@@ -36,11 +39,11 @@
 #' 
 #' @keywords hplot
 #' @export 
-autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
+autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE, breakpoint = TRUE, xlim = NULL, ylim = NULL, 
                              color = grDevices::palette.colors(3), size = c(1.5,2.5), linewidth = 1, alpha = 1, scales = "fixed", title = NULL, ...){
 
     ## ** extract from model
-    breakpoint <- stats::coef(object, type = "breakpoint")
+    breakpoint.value <- stats::coef(object, type = "breakpoint")
     breakpoint.var <- object$args$breakpoint.var
     data <- object$data
     response.var <- object$args$response.var
@@ -70,10 +73,15 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
         if(!inherits(y,"lmbreak")){
             stop("Incorrect argument \'y\': should inherit of lmbreak. \n")
         }
-        attr(breakpoint,"y") <- stats::coef(y,"breakpoint")
-        allBreakpoint <- unique(sort(c(breakpoint,attr(breakpoint,"y"))))
+        attr(breakpoint.value,"y") <- stats::coef(y,"breakpoint")
+        allBreakpoint <- unique(sort(c(breakpoint.value,attr(breakpoint.value,"y"))))
     }else{
-        allBreakpoint <- breakpoint
+        allBreakpoint <- breakpoint.value
+    }
+
+    ## breaks
+    if(!is.numeric(breaks)){
+        stop("Incorrect argument \'break\': should be numeric. \n")
     }
     
     ## xlim
@@ -87,6 +95,9 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
             stop("The first element of argument \'xlim\' should be strictly smaller than the second. \n")
         }
     }    
+    if(extrapolate==FALSE){
+        xlim.NNA <- range(data[!is.na(data[[response.var]]),breakpoint.var],na.rm=TRUE)
+    }
 
     ## ylim
     if(is.null(ylim) && ("ylim" %in% names(match.call()) == FALSE)){
@@ -94,25 +105,54 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
     }
 
     ## ** design matrix
-    if(all(!is.na(breakpoint))){
-        ls.X <- mapply(xxx = c(xlim[1], allBreakpoint),
-                       yyy = c(allBreakpoint-1e-10, xlim[2]),
-                       FUN = function(xxx, yyy){seq(xxx,yyy, length.out = 25)},
-                       SIMPLIFY = FALSE)
+    if(all(!is.na(breakpoint.value))){
 
+        if(length(breaks)==1){
+            if(breakpoint){
+                if(extrapolate){
+                    ls.X <- mapply(xxx = c(xlim[1], allBreakpoint),
+                                   yyy = c(allBreakpoint-1e-10, xlim[2]),
+                                   FUN = function(xxx, yyy){seq(xxx,yyy, length.out = breaks)},
+                                   SIMPLIFY = FALSE)
+                }else{
+                    ls.X <- mapply(xxx = c(xlim.NNA[1], allBreakpoint),
+                                   yyy = c(allBreakpoint-1e-10, xlim.NNA[2]),
+                                   FUN = function(xxx, yyy){seq(xxx,yyy, length.out = breaks)},
+                                   SIMPLIFY = FALSE)
+                }
+            }else{
+                if(extrapolate){
+                    ls.X <- list(seq(xlim[1], xlim[2], length.out = breaks))
+                }else{
+                    ls.X <- list(seq(xlim.NNA[1], xlim.NNA[2], length.out = breaks))
+                }
+            }
+            vec.X <- unlist(ls.X)
+        }else{
+            if(breakpoint){
+                vec.X <- sort(union(breaks, allBreakpoint[allBreakpoint>=min(breaks) & allBreakpoint<=max(breaks)]))
+            }else{
+                vec.X <- sort(breaks)
+            }
+        }
+        
+        if(extrapolate==FALSE){
+            vec.X <- vec.X[vec.X>=xlim.NNA[1] & vec.X<=xlim.NNA[2]]
+        }
+        
         if(length(Z.var)>0){
-            newdata <- expand.grid(c(list(unlist(ls.X)),unique(data[Z.var])))
+            newdata <- expand.grid(c(list(vec.X),unique(data[Z.var])))
             names(newdata)[1] <- breakpoint.var
         }else{
-            newdata <- data.frame(unlist(ls.X))
+            newdata <- data.frame(vec.X)
             names(newdata) <- breakpoint.var
         }
     }
 
     ## ** fitted values
-    if(all(!is.na(breakpoint))){
+    if(all(!is.na(breakpoint.value))){
         newdataA <- stats::predict(object, newdata = newdata, keep.newdata = TRUE)
-        newdataA$breakpoint <- newdataA[[breakpoint.var]] %in% breakpoint
+        newdataA$breakpoint <- newdataA[[breakpoint.var]] %in% breakpoint.value
         newdataA$model <- "fit"
         if(!is.null(y)){
             if(y$opt$optimizer[1]!=object$opt$optimizer[1]){
@@ -126,9 +166,9 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
         newdataA <- NULL
     }
 
-    if(!is.null(y) && all(!is.na(attr(breakpoint,"y")))){
+    if(!is.null(y) && all(!is.na(attr(breakpoint.value,"y")))){
         newdataA.bis <- stats::predict(y, newdata = newdata, keep.newdata = TRUE)
-        newdataA.bis$breakpoint <- newdataA.bis[[breakpoint.var]] %in% attr(breakpoint,"y")
+        newdataA.bis$breakpoint <- newdataA.bis[[breakpoint.var]] %in% attr(breakpoint.value,"y")
         if(y$opt$optimizer[1]!=object$opt$optimizer[1]){
             newdataA.bis$model <- paste0("fit (",y$opt$optimizer[1],")")
         }else{
@@ -145,10 +185,10 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
     ## ** graphical display
     out <- ggplot2::ggplot()
     out <- out + ggplot2::geom_point(data = cbind(data, model = "observation"), ggplot2::aes(x = .data[[breakpoint.var]], y = .data[[response.var]], color = .data$model), alpha = alpha, size = size[1])
-    if(!is.na(size[2]) && all(!is.na(breakpoint))){
-        out <- out + ggplot2::geom_point(data = newdataB, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), size = size[2])
-    }
-    if(all(!is.na(breakpoint))){
+    if(all(!is.na(breakpoint.value))){
+        if(breakpoint && !is.na(size[2])){
+            out <- out + ggplot2::geom_point(data = newdataB, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), size = size[2])
+        }
         out <- out + ggplot2::geom_line(data = newdataA, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, group = .data$model, color = .data$model), linewidth = linewidth)
     }
     out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataA$model))))
@@ -180,6 +220,9 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
 #' @param object,x [mlmbreak] output of \code{\link{mlmbreak}}.
 #' @param y [mlmbreak] another model whose fit is to be compared with the first one.
 #' @param cluster [vector] cluster relative to which the breakpoint model should be displayed.
+#' @param breaks [integer or numeric vector] number or vector of points to be used to display the fit.
+#' @param extrapolate [logical] should values before the first or beyond the last observation be displayed?
+#' @param breakpoint [logical] should the breakpoints be displayed?
 #' @param xlim [numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).
 #' @param ylim [numeric vector of length 2] range of displayed values for the y-axis (response variable).
 #' @param color [character vector of length 2 or 3] colors used to display the observations and the model fit.
@@ -196,7 +239,7 @@ autoplot.lmbreak <- function(object, y = NULL, xlim = NULL, ylim = NULL,
 #' 
 #' @keywords hplot
 #' @export 
-autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, xlim = NULL, ylim = NULL,
+autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, extrapolate = FALSE, breakpoint = TRUE, xlim = NULL, ylim = NULL,
                               color = grDevices::palette.colors(3), size = c(1.5,2.5), linewidth = 1, alpha = 1, scales = "fixed", labeller = "label_both",
                               subtitle = 2, ...){
 
@@ -250,13 +293,19 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, xlim = NULL, yli
         }
     }
     
+    ## breaks
+    if(length(breaks)>1 & is.numeric(breaks) & breakpoint){
+        allBreakpoint <- coef(object, "breakpoint")[,"breakpoint"]
+        breaks <- sort(union(breaks, allBreakpoint[allBreakpoint>=min(breaks) & allBreakpoint<=max(breaks)]))
+    }
 
+    
     ## ** fitted values
     ls.ggdata <- lapply(cluster, function(iC){
         if(!is.null(y)){
-            iOut <- autoplot(as.lmbreak(object, cluster = iC), y = as.lmbreak(y, cluster = iC), xlim = xlim)$data
+            iOut <- autoplot(as.lmbreak(object, cluster = iC), y = as.lmbreak(y, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, breakpoint = breakpoint)$data
         }else{
-            iOut <- autoplot(as.lmbreak(object, cluster = iC), xlim = xlim)$data
+            iOut <- autoplot(as.lmbreak(object, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, breakpoint = breakpoint)$data
         }
         if(!is.null(iOut)){
             return(cbind(iC,iOut))
@@ -284,15 +333,16 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, xlim = NULL, yli
     out <- ggplot2::ggplot()
     out <- out + ggplot2::geom_point(data = cbind(data, model = "observation"), ggplot2::aes(x = .data[[breakpoint.var]], y = .data[[response.var]], color = .data$model),
                                      alpha = alpha, size = size[1])
-    if(!is.na(size[2])){
+
+    if(breakpoint & !is.na(size[2])){
         out <- out + ggplot2::geom_point(data = newdataB, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), size = size[2])
     }
     if(scales == "none"){
         out <- out + ggplot2::geom_line(data = newdataA, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model, group = .data[[var.cluster]]), linewidth = linewidth)
-        out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataB$model))))
+        out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataA$model))))
     }else{
         out <- out + ggplot2::geom_line(data = newdataA, ggplot2::aes(x = .data[[breakpoint.var]], y = .data$estimate, color = .data$model), linewidth = linewidth)
-        out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataB$model))))
+        out <- out + ggplot2::scale_colour_manual(values = stats::setNames(color[1:(2+!is.null(y))], c("observation",unique(newdataA$model))))
         out <- out + ggplot2::facet_wrap(stats::as.formula(paste0("~",var.cluster)), scales = scales, labeller = labeller)
     }
 

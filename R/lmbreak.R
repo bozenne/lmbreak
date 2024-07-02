@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: apr 29 2024 (13:18) 
+## Last-Updated: jul  2 2024 (15:25) 
 ##           By: Brice Ozenne
-##     Update #: 1295
+##     Update #: 1298
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -342,7 +342,7 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
                            pattern = unlist(mapply(x = pattern, times = sapply(breakpoint.init,NCOL),rep, SIMPLIFY = FALSE)),                           
                            init = unlist(lapply(breakpoint.init, function(iM){1:NCOL(iM)})),
                            init.type = factor(unlist(lapply(breakpoint.init, colnames)), names(name.order)),
-                           cv = NA, continuity = NA, regularity = NA, R2 = NA
+                           cv = NA, continuity = NA, regularity = NA, r2 = NA
                            )
     rownames(grid.fit) <- NULL
     pattern2hierarchy <- stats::setNames(paste0(hierarchy.pattern,".",sapply(patternUsVs, "[[", "n.param")), pattern)
@@ -404,11 +404,11 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
         ls.fit[[iGrid]]$model <- iCheckCV$lm
         ls.fit[[iGrid]]$opt$continuity <- iCheckCV$continuity
         ls.fit[[iGrid]]$opt$regularity <- iCheckCV$regularity
-        ls.fit[[iGrid]]$opt$R2 <- iCheckCV$R2
-        grid.fit[iGrid,c("cv","continuity","regularity","R2")] <- unlist(ls.fit[[iGrid]]$opt[c("cv","continuity","regularity","R2")])
+        ls.fit[[iGrid]]$opt$r2 <- iCheckCV$r2
+        grid.fit[iGrid,c("cv","continuity","regularity","r2")] <- unlist(ls.fit[[iGrid]]$opt[c("cv","continuity","regularity","r2")])
 
         ## *** do not try other patterns or other initializations if a satisfactory solution is found
-        if(grid.fit[iGrid,"check.cv"] && any(rowSums(grid.fit[1:iGrid,c("cv","continuity","regularity")])==3 & grid.fit[1:iGrid,"R2"]>control$minR2)){
+        if(grid.fit[iGrid,"check.cv"] && any(rowSums(grid.fit[1:iGrid,c("cv","continuity","regularity")])==3 & grid.fit[1:iGrid,"r2"]>control$minR2)){
             break
         }
     }
@@ -420,7 +420,7 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
     if(iGrid==1){
         index.opt <- 1
     }else{
-        index.opt <- which.max(2*(grid.fit[1:iGrid,"cv"] & grid.fit[1:iGrid,"R2"]>control$minR2) + grid.fit[1:iGrid,"regularity"]+grid.fit[1:iGrid,"R2"])
+        index.opt <- which.max(2*(grid.fit[1:iGrid,"cv"] & grid.fit[1:iGrid,"r2"]>control$minR2) + grid.fit[1:iGrid,"regularity"]+grid.fit[1:iGrid,"r2"])
     }
     out <- ls.fit[[index.opt]]
     out$formula.pattern <- patternUsVs[[grid.fit[index.opt,"pattern"]]]$formula
@@ -580,7 +580,7 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
     ## *** test Vs terms
     if(is.na(tol[2]) || any(is.na(breakpoint)) || any(is.infinite(breakpoint))){
         out$continuity <- TRUE
-        out$R2 <- NA
+        out$r2 <- NA
         out$lm <- NULL
     }else{
         data.UsVs <- model.frame.lmbreak(list(breakpoint.var = var.bp, breakpoint = breakpoint), newdata = data)
@@ -593,12 +593,12 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
             out$continuity <- all(abs(param.UsVs[Vs.label])<tol[2])
         }
         if(out$continuity){
-            out$R2 <- summary(out$lm)$r.squared
+            out$r2 <- summary(out$lm)$r.squared
         }else if(enforce.continuity){
             attr(out$lm,"continuity") <- stats::lm(formula.noVs, data = data.UsVs)
-            out$R2 <- summary(attr(out$lm,"continuity"))$r.squared
+            out$r2 <- summary(attr(out$lm,"continuity"))$r.squared
         }else{
-            out$R2 <- NA
+            out$r2 <- NA
         }
     }
 

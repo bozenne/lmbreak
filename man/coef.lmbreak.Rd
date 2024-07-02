@@ -4,12 +4,13 @@
 \alias{coef.lmbreak}
 \title{Extract Summary Statistics From Breakpoint Model}
 \usage{
-\method{coef}{lmbreak}(object, type = "breakpoint", simplify = TRUE, ...)
+\method{coef}{lmbreak}(object, type = "breakpoint", interval, simplify = TRUE, ...)
 }
 \arguments{
 \item{object}{output of \code{\link{lmbreak}}.}
 
 \item{type}{[vector of character] summary statistic to be output: \itemize{
+\item auc: area under the curve
 \item breakpoint: position of the breakpoint
 \item breakpoint.range: position of the breakpoint, minimum and maximum X values.
 \item duration: duration (in term of X values) of each broken line.
@@ -23,6 +24,9 @@
 \item cv: convergence of the optimization algorithm.
 \item continuity: continuity at the breakpoints of the model fit.
 }}
+
+\item{interval}{[numeric vector of length 2] values from where to start and to stop calculating the area under the curve.
+Only relevant when \code{type="auc"}.}
 
 \item{simplify}{[logical] simplify the data format from a list to a vector or a data.frame.}
 

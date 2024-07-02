@@ -1,4 +1,4 @@
-% Created 2024-04-11 to 11:43
+% Created 2024-06-18 ti 13:58
 % Intended LaTeX compiler: pdflatex
 \documentclass[12pt]{article}
 
@@ -233,36 +233,430 @@ and (1.75,0.4) .. cycle;
 
 \maketitle
 
-\section{The problem}
-\label{sec:org82c5f22}
+\section{Single breakpoint, single slope}
+\label{sec:orgec88a0a}
+
+\subsection{Theory}
+\label{sec:org338d0d1}
 
 Consider a response variable \(Y\) and an explanatory variable \(X\)
-related by the following equation:
+related by:
+\begin{align*}
+Y = \beta X - \beta (X - \psi)_+ + \varepsilon
+\end{align*}
+
+\noindent where \((\beta,\psi) \in \Real^2\), \(\varepsilon
+\sim \Gaus[0,\sigma^2]\), and \((x)_+=x\) if \(x>0\) and 0
+otherwise. Introduce \(\Theta = (\beta,\psi,\sigma^2)\), we can
+express the likelihood relative to \(n\) iid observations as:
+\begin{align*}
+\Likelihood(\Theta) = \prod_{i=1}^n \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta X_i + \beta (X_i - \psi)_+)^2}{2\sigma^2}\right)
+\end{align*}
+and the log-likelihood as:
+\begin{align*}
+\likelihood(\Theta) = - \frac{n}{2} \log(2\pi) - \frac{n}{2} \log(\sigma^2) - \sum_{i=1}^n \frac{\left(Y_i - \beta X_i + \beta (X_i - \psi)_+\right)^2}{2\sigma^2}
+\end{align*}
+
+\noindent Maximizing the likelihood with respect to \(\Theta_\mu =
+(\beta,\psi)\) is equivalent to minimizing the mean squared
+error:
+\begin{align*}
+\likelihood(\Theta_\mu) = \sum_{i=1}^n (Y_i - \beta X_i + \beta (X_i - \psi)_+)^2
+\end{align*}
+
+\noindent which is equivalent to first minimizing
+w.r.t. \(beta\), i.e. plug-in the OLS estimator:
+\begin{align*}
+\tilde{\beta}(\psi) &= \frac{\sum_{i=1}^n X_i Y_i - (X_i - \psi)_+ Y_i}{\sum_{i=1}^n (X_i + (X_i - \psi)_+)^2} = \frac{\sum_{i=1}^n \Ind[X_i \leq \psi] X_i Y_i}{\sum_{i=1}^n \Ind[X_i \leq \psi] X^2_i} \\
+\end{align*}
+
+and then minimize w.r.t. \(\psi\):
+\begin{align*}
+\likelihood(\psi) &= \sum_{i=1}^n (Y_i - \tilde{\beta}(\psi) X_i + \tilde{\beta}(\psi) (X_i - \psi)_+)^2
+\end{align*}
+
+So the first 'derivative' should solve:
+\begin{align*}
+0 =& -2 \sum_{i=1}^n \left[
+  \frac{\partial \tilde{\beta}(\psi)}{\partial \psi} (X_i - (X_i - \psi)_+)
+- \tilde{\beta}(\psi)\frac{\partial (X_i - \psi)_+}{\partial \psi}\right]
+(Y_i - \tilde{\beta}(\psi) X_i + \tilde{\beta}(\psi)(X_i - \psi)_+ ) \\
+0 =& \frac{\partial \tilde{\beta}(\psi)}{\partial \psi} \sum_{i=1}^n (X_i - (X_i - \psi)_+)(Y_i - \tilde{\beta}(\psi) X_i + \tilde{\beta}(\psi)(X_i - \psi)_+ ) \\
+& - \tilde{\beta}(\psi)\sum_{i=1}^n\frac{\partial (X_i - \psi)_+}{\partial \psi}(Y_i - \tilde{\beta}(\psi) X_i + \tilde{\beta}(\psi)(X_i - \psi)_+ ) 
+\end{align*}
+
+Assuming that the breakpoint does not coincide with any datapoint:
+\begin{align*}
+0 =& - \tilde{\beta}(\psi)\sum_{i=1}^n \Ind[X_i \geq \psi] (Y_i - \tilde{\beta}(\psi) \psi)  \\
+\frac{1}{n}\sum_{i=1}^n \Ind[X_i \geq \psi] Y_i =& \tilde{\beta}(\psi) \psi
+\end{align*}
+
+So the breakpoint should be such that the average post-breakpoint value equal the fitted plateau.
+
+\clearpage
+
+\subsection{Example}
+\label{sec:org70a8a21}
+
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+library(lmbreak)
+
+set.seed(10)
+df10 <- simBreak(c(1, 100), breakpoint = c(0,2,4),
+                 slope = c(1,0), sigma = 0.05)
+e.lmbreak10 <- lmbreak(Y ~ 0 + bp(X, pattern = "10", start = c(2)),
+                       data = df11)
+model.tables(e.lmbreak10)
+\end{lstlisting}
+
+\begin{verbatim}
+           X duration intercept    slope
+1 0.05773562 1.940351  0.000000 1.003169
+2 1.99808692 1.847123  1.946501 0.000000
+3 3.84520966       NA  1.946501       NA
+\end{verbatim}
+
+
+OLS:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+XX <- df10$X - pmax(df10$X-coef(e.lmbreak10),0)
+solve(t(XX) %*% XX) %*% t(XX) %*% df11$Y
+\end{lstlisting}
+
+\begin{verbatim}
+         [,1]
+[1,] 1.003168
+\end{verbatim}
+
+
+Explicit OLS:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+sum((df10$X < coef(e.lmbreak10))*df10$X*df10$Y)/sum((df10$X < coef(e.lmbreak10))*df10$X^2)
+\end{lstlisting}
+
+\begin{verbatim}
+[1] 1.003169
+\end{verbatim}
+
+
+Full likelihood:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+calcLogLik <- function(theta){
+  beta <- theta["beta"]
+  gamma <- theta["gamma"]
+  psi <- theta["psi"]
+  sigma <- theta["sigma"]
+  as.double(-NROW(df11)/2 * log(2*pi) - NROW(df11)/2 * log(sigma) - sum((df11$Y - beta * df11$X - gamma * pmax(df11$X - psi,0))^2)/(2*sigma))
+}
+theta <- c(beta = unname(coef(e.lmbreak11$model)["Us0"]),
+           gamma = unname(coef(e.lmbreak11$model)["Us1"]),
+           psi = 1.98454227,
+           sigma = sigma(e.lmbreak11$model)^2)
+calcLogLik(theta = theta)
+logLik(e.lmbreak11$model)
+\end{lstlisting}
+
+\begin{verbatim}
+[1] 162.2538
+'log Lik.' 162.2768 (df=4)
+\end{verbatim}
+
+
+Profile likelihood:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+calcProfLik <- function(psi){ ## psi <- 1
+  XX <- cbind(df11$X, pmax(df11$X-psi,0))
+  OLS <- as.double(solve(t(XX) %*% XX) %*% t(XX) %*% df11$Y)
+  sigma <- sum((df11$Y - XX %*% OLS)^2)/(NROW(df11)-3)
+   - NROW(df11)/2 * log(2*pi) - NROW(df11)/2 * log(sigma) - (NROW(df11)-3)/2
+}
+calcProfLik(theta["psi"])
+
+df.gridPsi <- data.frame(psi = seq(0.5,3.5,length.out=1000))
+df.gridPsi$logLik <- sapply(df.gridPsi$psi,calcProfLik)
+ggplot(df.gridPsi, aes(x=psi,y=logLik)) + geom_line()
+\end{lstlisting}
+
+\begin{verbatim}
+[1] 162.2538
+\end{verbatim}
+
+
+
+Score:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+library(numDeriv)
+jacobian(calcLogLik, theta)
+jacobian(calcProfLik, theta["psi"])
+\end{lstlisting}
+\begin{verbatim}
+           [,1]        [,2]        [,3]      [,4]
+[1,] 0.02242403 0.006498193 0.007915766 -638.0514
+            [,1]
+[1,] 0.001578588
+\end{verbatim}
+
+
+Hessian:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+Hall <- hessian(calcLogLik, theta)
+Iall <- solve(-Hall)
+
+Iall[3,3] - Iall[3,1:2] %*% solve(Iall[1:2,1:2]) %*% Iall[1:2,3]
+
+Hpsi <- hessian(calcProfLik, theta["psi"])
+Ipsi <- solve(-Hpsi)
+
+Ipsi/(Iall[3,3] - Iall[3,1:2] %*% solve(Iall[1:2,1:2]) %*% Iall[1:2,3])
+
+\end{lstlisting}
+
+\begin{verbatim}
+             [,1]
+[1,] 5.740945e-05
+         [,1]
+[1,] 4.928297
+\end{verbatim}
+
+
+\clearpage
+
+\section{Single breakpoint}
+\label{sec:orgf7a689f}
+
+\subsection{Theory}
+\label{sec:org24f261c}
+
+Consider a response variable \(Y\) and an explanatory variable \(X\)
+related by:
 \begin{align*}
 Y = \beta X + \gamma (X - \psi)_+ + \varepsilon
 \end{align*}
 
-where \((\beta,\gamma,\psi) \in \Real^3\), \(\varepsilon
-\sim \Gaus[0,\sigma^2]\), and \((x)_+=x\) if \(x>0\) and 0 otherwise.
-
-\bigskip
-
-Denote by \(\Theta = (\beta,\gamma,\psi,\sigma^2)\), we can
+\noindent where \((\beta,\gamma,\psi) \in \Real^3\), \(\varepsilon
+\sim \Gaus[0,\sigma^2]\), and \((x)_+=x\) if \(x>0\) and 0
+otherwise. Introduce \(\Theta = (\beta,\gamma,\psi,\sigma^2)\), we can
 express the likelihood relative to \(n\) iid observations as:
 \begin{align*}
-\Likelihood(\Theta) = \prod_{i=1} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2}{2\sigma^2}\right)
+\Likelihood(\Theta) = \prod_{i=1}^n \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2}{2\sigma^2}\right)
 \end{align*}
-So maximizing the likelihood with respect to \(\Theta_\mu =
-(\beta,\gamma,\psi)\) is equivalent to minimizing the mean
-squared error:
+and the log-likelihood as:
 \begin{align*}
-\likelihood(\Theta_\mu) = \sum_{i=1} (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2 \\
+\likelihood(\Theta) = - \frac{n}{2} \log(2\pi) - \frac{n}{2} \log(\sigma^2) - \sum_{i=1}^n \frac{\left(Y_i - \beta X_i - \gamma (X_i - \psi)_+\right)^2}{2\sigma^2}
 \end{align*}
+
+\noindent Maximizing the likelihood with respect to \(\Theta_\mu =
+(\beta,\gamma,\psi)\) is equivalent to minimizing the mean squared
+error:
+\begin{align*}
+\likelihood(\Theta_\mu) = \sum_{i=1}^n (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2
+\end{align*}
+
+\noindent which is equivalent to first minimizing
+w.r.t. \((\beta,\gamma)\), i.e. plug-in the OLS estimator:
+\begin{align*}
+(\widehat{\beta},\widehat{\gamma}) = \left(\begin{bmatrix} X \\ (X - \psi)_+ \end{bmatrix} \begin{bmatrix} X & (X - \psi)_+ \end{bmatrix} \right)^{-1} \begin{bmatrix} X \\ (X - \psi)_+ \end{bmatrix} Y \\
+= \begin{bmatrix} \trans{X}X & \trans{X}(X - \psi)_+ \\  \trans{X}(X - \psi)_+ & \trans{(X - \psi)_+} (X - \psi)_+ \end{bmatrix}^{-1} \begin{bmatrix} \trans{X} Y \\ \trans{(X - \psi)_+} Y \end{bmatrix}  \\
+= \frac{\begin{bmatrix} \trans{(X - \psi)_+} (X - \psi)_+ & -\trans{X}(X - \psi)_+ \\  -\trans{X}(X - \psi)_+ & \trans{X}X \end{bmatrix} \begin{bmatrix} \trans{X} Y \\ \trans{(X - \psi)_+} Y \end{bmatrix} }{\trans{X}X\trans{(X - \psi)_+} (X - \psi)_+ -\trans{X}(X - \psi)_+\trans{X}(X - \psi)_+} 
+\end{align*}
+
+where \(Y = (Y_1,\ldots,Y_n)\) and \(X=(X_1,\ldots,X_n)\). We therefore obtain:
+\begin{align*}
+\tilde{\beta}(\psi) &= \frac{ \trans{(X - \psi)_+} (X - \psi)_+ \trans{X} Y -\trans{X}(X - \psi)_+ \trans{(X - \psi)_+} Y }{\trans{X}X\trans{(X - \psi)_+} (X - \psi)_+ -\trans{X}(X - \psi)_+ \trans{X}(X - \psi)_+}  \\
+\tilde{\gamma}(\psi) &= \frac{ \trans{X} X \trans{(X - \psi)_+} Y -\trans{X}(X - \psi)_+ \trans{X} Y }{\trans{X}X\trans{(X - \psi)_+} (X - \psi)_+ -\trans{X}(X - \psi)_+ \trans{X}(X - \psi)_+}  
+\end{align*}
+
+and then minimize w.r.t. \(\psi\):
+\begin{align*}
+\likelihood(\psi) &= \sum_{i=1}^n (Y_i - \tilde{\beta}(\psi) X_i - \tilde{\gamma}(\psi) (X_i - \psi)_+)^2
+\end{align*}
+
+Its first derivative is:
+\begin{align*}
+0 &= -2 \sum_{i=1}^n \left[
+  \frac{\partial \tilde{\beta}(\psi)}{\partial \psi} X_i
++ \frac{\partial \tilde{\gamma}(\psi)}{\partial \psi}(X_i - \psi)_+
++ \tilde{\gamma}(\psi)\frac{\partial (X_i - \psi)_+}{\partial \psi}\right]
+(Y_i - \tilde{\beta}(\psi) X_i - \tilde{\gamma}(\psi) (X_i - \psi)_+)
+\end{align*}
+
+\clearpage
+
+\subsection{Example}
+\label{sec:org5660144}
+
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+library(lmbreak)
+
+set.seed(10)
+df11 <- simBreak(c(1, 100), breakpoint = c(0,2,4),
+                 slope = c(1,0), sigma = 0.05)
+e.lmbreak11 <- lmbreak(Y ~ 0 + bp(X, pattern = "11", start = c(2)),
+                       data = df11)
+model.tables(e.lmbreak11)
+\end{lstlisting}
+
+\begin{verbatim}
+           X duration intercept      slope
+1 0.05773562 1.926807  0.000000 1.00316914
+2 1.98454227 1.860667  1.932913 0.01677379
+3 3.84520966       NA  1.964123         NA
+\end{verbatim}
+
+
+OLS:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+XX <- cbind(df11$X, pmax(df11$X-coef(e.lmbreak11),0))
+solve(t(XX) %*% XX) %*% t(XX) %*% df11$Y
+\end{lstlisting}
+
+\begin{verbatim}
+           [,1]
+[1,]  1.0031692
+[2,] -0.9863952
+\end{verbatim}
+
+
+Explicit OLS:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+(crossprod(XX[,2]) * crossprod(XX[,1],df11$Y) - crossprod(XX[,1],XX[,2]) * crossprod(XX[,2],df11$Y)) / (crossprod(XX[,1]) * crossprod(XX[,2]) - crossprod(XX[,1],XX[,2])^2)
+(crossprod(XX[,1]) * crossprod(XX[,2],df11$Y) - crossprod(XX[,1],XX[,2]) * crossprod(XX[,1],df11$Y)) / (crossprod(XX[,1]) * crossprod(XX[,2]) - crossprod(XX[,1],XX[,2])^2)
+\end{lstlisting}
+
+\begin{verbatim}
+         [,1]
+[1,] 1.003169
+           [,1]
+[1,] -0.9863952
+\end{verbatim}
+
+
+Full likelihood:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+calcLogLik <- function(theta){
+  beta <- theta["beta"]
+  gamma <- theta["gamma"]
+  psi <- theta["psi"]
+  sigma <- theta["sigma"]
+  as.double(-NROW(df11)/2 * log(2*pi) - NROW(df11)/2 * log(sigma) - sum((df11$Y - beta * df11$X - gamma * pmax(df11$X - psi,0))^2)/(2*sigma))
+}
+theta <- c(beta = unname(coef(e.lmbreak11$model)["Us0"]),
+           gamma = unname(coef(e.lmbreak11$model)["Us1"]),
+           psi = 1.98454227,
+           sigma = sigma(e.lmbreak11$model)^2)
+calcLogLik(theta = theta)
+logLik(e.lmbreak11$model)
+\end{lstlisting}
+
+\begin{verbatim}
+[1] 162.2538
+'log Lik.' 162.2768 (df=4)
+\end{verbatim}
+
+
+Profile likelihood:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+calcProfLik <- function(psi){ ## psi <- 1
+  XX <- cbind(df11$X, pmax(df11$X-psi,0))
+  OLS <- as.double(solve(t(XX) %*% XX) %*% t(XX) %*% df11$Y)
+  sigma <- sum((df11$Y - XX %*% OLS)^2)/(NROW(df11)-3)
+   - NROW(df11)/2 * log(2*pi) - NROW(df11)/2 * log(sigma) - (NROW(df11)-3)/2
+}
+calcProfLik(theta["psi"])
+
+df.gridPsi <- data.frame(psi = seq(0.5,3.5,length.out=1000))
+df.gridPsi$logLik <- sapply(df.gridPsi$psi,calcProfLik)
+ggplot(df.gridPsi, aes(x=psi,y=logLik)) + geom_line()
+\end{lstlisting}
+
+\begin{verbatim}
+[1] 162.2538
+\end{verbatim}
+
+
+
+Score:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+library(numDeriv)
+jacobian(calcLogLik, theta)
+jacobian(calcProfLik, theta["psi"])
+\end{lstlisting}
+\begin{verbatim}
+           [,1]        [,2]        [,3]      [,4]
+[1,] 0.02242403 0.006498193 0.007915766 -638.0514
+            [,1]
+[1,] 0.001578588
+\end{verbatim}
+
+
+Hessian:
+\lstset{language=r,label= ,caption= ,captionpos=b,numbers=none}
+\begin{lstlisting}
+Hall <- hessian(calcLogLik, theta)
+Iall <- solve(-Hall)
+
+Iall[3,3] - Iall[3,1:2] %*% solve(Iall[1:2,1:2]) %*% Iall[1:2,3]
+
+Hpsi <- hessian(calcProfLik, theta["psi"])
+Ipsi <- solve(-Hpsi)
+
+Ipsi/(Iall[3,3] - Iall[3,1:2] %*% solve(Iall[1:2,1:2]) %*% Iall[1:2,3])
+
+\end{lstlisting}
+
+\begin{verbatim}
+             [,1]
+[1,] 5.740945e-05
+         [,1]
+[1,] 4.928297
+\end{verbatim}
+
+
+\clearpage
+
+\section{Multiple breakpoints}
+\label{sec:orga5dc241}
+
+We now consider the more general case where:
+\begin{align*}
+Y = \beta X(\psi) + \varepsilon
+\end{align*}
+where \(\beta\) is a vector of coefficients and \(X(\psi)\) the design
+matrix depending on a vector of breakpoint \(\psi\). Similarly to the
+previous derivations we need to minimize the mean square loss:
+\begin{align*}
+\sum_{i=1}^n \left(Y_i - \beta X_i(\psi)\right)^2
+\end{align*}
+
+with respect to \(\beta\) and \(\psi\). For given \(\psi\) the
+coefficient \(\beta\) minimizing this loss are given by the OLS
+estimator:
+\begin{align*}
+\widehat{\beta} = (\trans{X}(\psi)X(\psi))^{-1}\trans{X}(\psi) Y
+\end{align*}
+
+\clearpage
+
+\section{Proximal gradient method}
+\label{sec:org8759e44}
+
 One difficulty is that this objective function is not differientiable
 in \(\psi\) at \(\left(X_i\right)_{i=1}^n\). 
 
-\section{Proximal gradient method}
-\label{sec:org2f9f9f3}
+\bigskip
 
 \(\likelihood(\Theta_\mu)\) might not be strictly convex but it is
 convex. So we can try applying a proximal gradient algorithm. This
@@ -270,6 +664,7 @@ means updating the estimate by:
 \begin{align*}
 \Theta_{\mu,k+1} &= \text{prox}_{\alpha_k \likelihood}(\Theta_{\mu,k}) = \argmin_{\Theta_\mu \in \Real^2} \left( \likelihood(\Theta_\mu) + \frac{1}{2\alpha_k}||\Theta_\mu-\Theta_{\mu,k}||^2 \right) \\
 &= \argmin_{\Theta_\mu \in \Real^3} \left( \sum_{i=1} (Y_i - \beta X_i - \gamma (X_i - \psi)_+)^2 + \frac{(\beta - \beta_k)^2+(\gamma - \gamma_k)^2+(\psi - \psi_k)^2}{2\alpha_k} \right) 
+&= \argmin_{\psi \in \Real} \left((I - Z)(\trans{Z}Z)^{-1}ZY + \frac{(\beta - \beta_k)^2+(\gamma - \gamma_k)^2+(\psi - \psi_k)^2}{2\alpha_k}  \right)
 \end{align*}
 where \(\alpha_k\) is a pre-defined stricly positive real value.
 \end{document}

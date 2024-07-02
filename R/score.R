@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 14 2024 (10:41) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (18:56) 
+## Last-Updated: jun 18 2024 (10:05) 
 ##           By: Brice Ozenne
-##     Update #: 105
+##     Update #: 108
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -87,7 +87,7 @@ score.lmbreak <- function(x, indiv = FALSE, psi = NULL, ...){
 
     ## ** update dataset & design matrix
     if(is.null(dX.skeleton)){
-        dX.skeleton <-lapply(1:n.breakpoint, function(iPoint){ ## iPoint <- 2
+        dX.skeleton <- lapply(1:n.breakpoint, function(iPoint){ ## iPoint <- 2
             ddata <- data
             ddata[,paste0("Us",0:n.breakpoint)] <- matrix(as.numeric(0:n.breakpoint == iPoint), byrow = TRUE, nrow = NROW(data), ncol = n.breakpoint+1)
             iX <- stats::model.matrix(formula, ddata)
