@@ -11,7 +11,7 @@
 
 \item{type}{[character vector] summary statistic to be output. See argument \code{type} in \code{\link{coef.lmbreak}}.}
 
-\item{cluster}{[vector] cluster relative to which the summary statistics should be extracted..}
+\item{cluster}{[numeric or character] cluster relative to which the summary statistics should be extracted.}
 
 \item{format}{[character] should the output be a data.frame (with cluster as a column) or a list (with one element for each cluster)?}
 

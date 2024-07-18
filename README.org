@@ -6,6 +6,7 @@
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
 options(width = 100)
+setwd("~/Github/lmbreak")
 #+END_SRC
 
 #+RESULTS:
@@ -28,6 +29,7 @@ library(lmbreak)
 #+END_SRC
 
 #+RESULTS:
+: lmbreak version 0.1.0
 
 will be exemplified on the following dataset:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -74,7 +76,7 @@ fit:
 #+BEGIN_SRC R :exports code :results output :session *R* :cache no
 plot(e.XP111, ylim = c(0,12)) ## left panel
 plot(e.XP101, ylim = c(0,12)) ## middle panel
-plot(e.XP11, ylim = c(0,12), extrapolate = TRUE) ## right panel
+plot(e.XP11, ylim = c(0,12)) ## right panel
 #+END_SRC
 
 #+RESULTS:
@@ -82,9 +84,8 @@ plot(e.XP11, ylim = c(0,12), extrapolate = TRUE) ## right panel
 : [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
 : Advarselsbesked:
 : [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
-: Advarselsbeskeder:
-: 1: [1m[22mRemoved 4 rows containing missing values (`geom_point()`). 
-: 2: [1m[22mRemoved 11 rows containing missing values (`geom_line()`).
+: Advarselsbesked:
+: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
 
 For the last call to =plot=, the argument =extrapolate= was used to
 display the model fit beyond the observed timepoints.
@@ -221,8 +222,8 @@ Breakpoints:
   7     101 TRUE       TRUE 0.9839889  47.61905, 87.91209    < 1e-07
   8     101 TRUE       TRUE 0.9855812 86.95652, 129.53271    < 1e-07
   9     101 TRUE       TRUE 0.9753291 49.12281, 115.93750 2.0289e-07
- 10     101 TRUE       TRUE 0.9961527 65.11628, 195.23810    < 1e-07
- 11     101 TRUE      FALSE 0.9828458  32.51092, 99.99992    0.25541
+ 10     101 TRUE       TRUE 0.9961527 65.11628, 195.23809 5.1759e-07
+ 11     101 TRUE      FALSE 0.9828458 32.51327, 100.00000    0.25541
  12     101 TRUE       TRUE 0.9654704 43.47826, 150.99237    < 1e-07
  13     101 TRUE       TRUE 0.9944311 87.87879, 230.66667    < 1e-07
  14     101 TRUE       TRUE 0.9777323  157.8947, 248.0208 4.7554e-07
@@ -237,7 +238,7 @@ optimizer convergence criteria were not met with pattern =101=. Once
 more key summary statistics can be extracted using the =model.tables=
 method:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
-model.tables(e.XPall, format = "array")[,,1:2]
+model.tables(e.XPall, format = "array", cluster = 1:2)
 #+END_SRC
 
 #+RESULTS:
@@ -347,13 +348,13 @@ cbind(head(fit.XPmean),"",tail(fit.XPmean))
 #+END_SRC
 
 #+RESULTS:
-:   observed time      mean         sd "" observed time mean sd
-: 1       15    0 0.0000000 0.00000000          15  435    0  0
-: 2       15    1 0.1438602 0.05788243          15  436    0  0
-: 3       15    2 0.2877203 0.11576486          15  437    0  0
-: 4       15    3 0.4315805 0.17364729          15  438    0  0
-: 5       15    4 0.5754406 0.23152972          15  439    0  0
-: 6       15    5 0.7193008 0.28941215          15  440    0  0
+:   observed time      mean        sd "" observed time mean sd
+: 1       15    0 0.0000000 0.0000000          15  435    0  0
+: 2       15    1 0.1438590 0.0578802          15  436    0  0
+: 3       15    2 0.2877180 0.1157604          15  437    0  0
+: 4       15    3 0.4315770 0.1736406          15  438    0  0
+: 5       15    4 0.5754361 0.2315208          15  439    0  0
+: 6       15    5 0.7192951 0.2894010          15  440    0  0
 
 its graphical display:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no

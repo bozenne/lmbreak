@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (12:22) 
 ## Version: 
-## Last-Updated: jul 18 2024 (11:42) 
+## Last-Updated: jul 18 2024 (16:25) 
 ##           By: Brice Ozenne
-##     Update #: 108
+##     Update #: 121
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -76,6 +76,19 @@ mlmbreak <- function(formula, data, cluster, trace = 1, cpus = 1, ...){
         stop("Argument \'cluster\' cannot take value \"",cluster,"\" as it is a reserved name. \n")
     }
 
+    ## cpus
+    max.cpus <- parallel::detectCores()
+    if(length(cpus)!=1){
+        stop("Argument \'cpus\' should have length 1.\n ")
+    }else if(identical(cpus,"all")){
+        cpus <- max.cpus
+    }else if(!is.numeric(cpus) || cpus <=0 || cpus %% 1 != 0){
+        stop("Argument \'cpus\' should be an integer between 1 and ",max.cpus," or \'all\'.\n ")
+    }else if(cpus>1 && cpus>parallel::detectCores()){
+        stop("Argument \'cpus\' exceeds the number of available CPUs.\n ",
+             "It should be an integer between 1 and ",max.cpus," or \'all\'.\n ")
+    }
+
     ## ** run lmbreak on each cluster
     if(is.factor(data[[cluster]])){
         U.cluster <- levels(droplevels(data[[cluster]]))
@@ -113,18 +126,14 @@ mlmbreak <- function(formula, data, cluster, trace = 1, cpus = 1, ...){
         ## link to foreach
         doSNOW::registerDoSNOW(cl)
 
-        ## export package
-        parallel::clusterCall(cl, fun = function(x){
-            suppressPackageStartupMessages(library(lmbreak, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE))
-        })
         ## export functions
-        toExport <- c("lmbreak.fit")
+        toExport <- NULL
         iC <- NULL ## [:forCRANcheck:] foreach        
         ls.lmbreak <- foreach::`%dopar%`(
-                                   foreach::foreach(iC=1:n.cluster,
+                                   foreach::foreach(iC=U.cluster,
                                                     .export = toExport,
-                                                    .options.snow = opts),                                            
-                                   {
+                                                    .packages = c("lmbreak"),
+                                                    .options.snow = opts), {
                                        lmbreak(formula, data = data[data[[cluster]]==iC,,drop=FALSE], trace = FALSE, ...)
                                    })
 

@@ -9,7 +9,7 @@ as.lmbreak(object, cluster)
 \arguments{
 \item{object}{output of \code{\link{mlmbreak}}.}
 
-\item{cluster}{[numeric or character] cluster for which the breakpoint model should be converted.}
+\item{cluster}{[numeric or character] cluster relative to which the breakpoint model should be converted.}
 }
 \description{
 Retrive the output of \code{\link{lmbreak}} from \code{\link{mlmbreak}} for a specific cluster.

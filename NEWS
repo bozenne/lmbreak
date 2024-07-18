@@ -1,16 +1,18 @@
 # -*- mode: org -*-
 
 FIX: fix an unexpected error/incorrect software output or clarify an unclear error message/documentation.
-NEW FEATURE: functionality/function/argument added to the package.
-BREAK: internal modification possibly leading to different results compared to previous version or change in the user interface (core functionalities)
-CHANGE: similar to BREAK but for experimental, minor functionalities, or software architecture that should not directly impact the user.
-REMOVE: element or software dependency removed from the package.
+NEW FEATURE: substantial improvement, e.g. functionality, function, or argument added to the package.
+BREAK: internal modification possibly leading to different results compared to previous version or change in the user interface w.r.t. core functionalities.
+CHANGE: minor improvement, change in software architecture, or modification of experimental/minor functionalities, that should not impact results obtained with previous version.
+REMOVE: element or software dependency removed from the package. 
 
 * Version 0.1.0
 ** User visible changes
       - FIX: fix bug in slope calculation with pattern 110
+      - FIX: argument cpus in mlmm. Add a test to make sure not to exceed the available number of cpus.
       - NEW FEATURE (possible BREAK): argument continuity to display the fix with or without Vs terms.
-
+      - CHANGE: argument cluster now accepts numeric values indexing the clusters (e.g. 1 for first cluster in the dataset).
+      
 ** Internal change
       - fix bug with initializer where only quantiles (init.quantile) were used and not gam breakpoints (init.gam)
       - structure of mlmbreak objects has been re-organized

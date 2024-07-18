@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: jul 18 2024 (11:28) 
+## Last-Updated: jul 18 2024 (16:54) 
 ##           By: Brice Ozenne
-##     Update #: 251
+##     Update #: 264
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -222,7 +222,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
 #'
 #' @param object,x [mlmbreak] output of \code{\link{mlmbreak}}.
 #' @param y [mlmbreak] another model whose fit is to be compared with the first one.
-#' @param cluster [vector] cluster relative to which the breakpoint model should be displayed.
+#' @param cluster [numeric or character] cluster relative to which the breakpoint model should be displayed.
 #' @param breaks [integer or numeric vector] number or vector of points to be used to display the fit.
 #' @param extrapolate [logical] should values before the first or beyond the last observation be displayed?
 #' @param continuity [logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
@@ -259,32 +259,52 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
     rownames(opt) <- NULL
 
     ## ** normalize user input
+    ## *** dots
     dots <- list(...)
     if(length(dots)>0){
         stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
     }
+
+    ## *** cluster
     if(is.null(cluster)){
-        cluster <- U.cluster
-    }else if(any(cluster %in% U.cluster == FALSE)){
-        stop("Unknown value for argument \'cluster\'.")
+        cluster.level <- U.cluster
+    }else if(is.numeric(cluster)){
+        if(any(cluster %in% 1:length(U.cluster) == FALSE)){
+            stop("When a numeric value \'cluster\' should be an integer between 1 and the number of cluster (here ",length(U.cluster),"). \n")
+        }else{
+            cluster.level <- U.cluster[cluster]
+            data <- data[data[[var.cluster]] %in% cluster.level,,drop=FALSE]
+        }
+    }else if(is.character(cluster) || is.factor(cluster)){
+        cluster <- as.character(cluster) 
+        if(any(cluster %in% U.cluster == FALSE)){
+            stop("When a character or factor value, \'cluster\' should be one of the strings representing the clusters (here \"",utils::head(U.cluster,1),"\", ... \"",utils::tail(U.cluster,1),"\"). \n")
+        }else{
+            cluster.level <- cluster
+            data <- data[data[[var.cluster]] %in% cluster.level,,drop=FALSE]
+        }
+    }else{
+        stop("\'cluster\' should either be indexing the cluster (1 or 2 or ..., i.e. numeric) \n",
+             "or the character string identifying the cluster (character or factor).")
     }
 
+    ## *** covariate
     if(length(object$args$covariate)>0){
-        stop("Cannot provide a graphical disply for mlmbreak object with covariate(s). \n")
+        stop("Cannot provide a graphical display for mlmbreak object with covariate(s). \n")
     }
 
-    ## y
+    ## *** y
     if(!is.null(y) && !inherits(y,"mlmbreak")){
         stop("Incorrect argument \'y\': should inherit of mlmbreak. \n")
     }
 
-    ## scales
+    ## *** scales
     if(is.null(scales) || any(is.na(scales))){
         scales <- "none"
     }
     scales <- match.arg(scales, c("none","fixed","free","free_x","free_y"))
     
-    ## ylim
+    ## *** ylim
     if(is.null(ylim) && ("ylim" %in% names(match.call()) == FALSE)){
         if(scales == "fixed"){
             ylim <- range(data[[response.var]], na.rm = TRUE)
@@ -300,7 +320,7 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
         }
     }
     
-    ## breaks
+    ## *** breaks
     if(length(breaks)>1 & is.numeric(breaks) & breakpoint){
         allBreakpoint <- coef(object, "breakpoint")[,"breakpoint"]
         breaks <- sort(union(breaks, allBreakpoint[allBreakpoint>=min(breaks) & allBreakpoint<=max(breaks)]))
@@ -308,7 +328,7 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
 
     
     ## ** fitted values
-    ls.ggdata <- lapply(cluster, function(iC){
+    ls.ggdata <- lapply(cluster.level, function(iC){
         if(!is.null(y)){
             iOut <- autoplot(as.lmbreak(object, cluster = iC), y = as.lmbreak(y, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, continuity = continuity, breakpoint = breakpoint)$data
         }else{
@@ -333,12 +353,11 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
         data[[var.cluster]] <- factor(data[[var.cluster]], levels = U.cluster, labels = old2new)
     }else{
         newdataA[[var.cluster]] <- factor(newdataA[[var.cluster]], levels = U.cluster)
+        data[[var.cluster]] <- factor(data[[var.cluster]], levels = U.cluster)
     }
     newdataB <- newdataA[newdataA$breakpoint,,drop=FALSE]
 
     ## ** graphical display
-    data[[var.cluster]] <- as.factor(data[[var.cluster]]) ## avoid warning since cluster var is factor in newdataA and newdataB
-
     out <- ggplot2::ggplot()
     out <- out + ggplot2::geom_point(data = cbind(data, model = "observation"), ggplot2::aes(x = .data[[breakpoint.var]], y = .data[[response.var]], color = .data$model),
                                      alpha = alpha, size = size[1])

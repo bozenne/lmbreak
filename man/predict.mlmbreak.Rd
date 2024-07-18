@@ -4,31 +4,14 @@
 \alias{predict.mlmbreak}
 \title{Fitted Values of the Multiple Breakpoint Model}
 \usage{
-\method{predict}{mlmbreak}(
-  object,
-  newdata = NULL,
-  cluster = NULL,
-  extrapolate = FALSE,
-  continuity = NULL,
-  keep.newdata = TRUE,
-  ...
-)
+\method{predict}{mlmbreak}(object, cluster = NULL, ...)
 }
 \arguments{
 \item{object}{[mlmbreak] output of \code{\link{mlmbreak}}.}
 
-\item{newdata}{[data.frame] dataset containing the covariate to condition on when evaluated the expected outcome.}
+\item{cluster}{[numeric or character] cluster relative to which the fit of the breakpoint model should be output.}
 
-\item{cluster}{[vector] cluster relative to which the fit of the breakpoint model should be output.}
-
-\item{extrapolate}{[logical] should fitted values before the first or beyond the last observation be set to NA?}
-
-\item{continuity}{[logical] should predictions be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
-Often not relevant as Vs term should be 0 when proper convergence has been reached.}
-
-\item{keep.newdata}{[logical] should the dataset be added as additional columns in the output?}
-
-\item{...}{additional arguments passed to \code{predict.lmbreak}.}
+\item{...}{additional arguments (newdata, extrapolate, continuity, keep.newdata) passed to \code{predict.lmbreak}.}
 }
 \description{
 Extract fitted values from each breakpoint model.

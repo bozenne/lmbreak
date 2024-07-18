@@ -30,7 +30,7 @@
 \arguments{
 \item{object, x}{[mlmbreak] output of \code{\link{mlmbreak}}.}
 
-\item{cluster}{[vector] cluster relative to which the breakpoint model should be displayed.}
+\item{cluster}{[numeric or character] cluster relative to which the breakpoint model should be displayed.}
 
 \item{y}{[mlmbreak] another model whose fit is to be compared with the first one.}
 

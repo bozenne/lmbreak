@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{output of \code{\link{mlmbreak}}.}
 
-\item{cluster}{[vector] cluster relative to which the summary statistics should be extracted..}
+\item{cluster}{[numeric or character] cluster relative to which the summary statistics should be extracted.}
 
 \item{format}{[character] should the output be a data.frame (with cluster as a column) or an array (with cluster as the third dimension)?}
 

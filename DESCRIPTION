@@ -19,6 +19,7 @@ Imports:
     ggplot2,
     lava,
     mgcv,
+    parallel,
     pbapply,
     rlang
 Suggests:

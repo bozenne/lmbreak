@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (08:49) 
 ## Version: 
-## Last-Updated: jul 18 2024 (11:30) 
+## Last-Updated: jul 18 2024 (16:54) 
 ##           By: Brice Ozenne
-##     Update #: 66
+##     Update #: 73
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -89,32 +89,42 @@ predict.lmbreak <- function(object, newdata = NULL, extrapolate = FALSE, continu
 #' @description Extract fitted values from each breakpoint model.
 #' 
 #' @param object [mlmbreak] output of \code{\link{mlmbreak}}.
-#' @param newdata [data.frame] dataset containing the covariate to condition on when evaluated the expected outcome.
-#' @param cluster [vector] cluster relative to which the fit of the breakpoint model should be output.
-#' @param extrapolate [logical] should fitted values before the first or beyond the last observation be set to NA?
-#' @param continuity [logical] should predictions be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
-#' Often not relevant as Vs term should be 0 when proper convergence has been reached.
-#' @param keep.newdata [logical] should the dataset be added as additional columns in the output?
-#' @param ... additional arguments passed to \code{predict.lmbreak}.
+#' @param cluster [numeric or character] cluster relative to which the fit of the breakpoint model should be output.
+#' @param ... additional arguments (newdata, extrapolate, continuity, keep.newdata) passed to \code{predict.lmbreak}.
 
 ## * predict.mlmbreak
 ##' @export
-predict.mlmbreak <- function(object, newdata = NULL, cluster = NULL, extrapolate = FALSE, continuity = NULL, keep.newdata = TRUE, ...){
+predict.mlmbreak <- function(object, cluster = NULL, ...){
 
     ## ** extract from object
     var.cluster <- object$args$cluster
     U.cluster <- object$args$U.cluster
 
     ## ** normalize user input
+    ## *** cluster
     if(is.null(cluster)){
-        cluster <- U.cluster
-    }else if(any(cluster %in% U.cluster == FALSE)){
-        stop("Unknown value for argument \'cluster\'.")
+        cluster.level <- U.cluster
+    }else if(is.numeric(cluster)){
+        if(any(cluster %in% 1:length(U.cluster) == FALSE)){
+            stop("When a numeric value \'cluster\' should be an integer between 1 and the number of cluster (here ",length(U.cluster),"). \n")
+        }else{
+            cluster.level <- U.cluster[cluster]
+        }
+    }else if(is.character(cluster) || is.factor(cluster)){
+        cluster <- as.character(cluster) 
+        if(any(cluster %in% U.cluster == FALSE)){
+            stop("When a character or factor value, \'cluster\' should be one of the strings representing the clusters (here \"",utils::head(U.cluster,1),"\", ... \"",utils::tail(U.cluster,1),"\"). \n")
+        }else{
+            cluster.level <- cluster
+        }
+    }else{
+        stop("\'cluster\' should either be indexing the cluster (1 or 2 or ..., i.e. numeric) \n",
+             "or the character string identifying the cluster (character or factor).")
     }
     
     ## ** extract prediction
-    ls.pred <- lapply(cluster, function(iC){
-        iOut <- predict(as.lmbreak(object, cluster = iC), newdata = newdata, extrapolate = extrapolate, continuity = continuity, keep.newdata = keep.newdata, ...)
+    ls.pred <- lapply(cluster.level, function(iC){
+        iOut <- predict(as.lmbreak(object, cluster = iC), ...)
         iOutA <- cbind(stats::setNames(list(rep(iC,NROW(iOut))),var.cluster),iOut)
         return(iOutA)
     })

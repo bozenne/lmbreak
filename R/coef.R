@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:23) 
 ## Version: 
-## Last-Updated: jul 18 2024 (14:39) 
+## Last-Updated: jul 18 2024 (16:53) 
 ##           By: Brice Ozenne
-##     Update #: 155
+##     Update #: 161
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -174,7 +174,7 @@ coef.lmbreak <- function(object, type = "breakpoint", interval, continuity = NUL
 ##'
 ##' @param object output of \code{\link{mlmbreak}}.
 ##' @param type [character vector] summary statistic to be output. See argument \code{type} in \code{\link{coef.lmbreak}}.
-##' @param cluster [vector] cluster relative to which the summary statistics should be extracted..
+##' @param cluster [numeric or character] cluster relative to which the summary statistics should be extracted.
 ##' @param format [character] should the output be a data.frame (with cluster as a column) or a list (with one element for each cluster)?
 ##' @param ... additional arguments passed to \code{\link{coef.lmbreak}}.
 ##'
@@ -189,16 +189,32 @@ coef.mlmbreak <- function(object, type = "breakpoint", cluster = NULL, format = 
     U.cluster <- object$args$U.cluster
 
     ## ** normalize user input
+    ## *** cluster
     if(is.null(cluster)){
-        cluster <- U.cluster
-    }else if(any(cluster %in% U.cluster == FALSE)){
-        stop("Unknown value for argument \'cluster\'.")
+        cluster.level <- U.cluster
+    }else if(is.numeric(cluster)){
+        if(any(cluster %in% 1:length(U.cluster) == FALSE)){
+            stop("When a numeric value \'cluster\' should be an integer between 1 and the number of cluster (here ",length(U.cluster),"). \n")
+        }else{
+            cluster.level <- U.cluster[cluster]
+        }
+    }else if(is.character(cluster) || is.factor(cluster)){
+        cluster <- as.character(cluster) 
+        if(any(cluster %in% U.cluster == FALSE)){
+            stop("When a character or factor value, \'cluster\' should be one of the strings representing the clusters (here \"",utils::head(U.cluster,1),"\", ... \"",utils::tail(U.cluster,1),"\"). \n")
+        }else{
+            cluster.level <- cluster
+        }
+    }else{
+        stop("\'cluster\' should either be indexing the cluster (1 or 2 or ..., i.e. numeric) \n",
+             "or the character string identifying the cluster (character or factor).")
     }
+
+    ## *** format
     format <- match.arg(format, c("data.frame","list"))
 
-
     ## ** extract
-    ls.table <- lapply(cluster, function(iC){ ## iC <- cluster[1]
+    ls.table <- lapply(cluster.level, function(iC){ ## iC <- cluster.level[1]
         iOut <- coef(as.lmbreak(object, cluster = iC), type = type, simplify = FALSE,...)
         if(length(unique(lengths(iOut)))!=1){
             iMax.size <- max(lengths(iOut))

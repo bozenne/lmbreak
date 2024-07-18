@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr 10 2024 (14:05) 
 ## Version: 
-## Last-Updated: jul 18 2024 (11:25) 
+## Last-Updated: jul 18 2024 (16:37) 
 ##           By: Brice Ozenne
-##     Update #: 20
+##     Update #: 21
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -20,7 +20,7 @@
 ##' @description Retrive the output of \code{\link{lmbreak}} from \code{\link{mlmbreak}} for a specific cluster.
 ##'
 ##' @param object output of \code{\link{mlmbreak}}.
-##' @param cluster [numeric or character] cluster for which the breakpoint model should be converted.
+##' @param cluster [numeric or character] cluster relative to which the breakpoint model should be converted.
 ##'
 ##' @keywords utilities
 
@@ -32,6 +32,8 @@ as.lmbreak <- function(object, cluster){
     if(!inherits(object,"mlmbreak")){
         stop("Argument \'object\' must inherits from mlmbreak. \n")
     }
+
+    ## *** cluster
     if(length(cluster)!=1){
         stop("Argument \'cluster\' should have length 1.")
     }
