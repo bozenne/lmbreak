@@ -10,6 +10,7 @@
   y = NULL,
   breaks = 25,
   extrapolate = FALSE,
+  continuity = NULL,
   breakpoint = TRUE,
   xlim = NULL,
   ylim = NULL,
@@ -32,6 +33,9 @@
 \item{breaks}{[integer or numeric vector] number or vector of points to be used to display the fit.}
 
 \item{extrapolate}{[logical] should values before the first or beyond the last observation be displayed?}
+
+\item{continuity}{[logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+Often not relevant as Vs term should be 0 when proper convergence has been reached.}
 
 \item{breakpoint}{[logical] should the breakpoints be displayed?}
 

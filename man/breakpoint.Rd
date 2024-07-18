@@ -65,8 +65,11 @@ coef(e.lmbreak111, type = "intercept")
 coef(e.lmbreak111, type = "duration")
 model.tables(e.lmbreak111)
 
+grid111 <- data.frame(tester = "(0,0.5]", X = coef(e.lmbreak111, "breakpoint.range"))
+predict(e.lmbreak111, newdata = grid111)
+
 ## broken line with plateau
-e.lmbreak101 <- lmbreak(Y ~ bp(X, "101"), data = df1, trace = 4)
+e.lmbreak101 <- lmbreak(Y ~ bp(X, "101"), data = df1)
 plot(e.lmbreak101)
 summary(e.lmbreak101)
 model.tables(e.lmbreak101)
@@ -83,9 +86,17 @@ df2 <- df1
 df2$tester <- cut(df1$X,c(0,0.5,2,4))
 df2$Y <- df1$Y + as.numeric(df2$tester) + rnorm(NROW(df1), sd = 0.05)
 
-eCov.lmbreak101 <- lmbreak(Y ~ tester + bp(X, "101"), data = df2)
+eCov.lmbreak101 <- lmbreak(Y ~ tester + bp(X, "101"), data = df2, start = c(1.03474573, 2.91979538))
 summary(eCov.lmbreak101)
 plot(eCov.lmbreak101)
+
+summary(eCov.lmbreak101, continuity = FALSE)
+plot(eCov.lmbreak101, continuity = FALSE)
+
+gridCov101 <- data.frame(tester = "(0,0.5]",
+                         X = coef(eCov.lmbreak101, "breakpoint.range"))
+predict(eCov.lmbreak101, newdata = gridCov101)
+predict(eCov.lmbreak101, newdata = gridCov101, continuity = FALSE, extrapolate = TRUE)
 }
 \references{
 Muggeo, V. M. R. Estimating regression models with unknown break-points.

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr 10 2024 (14:05) 
 ## Version: 
-## Last-Updated: apr 10 2024 (16:42) 
+## Last-Updated: jul 18 2024 (11:25) 
 ##           By: Brice Ozenne
-##     Update #: 14
+##     Update #: 20
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -35,21 +35,33 @@ as.lmbreak <- function(object, cluster){
     if(length(cluster)!=1){
         stop("Argument \'cluster\' should have length 1.")
     }
-
-    index.cluster <- which(cluster == object$args$U.cluster)
-    if(length(index.cluster)!=1){
-        stop("Unknown value for argument \'cluster\'.")
+    U.cluster <- object$args$U.cluster
+    if(is.numeric(cluster)){
+        if(cluster %in% 1:length(U.cluster) == FALSE){
+            stop("When a numeric value \'cluster\' should be an integer between 1 and the number of cluster (here ",length(U.cluster),"). \n")
+        }else{
+            cluster.level <- U.cluster[cluster]
+        }
+    }else if(is.character(cluster) || is.factor(cluster)){
+        cluster <- as.character(cluster) 
+        if(cluster %in% U.cluster == FALSE){
+            stop("When a character or factor value, \'cluster\' should be one of the strings representing the clusters (here \"",utils::head(U.cluster,1),"\", ... \"",utils::tail(U.cluster,1),"\"). \n")
+        }else{
+            cluster.level <- cluster
+        }
+    }else{
+        stop("\'cluster\' should either be indexing the cluster (1 or 2 or ..., i.e. numeric) \n",
+             "or the character string identifying the cluster (character or factor).")
     }
 
     ## ** re-generate object
-    out <- list(model = object$model[[index.cluster]],
-                breakpoint = object$breakpoint[object$breakpoint[[object$args$cluster]]==cluster,,drop=FALSE],
-                opt = object$opt[index.cluster,,drop=FALSE],
+    out <- list(model = object$model[[cluster]],
+                breakpoint = object$breakpoint[[cluster]],
+                phase = object$phase[[cluster]],
+                opt = object$opt[[cluster]],
                 call = object$call,
                 args = object$args,
-                data = object$data[object$data[[object$args$cluster]]==cluster,,drop=FALSE])
-    attr(out$breakpoint,"all") <- attr(object$breakpoint,"all")[[cluster]]
-    attr(out$opt,"all") <- attr(object$opt,"all")[[cluster]]
+                data = object$data[as.character(object$data[[object$args$cluster]])==cluster.level,,drop=FALSE])
     out$call$cluster <- paste0(out$call$cluster,"==",cluster)
     class(out) <- "lmbreak"
 

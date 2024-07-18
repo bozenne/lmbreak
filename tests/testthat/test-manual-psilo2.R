@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: apr 29 2024 (13:19) 
+## Last-Updated: jul 18 2024 (14:54) 
 ##           By: Brice Ozenne
-##     Update #: 62
+##     Update #: 66
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -19,6 +19,7 @@ if(FALSE){
     library(readxl)
     library(data.table)
     library(ggplot2)
+    library(testthat)
 
     library(lmbreak)
 }
@@ -42,9 +43,9 @@ if(FALSE){
     ggTraj %+% dtL.SERT
 
     e.SERT <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","1010","101","011","11"), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.SERT), -955.0167, tol = 1e-3)
+    expect_equal(logLik(e.SERT), -953.7636, tol = 1e-3)
     eDESCENTUN.SERT <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","1010","101","011","11"), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "BFGS"))
-    expect_equal(logLik(eDESCENTUN.SERT), -842.4136, tol = 1e-3)
+    expect_equal(logLik(eDESCENTUN.SERT), -842.1966, tol = 1e-3)
     
     plot(e.SERT, eDESCENTUN.SERT, labeller = label_value)
 
@@ -58,10 +59,11 @@ if(FALSE){
     ggTraj %+% dtL.LPS
 
     e.LPS <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LPS, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.LPS), -1688.759, tol = 1e-3)
+    expect_equal(logLik(e.LPS), -1690.451, tol = 1e-3)
     eDESCENTUN.LPS <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LPS, control = list(optimizer = "BFGS"))
     expect_equal(logLik(eDESCENTUN.LPS), -1499.123, tol = 1e-3)
- 
+
+    ## dev.new()
     plot(e.LPS, eDESCENTUN.LPS, labeller = label_value)
     model.tables(eDESCENTUN.LPS, format = "list")
 
@@ -75,7 +77,7 @@ if(FALSE){
     ggTraj %+% dtL.LLPS
 
     e.LLPS <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LLPS, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.LLPS), -1684.527, tol = 1e-3)
+    expect_equal(logLik(e.LLPS), -1678.042, tol = 1e-3)
     eDESCENTUN.LLPS <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LLPS, control = list(optimizer = "BFGS"))
     expect_equal(logLik(eDESCENTUN.LLPS), -1429.695, tol = 1e-3)
    
@@ -89,11 +91,13 @@ if(FALSE){
     ggTraj %+% dtL.LPM
 
     e.LPM <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LPM, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.LPM), -2013.906, tol = 1e-3)
+    expect_equal(logLik(e.LPM), -1999.724, tol = 1e-3)
     eDESCENTUN.LPM <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LPM, control = list(optimizer = "BFGS"))
-    expect_equal(logLik(eDESCENTUN.LPM), -1673.175, tol = 1e-3)
+    expect_equal(logLik(eDESCENTUN.LPM), -1639.104, tol = 1e-3)
 
     plot(e.LPM, eDESCENTUN.LPM, labeller = label_value)
+
+    eFAST.LPM <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", start = c(50,100,200,250), data = dtL.LPM, control = list(optimizer = "BFGS"))
 }
 
 
@@ -115,7 +119,7 @@ if(FALSE){
 
     ## ** trajectory model
     e.FP <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "id", data = dtL, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.FP), -239.0657, tol = 1e-3)
+    expect_equal(logLik(e.FP), -253.5706, tol = 1e-3)
     eDESCENTUN.FP <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "id", data = dtL, control = list(optimizer = "BFGS"))
     expect_equal(logLik(eDESCENTUN.FP), -188.1214, tol = 1e-3)
 

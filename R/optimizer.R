@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 20 2024 (15:24) 
 ## Version: 
-## Last-Updated: jul  2 2024 (15:25) 
+## Last-Updated: jul 18 2024 (14:26) 
 ##           By: Brice Ozenne
-##     Update #: 35
+##     Update #: 54
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -202,7 +202,6 @@ optim.lmbreak_BFGS <- function(formula, formula.noVs, pattern, Us.label, Us.sign
                                var.response, var.bp, data,
                                n.iter, tol, initialization, 
                                trace, digits){
-
     
     ## *** prepare
     n.breakpoint <- length(Us.label)
@@ -223,9 +222,16 @@ optim.lmbreak_BFGS <- function(formula, formula.noVs, pattern, Us.label, Us.sign
 
     ## *** gradient descent
     if(transform){
-        initialization.trans <- transformPsi(initialization, min = bp.range[1], max = bp.range[2], mindiff = bp.min.diff, jacobian = FALSE)
+        if((initialization[1] > bp.range[1]+bp.min.diff/2) && (initialization[length(initialization)]+bp.min.diff/2 < bp.range[2]) ){
+            trans.min.diff <- bp.min.diff
+        }else{ ## handle the case where the breakpoint is close to the border: ensures that the transformation is feasible
+            trans.factor <- max(ceiling(bp.min.diff/(initialization[1] - bp.range[1])), ceiling(bp.min.diff/(bp.range[2] - initialization[length(initialization)])))
+            trans.min.diff <- 2*bp.min.diff/trans.factor
+        }
+
+        initialization.trans <- transformPsi(initialization, min = bp.range[1], max = bp.range[2], mindiff = trans.min.diff, jacobian = FALSE)
         attr(transform,"range") <- bp.range
-        attr(transform,"mindiff") <- bp.min.diff
+        attr(transform,"mindiff") <- trans.min.diff
 
         ## SANITY CHECK
         ## .RSS.lmbreak(initialization, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)

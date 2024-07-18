@@ -32,7 +32,6 @@ df1 <- simBreak(c(10,25), breakpoint = c(0,1.5,3,4,5.5), slope = c(1,0,-1.2,0), 
 
 #### fit breakpoint regression ####
 e.mlmbreak1010 <- mlmbreak(Y ~ 0 + bp(X, "1010"), cluster = "id", data = df1)
-## expect 2 warnings
 plot(e.mlmbreak1010, scales = "free")
 plot(e.mlmbreak1010, scales = "free", subtitle = 0)
 

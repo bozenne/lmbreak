@@ -9,6 +9,7 @@
   newdata = NULL,
   cluster = NULL,
   extrapolate = FALSE,
+  continuity = NULL,
   keep.newdata = TRUE,
   ...
 )
@@ -21,6 +22,9 @@
 \item{cluster}{[vector] cluster relative to which the fit of the breakpoint model should be output.}
 
 \item{extrapolate}{[logical] should fitted values before the first or beyond the last observation be set to NA?}
+
+\item{continuity}{[logical] should predictions be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+Often not relevant as Vs term should be 0 when proper convergence has been reached.}
 
 \item{keep.newdata}{[logical] should the dataset be added as additional columns in the output?}
 

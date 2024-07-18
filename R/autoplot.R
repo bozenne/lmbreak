@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: jul  2 2024 (15:25) 
+## Last-Updated: jul 18 2024 (11:28) 
 ##           By: Brice Ozenne
-##     Update #: 242
+##     Update #: 251
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -24,6 +24,8 @@
 #' @param y [lmbreak] another model whose fit is to be compared with the first one.
 #' @param breaks [integer or numeric vector] number or vector of points to be used to display the fit.
 #' @param extrapolate [logical] should values before the first or beyond the last observation be displayed?
+#' @param continuity [logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+#' Often not relevant as Vs term should be 0 when proper convergence has been reached.
 #' @param breakpoint [logical] should the breakpoints be displayed?
 #' @param xlim [numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).
 #' @param ylim [numeric vector of length 2] range of displayed values for the y-axis (response variable).
@@ -39,7 +41,7 @@
 #' 
 #' @keywords hplot
 #' @export 
-autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE, breakpoint = TRUE, xlim = NULL, ylim = NULL, 
+autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE, continuity = NULL, breakpoint = TRUE, xlim = NULL, ylim = NULL, 
                              color = grDevices::palette.colors(3), size = c(1.5,2.5), linewidth = 1, alpha = 1, scales = "fixed", title = NULL, ...){
 
     ## ** extract from model
@@ -49,16 +51,17 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
     response.var <- object$args$response.var
     Z.var <- object$args$covariate
     cv <- object$opt$cv
-    continuity <- object$opt$continuity
+    opt.continuity <- object$opt$continuity
     pattern <- object$opt$pattern
 
     ## ** check user input
+    ## *** dots
     dots <- list(...)
     if(length(dots)>0){
         stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
     }
 
-    ## names
+    ## *** names
     if(any(c(object$args$response.var,object$args$breakpoint.var) %in% "model")){
         stop("The response and breakpoint variable should not be called \"model\". \n",
              "This name is used internally for buidling the graphical display. \n")
@@ -68,7 +71,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
              "This name is used internally for buidling the graphical display. \n")
     }
 
-    ## y
+    ## *** y
     if(!is.null(y)){
         if(!inherits(y,"lmbreak")){
             stop("Incorrect argument \'y\': should inherit of lmbreak. \n")
@@ -79,12 +82,12 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
         allBreakpoint <- breakpoint.value
     }
 
-    ## breaks
+    ## *** breaks
     if(!is.numeric(breaks)){
         stop("Incorrect argument \'break\': should be numeric. \n")
     }
     
-    ## xlim
+    ## *** xlim
     if(is.null(xlim)){
         xlim <- range(data[[breakpoint.var]], na.rm = TRUE)        
     }else{
@@ -99,7 +102,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
         xlim.NNA <- range(data[!is.na(data[[response.var]]),breakpoint.var],na.rm=TRUE)
     }
 
-    ## ylim
+    ## *** ylim
     if(is.null(ylim) && ("ylim" %in% names(match.call()) == FALSE)){
         ylim <- range(data[[response.var]], na.rm = TRUE)
     }
@@ -151,7 +154,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
 
     ## ** fitted values
     if(all(!is.na(breakpoint.value))){
-        newdataA <- stats::predict(object, newdata = newdata, keep.newdata = TRUE)
+        newdataA <- stats::predict(object, newdata = newdata, keep.newdata = TRUE, continuity = continuity)
         newdataA$breakpoint <- newdataA[[breakpoint.var]] %in% breakpoint.value
         newdataA$model <- "fit"
         if(!is.null(y)){
@@ -167,7 +170,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
     }
 
     if(!is.null(y) && all(!is.na(attr(breakpoint.value,"y")))){
-        newdataA.bis <- stats::predict(y, newdata = newdata, keep.newdata = TRUE)
+        newdataA.bis <- stats::predict(y, newdata = newdata, keep.newdata = TRUE, continuity = continuity)
         newdataA.bis$breakpoint <- newdataA.bis[[breakpoint.var]] %in% attr(breakpoint.value,"y")
         if(y$opt$optimizer[1]!=object$opt$optimizer[1]){
             newdataA.bis$model <- paste0("fit (",y$opt$optimizer[1],")")
@@ -201,7 +204,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
         out <- out + ggplot2::coord_cartesian(ylim = range(newdataA$estimate))
     }
     if(is.null(title)){
-        out <- out + ggplot2::ggtitle(label = paste0("Pattern ",paste(pattern, collapse="")," (convergence: ",cv,", continuity: ",continuity,")"))
+        out <- out + ggplot2::ggtitle(label = paste0("Pattern ",paste(pattern, collapse="")," (convergence: ",cv,", continuity: ",opt.continuity,")"))
     }else if(any(!is.na(title))){
         out <- out + ggplot2::ggtitle(label = title)
     }
@@ -222,6 +225,8 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
 #' @param cluster [vector] cluster relative to which the breakpoint model should be displayed.
 #' @param breaks [integer or numeric vector] number or vector of points to be used to display the fit.
 #' @param extrapolate [logical] should values before the first or beyond the last observation be displayed?
+#' @param continuity [logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+#' Often not relevant as Vs term should be 0 when proper convergence has been reached.
 #' @param breakpoint [logical] should the breakpoints be displayed?
 #' @param xlim [numeric vector of length 2] range of displayed values for the x-axis (breakpoint variable).
 #' @param ylim [numeric vector of length 2] range of displayed values for the y-axis (response variable).
@@ -239,7 +244,7 @@ autoplot.lmbreak <- function(object, y = NULL, breaks = 25, extrapolate = FALSE,
 #' 
 #' @keywords hplot
 #' @export 
-autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, extrapolate = FALSE, breakpoint = TRUE, xlim = NULL, ylim = NULL,
+autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, extrapolate = FALSE, continuity = NULL, breakpoint = TRUE, xlim = NULL, ylim = NULL,
                               color = grDevices::palette.colors(3), size = c(1.5,2.5), linewidth = 1, alpha = 1, scales = "fixed", labeller = "label_both",
                               subtitle = 2, ...){
 
@@ -249,7 +254,9 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
     data <- object$data
     breakpoint.var <- object$args$breakpoint.var
     response.var <- object$args$response.var
-    opt <- object$opt
+    opt <- do.call(rbind,lapply(names(object$opt), function(iC){cbind(iC,object$opt[[iC]])}))
+    names(opt)[1] <- object$args$cluster
+    rownames(opt) <- NULL
 
     ## ** normalize user input
     dots <- list(...)
@@ -303,9 +310,9 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
     ## ** fitted values
     ls.ggdata <- lapply(cluster, function(iC){
         if(!is.null(y)){
-            iOut <- autoplot(as.lmbreak(object, cluster = iC), y = as.lmbreak(y, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, breakpoint = breakpoint)$data
+            iOut <- autoplot(as.lmbreak(object, cluster = iC), y = as.lmbreak(y, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, continuity = continuity, breakpoint = breakpoint)$data
         }else{
-            iOut <- autoplot(as.lmbreak(object, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, breakpoint = breakpoint)$data
+            iOut <- autoplot(as.lmbreak(object, cluster = iC), xlim = xlim, breaks = breaks, extrapolate = extrapolate, continuity = continuity, breakpoint = breakpoint)$data
         }
         if(!is.null(iOut)){
             return(cbind(iC,iOut))
@@ -330,6 +337,8 @@ autoplot.mlmbreak <- function(object, cluster = NULL, y = NULL, breaks = 25, ext
     newdataB <- newdataA[newdataA$breakpoint,,drop=FALSE]
 
     ## ** graphical display
+    data[[var.cluster]] <- as.factor(data[[var.cluster]]) ## avoid warning since cluster var is factor in newdataA and newdataB
+
     out <- ggplot2::ggplot()
     out <- out + ggplot2::geom_point(data = cbind(data, model = "observation"), ggplot2::aes(x = .data[[breakpoint.var]], y = .data[[response.var]], color = .data$model),
                                      alpha = alpha, size = size[1])

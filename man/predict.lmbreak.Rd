@@ -4,7 +4,14 @@
 \alias{predict.lmbreak}
 \title{Fitted Values of the Breakpoint Model}
 \usage{
-\method{predict}{lmbreak}(object, newdata = NULL, extrapolate = FALSE, keep.newdata = TRUE, ...)
+\method{predict}{lmbreak}(
+  object,
+  newdata = NULL,
+  extrapolate = FALSE,
+  continuity = NULL,
+  keep.newdata = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{[lmbreak] output of \code{\link{lmbreak}}.}
@@ -13,9 +20,12 @@
 
 \item{extrapolate}{[logical] should fitted values before the first or beyond the last observation be set to NA?}
 
+\item{continuity}{[logical] should predictions be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+Often not relevant as Vs term should be 0 when proper convergence has been reached.}
+
 \item{keep.newdata}{[logical] should the dataset be added as additional columns in the output?}
 
-\item{...}{additional arguments passed to \code{stats::predict.lm}.}
+\item{...}{Not used. For compatibility with the generic method.}
 }
 \description{
 Extract fitted values from the breakpoint model.

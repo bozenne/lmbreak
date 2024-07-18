@@ -13,7 +13,7 @@
 
 \item{format}{[character] should the output be a data.frame (with cluster as a column) or an array (with cluster as the third dimension)?}
 
-\item{...}{Not used. For compatibility with the generic method.}
+\item{...}{Passed to \code{model.tables.lmbreak}.}
 }
 \description{
 Extract key summary statistics from each breakpoint model

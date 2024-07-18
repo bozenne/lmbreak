@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  6 2024 (12:19) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (19:02) 
+## Last-Updated: jul 18 2024 (13:52) 
 ##           By: Brice Ozenne
-##     Update #: 48
+##     Update #: 52
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -48,7 +48,7 @@ test_that("Pattern 11", {
 
     ## model fit
     expect_equal(as.double(fitted(test.1bp)), as.double(predict(test.1bp, newdata = dati)$estimate), tol = 1e-3)
-    df.fit1bp <- predict(test.1bp, newdata = data.frame(x = seq(0,1,length.out =100)), keep.newdata = TRUE, se.fit = FALSE, interval = "confidence")
+    df.fit1bp <- predict(test.1bp, newdata = data.frame(x = seq(0,1,length.out =100)), keep.newdata = TRUE)
     plot(test.1bp)
 })
 
@@ -143,7 +143,7 @@ test_that("Pattern 010", {
 test_that("Pattern 011", {
 
     ## estimation
-    test.011 <- lmbreak(y~bp(x,"011"), data = dati)
+    test.011 <- lmbreak(y~bp(x,"011"), data = dati, control = list(init.gam = TRUE, init.quantile = TRUE)) ## gam alone find a sub-optimal solution
     expect_equal(coef(test.011, "breakpoint"), c(33.67895, 71.77681), tol = 1e-3)
     expect_equal(test.011$breakpoint$Us,c("Us1","Us2"))
     expect_equal(test.011$breakpoint$sign,c(1,1))
@@ -157,7 +157,7 @@ test_that("Pattern 011", {
 test_that("Pattern 110", {
 
     ## estimation
-    test.110 <- lmbreak(y~bp(x,"110"), data = dati)
+    test.110 <- lmbreak(y~bp(x,"110"), data = dati, control = list(init.gam = TRUE, init.quantile = TRUE)) ## gam alone find a sub-optimal solution)
     expect_equal(coef(test.110, "breakpoint"), c(33.41794, 70.10277), tol = 1e-3)
     expect_equal(test.110$breakpoint$Us,c("I(Us1 - Us2)","I(Us1 - Us2)"))
     expect_equal(test.110$breakpoint$sign,c(1,-1))

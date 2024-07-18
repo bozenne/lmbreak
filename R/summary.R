@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (17:58) 
 ## Version: 
-## Last-Updated: jul  2 2024 (15:32) 
+## Last-Updated: jul 18 2024 (13:51) 
 ##           By: Brice Ozenne
-##     Update #: 126
+##     Update #: 132
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -17,8 +17,13 @@
 
 ## * summary.lmbreak (code)
 #' @export 
-summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
+summary.lmbreak <- function(object, digits = c(options()$digits,1), continuity = NULL, ...){
 
+    ## ** normalize user input
+    if(is.null(continuity)){
+        continuity <- (object$opt$continuity==FALSE)
+    }
+    
     ## ** extract from object
     object.pattern <- object$opt$pattern
     object.vecpattern <- object$arg$pattern[[object.pattern]]
@@ -31,7 +36,11 @@ summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
     object.opt <- object$opt 
     objectAll.opt <- attr(object.opt,"all")
 
-    model <- object$model
+    if(continuity && !is.null(attr(object$model,"continuity"))){
+        model <- attr(object$model,"continuity")
+    }else{
+        model <- object$model
+    }
     
     ## ** print
     cat("\t\tLinear regression with estimated breakpoints \n")
@@ -67,7 +76,7 @@ summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
     txt.plateau <- ifelse(all(object.vecpattern==1),"",paste0(", ",sum(object.vecpattern==0)," plateau",ifelse(sum(object.vecpattern==0)>1,"x","")))
     cat("Pattern: ",paste(object.pattern,collapse="")," (",txt.breakpoint,txt.plateau,")\n",sep="")
 
-    object.table <- model.tables(object)
+    object.table <- model.tables(object, continuity = continuity)
     table2print <- format.data.frame(object.table, digits = digits[1], na.encode = FALSE)
     table2print[is.na(object.table)] <- ""
     print(table2print, row.names = FALSE)
@@ -76,8 +85,6 @@ summary.lmbreak <- function(object, digits = c(options()$digits,1), ...){
 }
 
 ## * summary.mlmbreak (code)
-#' @export 
-## * print.mlmbreak (code)
 #' @export 
 summary.mlmbreak <- function(object, digits = c(options()$digits,1), ...){
 

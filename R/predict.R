@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (08:49) 
 ## Version: 
-## Last-Updated: jul  2 2024 (15:53) 
+## Last-Updated: jul 18 2024 (11:30) 
 ##           By: Brice Ozenne
-##     Update #: 53
+##     Update #: 66
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -22,25 +22,39 @@
 #' @param object [lmbreak] output of \code{\link{lmbreak}}.
 #' @param newdata [data.frame] dataset containing the covariate to condition on when evaluated the expected outcome.
 #' @param extrapolate [logical] should fitted values before the first or beyond the last observation be set to NA?
+#' @param continuity [logical] should predictions be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+#' Often not relevant as Vs term should be 0 when proper convergence has been reached.
 #' @param keep.newdata [logical] should the dataset be added as additional columns in the output?
-#' @param ... additional arguments passed to \code{stats::predict.lm}.
+#' @param ... Not used. For compatibility with the generic method.
 
 ## * predict.lmbreak
 ##' @export
-predict.lmbreak <- function(object, newdata = NULL, extrapolate = FALSE, keep.newdata = TRUE, ...){
+predict.lmbreak <- function(object, newdata = NULL, extrapolate = FALSE, continuity = NULL, keep.newdata = TRUE, ...){
     
+    ## ** normalize user input
+    ## *** dots
+    dots <- list(...)
+    if(length(dots)>0){
+        stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
+    }
+
+    ## *** continuity
+    if(is.null(continuity)){
+        continuity <- (object$opt$continuity==FALSE)
+    }
+
     ## ** extract from object
-    continuity <- object$opt$continuity
-    model <- object$model
+    if(continuity && !is.null(attr(object$model,"continuity"))){
+        model <- attr(object$model,"continuity")
+    }else{
+        model <- object$model
+    }
     breakpoint.var <- object$args$breakpoint.var
 
     ## ** predictions
     newdata.frame <- model.frame(object, newdata = newdata)
-    if(continuity == FALSE && !is.null(attr(model,"continuity"))){
-        out <- stats::predict(attr(model,"continuity"), newdata = newdata.frame, ...)
-    }else{
-        out <- stats::predict(model, newdata = newdata.frame, ...)
-    }
+    out <- stats::predict(model, newdata = newdata.frame)
+    
     if(extrapolate==FALSE){
         response.var <- object$args$response.var
         data <- object$data
@@ -78,12 +92,14 @@ predict.lmbreak <- function(object, newdata = NULL, extrapolate = FALSE, keep.ne
 #' @param newdata [data.frame] dataset containing the covariate to condition on when evaluated the expected outcome.
 #' @param cluster [vector] cluster relative to which the fit of the breakpoint model should be output.
 #' @param extrapolate [logical] should fitted values before the first or beyond the last observation be set to NA?
+#' @param continuity [logical] should predictions be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+#' Often not relevant as Vs term should be 0 when proper convergence has been reached.
 #' @param keep.newdata [logical] should the dataset be added as additional columns in the output?
 #' @param ... additional arguments passed to \code{predict.lmbreak}.
 
 ## * predict.mlmbreak
 ##' @export
-predict.mlmbreak <- function(object, newdata = NULL, cluster = NULL, extrapolate = FALSE, keep.newdata = TRUE, ...){
+predict.mlmbreak <- function(object, newdata = NULL, cluster = NULL, extrapolate = FALSE, continuity = NULL, keep.newdata = TRUE, ...){
 
     ## ** extract from object
     var.cluster <- object$args$cluster
@@ -98,7 +114,7 @@ predict.mlmbreak <- function(object, newdata = NULL, cluster = NULL, extrapolate
     
     ## ** extract prediction
     ls.pred <- lapply(cluster, function(iC){
-        iOut <- predict(as.lmbreak(object, cluster = iC), newdata = newdata, extrapolate = extrapolate, keep.newdata = keep.newdata, ...)
+        iOut <- predict(as.lmbreak(object, cluster = iC), newdata = newdata, extrapolate = extrapolate, continuity = continuity, keep.newdata = keep.newdata, ...)
         iOutA <- cbind(stats::setNames(list(rep(iC,NROW(iOut))),var.cluster),iOut)
         return(iOutA)
     })

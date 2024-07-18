@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (12:22) 
 ## Version: 
-## Last-Updated: apr 13 2024 (19:41) 
+## Last-Updated: jul 18 2024 (11:42) 
 ##           By: Brice Ozenne
-##     Update #: 95
+##     Update #: 108
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -45,7 +45,6 @@
 ##'
 ##' #### fit breakpoint regression ####
 ##' e.mlmbreak1010 <- mlmbreak(Y ~ 0 + bp(X, "1010"), cluster = "id", data = df1)
-##' ## expect 2 warnings
 ##' plot(e.mlmbreak1010, scales = "free")
 ##' plot(e.mlmbreak1010, scales = "free", subtitle = 0)
 ##'
@@ -134,16 +133,13 @@ mlmbreak <- function(formula, data, cluster, trace = 1, cpus = 1, ...){
     }
     
     ## ** export
-    col.cluster <- as.data.frame(stats::setNames(list(U.cluster), cluster))
-    out <- list(model = lapply(ls.lmbreak,"[[","model"),
-                breakpoint = do.call(rbind,lapply(1:n.cluster, function(iC){cbind(U.cluster[iC],ls.lmbreak[[iC]]$breakpoint)})),
-                opt = cbind(col.cluster,do.call(rbind,lapply(ls.lmbreak,"[[","opt"))),
+    out <- list(model = stats::setNames(lapply(ls.lmbreak,"[[","model"), U.cluster),
+                breakpoint = stats::setNames(lapply(ls.lmbreak,"[[","breakpoint"), U.cluster),
+                phase = stats::setNames(lapply(ls.lmbreak,"[[","phase"), U.cluster),
+                opt = stats::setNames(lapply(ls.lmbreak,"[[","opt"), U.cluster),
                 call = match.call(),
                 args = c(ls.lmbreak[[1]]$args,list(cluster.var = cluster, U.cluster = U.cluster)),
                 data = data)
-    attr(out$breakpoint,"all") <- stats::setNames(lapply(1:n.cluster, function(iC){attr(ls.lmbreak[[iC]]$breakpoint,"all")}),U.cluster)
-    attr(out$opt,"all") <- stats::setNames(lapply(1:n.cluster, function(iC){attr(ls.lmbreak[[iC]]$opt,"all")}),U.cluster)
-    names(out$breakpoint)[1] <- cluster
     class(out) <- "mlmbreak"
     return(out)
 }

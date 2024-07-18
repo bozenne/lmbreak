@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (10:00) 
 ## Version: 
-## Last-Updated: Apr 20 2024 (16:00) 
+## Last-Updated: jul 18 2024 (11:32) 
 ##           By: Brice Ozenne
-##     Update #: 54
+##     Update #: 55
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -17,14 +17,33 @@
 
 ## * print.lmbreak (code)
 #' @export 
-print.lmbreak <- function(x, digits = options()$digits, ...){
+print.lmbreak <- function(x, digits = options()$digits, continuity = NULL, ...){
 
-    object <- x$model
-    object$call <- x$call
-    print(object)
+    ## ** normalize user input
+    ## *** dots
+    dots <- list(...)
+    if(length(dots)>0){
+        stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
+    }
+
+    ## *** continuity
+    if(is.null(continuity)){
+        continuity <- (x$opt$continuity==FALSE)
+    }
+
+    ## ** extract from object
+    if(continuity && !is.null(attr(x$model,"continuity"))){
+        model <- attr(x$model,"continuity")
+    }else{
+        model <- x$model
+    }
+
+    ## ** print
+    print(model)
     cat("Breakpoints: \n", paste0(round(x$breakpoint$value, digits = digits), collapse = ", "))
     cat("\n\nConvergence: ", x$opt$cv, ", continuity: ",x$opt$continuity,", regularity: ",x$opt$regularity,"\n",sep="")
 
+    ## ** export
     return(invisible(TRUE))
 }
 

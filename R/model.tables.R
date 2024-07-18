@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  9 2024 (11:38) 
 ## Version: 
-## Last-Updated: apr 11 2024 (20:00) 
+## Last-Updated: jul 18 2024 (11:29) 
 ##           By: Brice Ozenne
-##     Update #: 38
+##     Update #: 43
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -20,11 +20,13 @@
 ##' @description Extract key summary statistics from the breakpoint model
 ##'
 ##' @param x output of \code{\link{lmbreak}}
+##' @param continuity [logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+##' Often not relevant as Vs term should be 0 when proper convergence has been reached.
 ##' @param ... Not used. For compatibility with the generic method.
 ##' 
 ##' @keywords methods
 ##' @export
-model.tables.lmbreak <- function(x, ...){
+model.tables.lmbreak <- function(x, continuity = NULL, ...){
 
     ## ** normalize user input
     dots <- list(...)
@@ -33,7 +35,7 @@ model.tables.lmbreak <- function(x, ...){
     }
 
     ## ** extract
-    allcoef <- coef(x, type = c("breakpoint.range","duration","intercept","slope"))
+    allcoef <- coef(x, type = c("breakpoint.range","duration","intercept","slope"), continuity = continuity)
     allcoef$duration <- c(allcoef$duration,NA)
     allcoef$slope <- c(allcoef$slope,NA)
     out <- as.data.frame(allcoef)
@@ -51,7 +53,7 @@ model.tables.lmbreak <- function(x, ...){
 ##' @param x output of \code{\link{mlmbreak}}.
 ##' @param cluster [vector] cluster relative to which the summary statistics should be extracted..
 ##' @param format [character] should the output be a data.frame (with cluster as a column) or an array (with cluster as the third dimension)?
-##' @param ... Not used. For compatibility with the generic method.
+##' @param ... Passed to \code{model.tables.lmbreak}.
 ##' 
 ##' @keywords methods
 ##' @export
@@ -71,7 +73,7 @@ model.tables.mlmbreak <- function(x, cluster = NULL, format = "data.frame", ...)
 
     ## ** extract
     ls.table <- lapply(cluster, function(iC){ ## iC <- cluster[6]
-        iOut <- model.tables(as.lmbreak(x, cluster = iC))
+        iOut <- model.tables(as.lmbreak(x, cluster = iC), ...)
         if(format == "data.frame"){
             return(cbind(iC,iOut))
         }else{

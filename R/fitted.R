@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  8 2024 (09:10) 
 ## Version: 
-## Last-Updated: Apr  8 2024 (09:13) 
+## Last-Updated: jul 18 2024 (10:32) 
 ##           By: Brice Ozenne
-##     Update #: 5
+##     Update #: 6
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -17,16 +17,31 @@
 
 ## * fitted.lmbreak
 ##' @export
-fitted.lmbreak <- function(object, ...){
+fitted.lmbreak <- function(object, continuity = NULL, ...){
 
     ## ** check user input
+    ## *** dots
     dots <- list(...)
     if(length(dots)>0){
         stop("Unknown argument(s) \'",paste(names(dots),collapse="\' \'"),"\'. \n")
     }
     
+    ## *** continuity
+    if(is.null(continuity)){
+        continuity <- (object$opt$continuity==FALSE)
+    }
+
+    ## ** extract from object
+    if(continuity && !is.null(attr(object$model,"continuity"))){
+        model <- attr(object$model,"continuity")
+    }else{
+        model <- object$model
+    }
+
+    out <- model$fitted
+    
     ## ** export
-    return(object$model$fitted)
+    return(out)
 
 }
 

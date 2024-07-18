@@ -4,7 +4,14 @@
 \alias{coef.lmbreak}
 \title{Extract Summary Statistics From Breakpoint Model}
 \usage{
-\method{coef}{lmbreak}(object, type = "breakpoint", interval, simplify = TRUE, ...)
+\method{coef}{lmbreak}(
+  object,
+  type = "breakpoint",
+  interval,
+  continuity = NULL,
+  simplify = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{output of \code{\link{lmbreak}}.}
@@ -27,6 +34,9 @@
 
 \item{interval}{[numeric vector of length 2] values from where to start and to stop calculating the area under the curve.
 Only relevant when \code{type="auc"}.}
+
+\item{continuity}{[logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+Often not relevant as Vs term should be 0 when proper convergence has been reached.}
 
 \item{simplify}{[logical] simplify the data format from a list to a vector or a data.frame.}
 

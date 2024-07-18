@@ -4,10 +4,13 @@
 \alias{model.tables.lmbreak}
 \title{Extract Key Summary Statistics From Breakpoint Model}
 \usage{
-\method{model.tables}{lmbreak}(x, ...)
+\method{model.tables}{lmbreak}(x, continuity = NULL, ...)
 }
 \arguments{
 \item{x}{output of \code{\link{lmbreak}}}
+
+\item{continuity}{[logical] should coefficients be extracted from a breakpoint model ensuring continuity (i.e. no Vs terms)?
+Often not relevant as Vs term should be 0 when proper convergence has been reached.}
 
 \item{...}{Not used. For compatibility with the generic method.}
 }
