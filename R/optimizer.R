@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr 20 2024 (15:24) 
 ## Version: 
-## Last-Updated: jul 18 2024 (14:26) 
+## Last-Updated: maj 11 2026 (17:16) 
 ##           By: Brice Ozenne
-##     Update #: 54
+##     Update #: 82
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -168,18 +168,25 @@ optim.lmbreak_NLMINB <- function(formula, formula.noVs, pattern, Us.label, Us.si
     data$Us0 <- data[[var.bp]]
 
     ## *** grid search
-    res.optim <- stats::nlminb(start = initialization,
-                               objective = .RSS.lmbreak, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, 
-                               lower = rep(bp.range[1] + bp.min.diff, n.breakpoint),
-                               upper = rep(bp.range[2]- bp.min.diff, n.breakpoint),
-                               control = list(abs.tol = tol[1], eval.max = 10*n.iter, iter.max = 7.5*n.iter))
-    iBreakpoint <- res.optim$par
-    cv <- res.optim$convergence==0
+    res.optim <- try(stats::nlminb(start = initialization,
+                                   objective = .RSS.lmbreak, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, 
+                                   lower = rep(bp.range[1] + bp.min.diff, n.breakpoint),
+                                   upper = rep(bp.range[2]- bp.min.diff, n.breakpoint),
+                                   control = list(abs.tol = tol[1], eval.max = 10*n.iter, iter.max = 7.5*n.iter)), silent = TRUE)
+    if(!inherits(res.optim, "try-error")){
+        iBreakpoint <- res.optim$par
+        cv <- res.optim$convergence==0
+        n.iter <- res.optim$iteration
+    }else{
+        iBreakpoint <- initialization*NA
+        cv <- FALSE
+        n.iter <- NA
+    }
 
     ## *** export
     df.opt <- data.frame(initialization = NA,
                          optimizer = "nlminb",
-                         n.iter = res.optim$iteration,
+                         n.iter = n.iter,
                          cv = cv,
                          continuity = NA,
                          regularity = NA,
@@ -188,6 +195,10 @@ optim.lmbreak_NLMINB <- function(formula, formula.noVs, pattern, Us.label, Us.si
                          diff = NA,
                          r2 = NA
                          )
+    if(inherits(res.optim, "try-error")){
+        df.opt$error <- res.optim
+        cat("\n",df.opt$error)
+    }    
     df.opt$tol <- list(tol)
     df.opt$initialization <- list(initialization)
     df.opt$diff <- list(NULL)
@@ -222,11 +233,13 @@ optim.lmbreak_BFGS <- function(formula, formula.noVs, pattern, Us.label, Us.sign
 
     ## *** gradient descent
     if(transform){
-        if((initialization[1] > bp.range[1]+bp.min.diff/2) && (initialization[length(initialization)]+bp.min.diff/2 < bp.range[2]) ){
+
+        if((initialization[1] > bp.range[1]+bp.min.diff/2) && (initialization[length(initialization)]+bp.min.diff/2 < bp.range[2])){
             trans.min.diff <- bp.min.diff
         }else{ ## handle the case where the breakpoint is close to the border: ensures that the transformation is feasible
-            trans.factor <- max(ceiling(bp.min.diff/(initialization[1] - bp.range[1])), ceiling(bp.min.diff/(bp.range[2] - initialization[length(initialization)])))
-            trans.min.diff <- 2*bp.min.diff/trans.factor
+            trans.factor <- max(ceiling(bp.min.diff/(initialization[1] - bp.range[1])),
+                                ceiling(bp.min.diff/(bp.range[2] - initialization[length(initialization)])))
+            trans.min.diff <- 1.5*bp.min.diff/trans.factor
         }
 
         initialization.trans <- transformPsi(initialization, min = bp.range[1], max = bp.range[2], mindiff = trans.min.diff, jacobian = FALSE)
@@ -238,33 +251,48 @@ optim.lmbreak_BFGS <- function(formula, formula.noVs, pattern, Us.label, Us.sign
         ## .RSS.lmbreak(initialization.trans, indiv = FALSE, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## numDeriv::jacobian(.RSS.lmbreak, indiv = FALSE, initialization.trans, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## .score.lmbreak(initialization.trans, indiv = FALSE, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-        res.optim <- stats::optim(par = initialization.trans, method = "BFGS",
-                                  fn = function(psi){.RSS.lmbreak(psi, indiv = FALSE, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
-                                  gr = function(psi){.score.lmbreak(psi, indiv = FALSE, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
-                                  control = list(maxit = 5*n.iter))
-        iBreakpoint <- backtransformPsi(res.optim$par, min = bp.range[1], max = bp.range[2], mindiff = bp.min.diff, jacobian = FALSE)
+        res.optim <- try(stats::optim(par = initialization.trans, method = "BFGS",
+                                      fn = function(psi){.RSS.lmbreak(psi, indiv = FALSE, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
+                                      gr = function(psi){.score.lmbreak(psi, indiv = FALSE, transform = transform, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
+                                      control = list(maxit = 5*n.iter)), silent = TRUE)
+        if(!inherits(res.optim, "try-error")){
+            iBreakpoint <- backtransformPsi(res.optim$par, min = bp.range[1], max = bp.range[2], mindiff = bp.min.diff, jacobian = FALSE)
+        }else{
+            iBreakpoint <- initialization*NA
+        }
     }else{       
-         
+        
         ## SANITY CHECK
         ## .RSS.lmbreak(initialization, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## .RSS.lmbreak(rep(bp.range[1], n.breakpoint) + bp.min.diff/2, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## .RSS.lmbreak(rep(bp.range[2], n.breakpoint) - bp.min.diff/2, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## numDeriv::jacobian(.RSS.lmbreak, indiv = FALSE, initialization, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)
         ## .score.lmbreak(initialization, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response, dX.skeleton = dX.skeleton, tol = tol[1])
-        res.optim <- stats::optim(par = initialization, method = "L-BFGS-B",
-                                  fn = function(psi){.RSS.lmbreak(psi, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
-                                  gr = function(psi){.score.lmbreak(psi, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
-                                  lower = rep(bp.range[1], n.breakpoint) + bp.min.diff/2,
-                                  upper = rep(bp.range[2], n.breakpoint) - bp.min.diff/2,
-                                  control = list(maxit = 5*n.iter))
-        iBreakpoint <- res.optim$par
+        res.optim <- try(stats::optim(par = initialization, method = "L-BFGS-B",
+                                      fn = function(psi){.RSS.lmbreak(psi, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, var.response = var.response)},
+                                      gr = function(psi){.score.lmbreak(psi, indiv = FALSE, transform = FALSE, formula = formula.noVs, data = data, var.bp = var.bp, dX.skeleton = dX.skeleton, var.response = var.response, tol = tol[1])},
+                                      lower = rep(bp.range[1], n.breakpoint) + bp.min.diff/2,
+                                      upper = rep(bp.range[2], n.breakpoint) - bp.min.diff/2,
+                                      control = list(maxit = 5*n.iter)), silent = TRUE)
+        if(!inherits(res.optim, "try-error")){
+            iBreakpoint <- res.optim$par
+        }else{
+            iBreakpoint <- initialization*NA
+        }
     }
-    cv <- res.optim$convergence==0
+
+    if(!inherits(res.optim, "try-error")){
+        cv <- res.optim$convergence==0
+        n.iter <- res.optim$counts[1]
+    }else{
+        cv <- FALSE
+        n.iter <- NA
+    }
 
     ## *** export
     df.opt <- data.frame(initialization = NA,
                          optimizer = ifelse(transform,"BFGS","L-BFGS-B"),
-                         n.iter = res.optim$counts[1],
+                         n.iter = n.iter,
                          cv = cv,
                          continuity = NA,
                          regularity = NA,
@@ -276,9 +304,14 @@ optim.lmbreak_BFGS <- function(formula, formula.noVs, pattern, Us.label, Us.sign
     df.opt$tol <- list(tol)
     df.opt$initialization <- list(initialization)
     df.opt$diff <- list(NULL)
-    return(list(model = NULL,
+    out <- list(model = NULL,
                 breakpoint = data.frame(value = iBreakpoint, Us = Us.label, Vs = Vs.label, sign = Us.sign),
-                opt = df.opt))
+                opt = df.opt)
+    if(inherits(res.optim, "try-error")){
+        out$error <- res.optim
+        cat("\n",out$error)
+    }
+    return(out)
 }
 
 

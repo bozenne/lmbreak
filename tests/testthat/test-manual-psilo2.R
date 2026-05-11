@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: apr  8 2024 (20:05) 
 ## Version: 
-## Last-Updated: jul 18 2024 (14:54) 
+## Last-Updated: maj 11 2026 (17:32) 
 ##           By: Brice Ozenne
-##     Update #: 66
+##     Update #: 68
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -43,9 +43,9 @@ if(FALSE){
     ggTraj %+% dtL.SERT
 
     e.SERT <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","1010","101","011","11"), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.SERT), -953.7636, tol = 1e-3)
+    expect_equal(logLik(e.SERT), -957.2124, tol = 1e-3)
     eDESCENTUN.SERT <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","1010","101","011","11"), cluster = "PatientID", data = dtL.SERT, control = list(optimizer = "BFGS"))
-    expect_equal(logLik(eDESCENTUN.SERT), -842.1966, tol = 1e-3)
+    expect_equal(logLik(eDESCENTUN.SERT), -832.3615, tol = 1e-3)
     
     plot(e.SERT, eDESCENTUN.SERT, labeller = label_value)
 
@@ -77,7 +77,7 @@ if(FALSE){
     ggTraj %+% dtL.LLPS
 
     e.LLPS <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LLPS, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.LLPS), -1678.042, tol = 1e-3)
+    expect_equal(logLik(e.LLPS), -1703.722, tol = 1e-3)
     eDESCENTUN.LLPS <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LLPS, control = list(optimizer = "BFGS"))
     expect_equal(logLik(eDESCENTUN.LLPS), -1429.695, tol = 1e-3)
    
@@ -91,9 +91,9 @@ if(FALSE){
     ggTraj %+% dtL.LPM
 
     e.LPM <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LPM, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.LPM), -1999.724, tol = 1e-3)
+    expect_equal(logLik(e.LPM), -2000.507, tol = 1e-3)
     eDESCENTUN.LPM <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "PatientID", data = dtL.LPM, control = list(optimizer = "BFGS"))
-    expect_equal(logLik(eDESCENTUN.LPM), -1639.104, tol = 1e-3)
+    expect_equal(logLik(eDESCENTUN.LPM), -1644.594, tol = 1e-3)
 
     plot(e.LPM, eDESCENTUN.LPM, labeller = label_value)
 
@@ -119,9 +119,9 @@ if(FALSE){
 
     ## ** trajectory model
     e.FP <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "id", data = dtL, control = list(optimizer = "Muggeo"))
-    expect_equal(logLik(e.FP), -253.5706, tol = 1e-3)
+    expect_equal(logLik(e.FP), -239.6338, tol = 1e-3)
     eDESCENTUN.FP <- mlmbreak(score ~ 0 + bp(time.num), pattern = c("01010","10101","1010","0101","101","011","110","11"), cluster = "id", data = dtL, control = list(optimizer = "BFGS"))
-    expect_equal(logLik(eDESCENTUN.FP), -188.1214, tol = 1e-3)
+    expect_equal(logLik(eDESCENTUN.FP), -187.8784, tol = 1e-3)
 
     plot(e.FP, eDESCENTUN.FP, labeller = label_value)
 }

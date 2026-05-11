@@ -29,7 +29,7 @@ library(lmbreak)
 #+END_SRC
 
 #+RESULTS:
-: lmbreak version 0.1.0
+: lmbreak version 0.1.1
 
 will be exemplified on the following dataset:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -81,11 +81,11 @@ plot(e.XP11, ylim = c(0,12)) ## right panel
 
 #+RESULTS:
 : Advarselsbesked:
-: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
 : Advarselsbesked:
-: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
 : Advarselsbesked:
-: [1m[22mRemoved 4 rows containing missing values (`geom_point()`).
+: [1m[22mRemoved 4 rows containing missing values or values outside the scale range (`geom_point()`).
 
 For the last call to =plot=, the argument =extrapolate= was used to
 display the model fit beyond the observed timepoints.
@@ -221,9 +221,9 @@ Breakpoints:
   6     101 TRUE       TRUE 0.9933673             70, 150    < 1e-07
   7     101 TRUE       TRUE 0.9839889  47.61905, 87.91209    < 1e-07
   8     101 TRUE       TRUE 0.9855812 86.95652, 129.53271    < 1e-07
-  9     101 TRUE       TRUE 0.9753291 49.12281, 115.93750 2.0289e-07
+  9     101 TRUE       TRUE 0.9753291 49.12281, 115.93750 2.0458e-07
  10     101 TRUE       TRUE 0.9961527 65.11628, 195.23809 5.1759e-07
- 11     101 TRUE      FALSE 0.9828458 32.51327, 100.00000    0.25541
+ 11     101 TRUE      FALSE 0.9828458 32.51512, 100.00000    0.25541
  12     101 TRUE       TRUE 0.9654704 43.47826, 150.99237    < 1e-07
  13     101 TRUE       TRUE 0.9944311 87.87879, 230.66667    < 1e-07
  14     101 TRUE       TRUE 0.9777323  157.8947, 248.0208 4.7554e-07
@@ -267,7 +267,7 @@ plot(e.XPall, ylim = c(0,10))
 
 #+RESULTS:
 : Advarselsbesked:
-: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+: [1m[22mRemoved 89 rows containing missing values or values outside the scale range (`geom_point()`).
 
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
@@ -291,7 +291,7 @@ plot(e.XPall, ylim = c(0,10), scales = "none")
 
 #+RESULTS:
 : Advarselsbesked:
-: [1m[22mRemoved 89 rows containing missing values (`geom_point()`).
+: [1m[22mRemoved 89 rows containing missing values or values outside the scale range (`geom_point()`).
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
 ggplot2::ggsave(ggplot2::autoplot(e.XPall, scales = "none", ylim = c(0,10))$plot, width = 8, height = 8, file = "inst/figures/gg-all-exampleIn1.png")
@@ -348,13 +348,13 @@ cbind(head(fit.XPmean),"",tail(fit.XPmean))
 #+END_SRC
 
 #+RESULTS:
-:   observed time      mean        sd "" observed time mean sd
-: 1       15    0 0.0000000 0.0000000          15  435    0  0
-: 2       15    1 0.1438590 0.0578802          15  436    0  0
-: 3       15    2 0.2877180 0.1157604          15  437    0  0
-: 4       15    3 0.4315770 0.1736406          15  438    0  0
-: 5       15    4 0.5754361 0.2315208          15  439    0  0
-: 6       15    5 0.7192951 0.2894010          15  440    0  0
+:   observed time      mean         sd "" observed time mean sd
+: 1       15    0 0.0000000 0.00000000          15  435    0  0
+: 2       15    1 0.1438581 0.05787845          15  436    0  0
+: 3       15    2 0.2877163 0.11575689          15  437    0  0
+: 4       15    3 0.4315744 0.17363534          15  438    0  0
+: 5       15    4 0.5754325 0.23151378          15  439    0  0
+: 6       15    5 0.7192906 0.28939223          15  440    0  0
 
 its graphical display:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
@@ -372,7 +372,7 @@ gg.mean
 
 #+RESULTS:
 : Advarselsbesked:
-: pakke 'ggplot2' blev bygget under R version 4.2.3
+: pakke 'ggplot2' blev bygget under R version 4.5.2
 
 #+BEGIN_HTML
 <img src="./inst/figures/gg-all-mean.png" title="101/11 pattern - all patient mean plot" alt="101/11 pattern - all patient mean plot" width="100%" style="display: block; margin: auto;" />

@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: Apr  5 2024 (15:33) 
 ## Version: 
-## Last-Updated: jul 18 2024 (14:38) 
+## Last-Updated: maj 11 2026 (17:06) 
 ##           By: Brice Ozenne
-##     Update #: 1437
+##     Update #: 1469
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -175,7 +175,7 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
         terms.nobp <- stats::drop.terms(terms.formula, dropx = formula.bp-1, keep.response = TRUE)
     }
     if(any(attr(terms.formula,"order")>1) && any(attr(terms.formula,"factor")[formula.bp,attr(terms.formula,"order")>1]>0)){ ## check no interaction with breakpoint
-            stop("The argument \'formula\' should not contain interaction(s) with the breakpoint variable. \n")
+        stop("The argument \'formula\' should not contain interaction(s) with the breakpoint variable. \n")
     }
 
     ## *** find pattern
@@ -381,10 +381,14 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
         ## *** display
         if(trace>0){
             if(trace>=2){
-                cat(" - (",iGrid,") pattern ",iPattern,", initialization ",paste0(round(iInit, digits[1]),collapse = ", "),if(trace>=3){" "},if(trace>=4){"\n"}, sep="")
+                if((iGrid == 1 || iPattern!=grid.fit$pattern[iGrid-1])){
+                    cat(" - (",iGrid,") pattern ",iPattern,", initialization ",paste0(round(iInit, digits[1]),collapse = ", "),if(trace>=3){" "},if(trace>=4){"\n"}, sep="")
+                }else{
+                    cat(", ",iGrid)
+                }
             }else if(trace>=1){
                 if((iGrid == 1 || iPattern!=grid.fit$pattern[iGrid-1])){
-                    cat("\n - Pattern ",iPattern,": ",iGrid, sep = "")
+                    cat("- Pattern ",iPattern,": ",iGrid, sep = "")
                 }else{
                     cat(", ",iGrid)
                 }
@@ -395,27 +399,27 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
 
         ## *** optimize
         if((control$n.iter == 0) || control$optimizer=="Muggeo"){
-            ls.fit[[iGrid]] <- optim.lmbreak_Muggeo(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
-                                                    Us.label = patternUsVs[[iPattern]]$breakpoint.Us, Us.sign = patternUsVs[[iPattern]]$breakpoint.sign,
-                                                    Vs.label = patternUsVs[[iPattern]]$Vs.label,
-                                                    var.response = var.response, var.bp = var.bp, data = data.fit,
-                                                    n.iter = control$n.iter, tol = control$tol, initialization = iInit, optimize.step = control$optimize.step,
-                                                    trace = trace-1.999999, digits = digits)
+            ls.fit[[iGrid]] <- try(optim.lmbreak_Muggeo(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
+                                                        Us.label = patternUsVs[[iPattern]]$breakpoint.Us, Us.sign = patternUsVs[[iPattern]]$breakpoint.sign,
+                                                        Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                                        var.response = var.response, var.bp = var.bp, data = data.fit,
+                                                        n.iter = control$n.iter, tol = control$tol, initialization = iInit, optimize.step = control$optimize.step,
+                                                        trace = trace-1.999999, digits = digits), silent = TRUE)
         }else if(control$optimizer=="nlminb"){
-            ls.fit[[iGrid]] <- optim.lmbreak_NLMINB(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
-                                                    Us.label = patternUsVs[[iPattern]]$breakpoint.Us, Us.sign = patternUsVs[[iPattern]]$breakpoint.sign,
-                                                    Vs.label = patternUsVs[[iPattern]]$Vs.label,
-                                                    var.response = var.response, var.bp = var.bp, data = data.fit,
-                                                    n.iter = control$n.iter, tol = control$tol, initialization = iInit, 
-                                                    trace = trace-1.999999, digits = digits)
+            ls.fit[[iGrid]] <- try(optim.lmbreak_NLMINB(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
+                                                        Us.label = patternUsVs[[iPattern]]$breakpoint.Us, Us.sign = patternUsVs[[iPattern]]$breakpoint.sign,
+                                                        Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                                        var.response = var.response, var.bp = var.bp, data = data.fit,
+                                                        n.iter = control$n.iter, tol = control$tol, initialization = iInit, 
+                                                        trace = trace-1.999999, digits = digits), silent = TRUE)
         }else if(control$optimizer %in% c("BFGS","L-BFGS-B")){
-            ls.fit[[iGrid]] <- optim.lmbreak_BFGS(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
-                                                  transform = control$optimizer == "BFGS",
-                                                  Us.label = patternUsVs[[iPattern]]$breakpoint.Us, Us.sign = patternUsVs[[iPattern]]$breakpoint.sign,
-                                                  Vs.label = patternUsVs[[iPattern]]$Vs.label,
-                                                  var.response = var.response, var.bp = var.bp, data = data.fit,
-                                                  n.iter = control$n.iter, tol = control$tol, initialization = iInit, 
-                                                  trace = trace-1.999999, digits = digits)
+            ls.fit[[iGrid]] <- try(optim.lmbreak_BFGS(formula = patternUsVs[[iPattern]]$formula, formula.noVs = patternUsVs[[iPattern]]$formula.noVs, pattern = iPattern,
+                                                      transform = control$optimizer == "BFGS",
+                                                      Us.label = patternUsVs[[iPattern]]$breakpoint.Us, Us.sign = patternUsVs[[iPattern]]$breakpoint.sign,
+                                                      Vs.label = patternUsVs[[iPattern]]$Vs.label,
+                                                      var.response = var.response, var.bp = var.bp, data = data.fit,
+                                                      n.iter = control$n.iter, tol = control$tol, initialization = iInit, 
+                                                      trace = trace-1.999999, digits = digits), silent = TRUE)
         }
 
         ## *** check convergence
@@ -441,6 +445,11 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
         if(grid.fit[iGrid,"check.cv"] && any(rowSums(grid.fit[1:iGrid,c("cv","continuity","regularity")])==3 & grid.fit[1:iGrid,"r2"]>control$minR2)){
             break
         }
+
+        if(trace>=1 && trace<2 && (iGrid != NROW(grid.fit)) && iPattern!=grid.fit$pattern[iGrid+1]){
+            cat("\n")
+        }
+        
     }
     if(trace>0){
         cat("\n")
@@ -616,7 +625,11 @@ lmbreak <- function(formula, data, pattern = NULL, start = NULL, range = NULL,
 ##' @noRd 
 .checkCV.lmbreak <- function(object, formula, formula.noVs, Us.label, Vs.label, data, var.bp, tol, enforce.continuity, range){
 
-    breakpoint <- object$breakpoint$value
+    if(inherits(object$error,"try-error")){
+        breakpoint <- rep(NA_real_, NROW(object$breakpoint))
+    }else{
+        breakpoint <- object$breakpoint$value
+    }
     out <- list()
     
     ## *** test Vs terms
