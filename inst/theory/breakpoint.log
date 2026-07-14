@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.7.9)  13 JUL 2026 18:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.7.9)  14 JUL 2026 17:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1283,6 +1283,9 @@ LaTeX Warning: Label `' multiply defined.
 
 LaTeX Warning: Label `' multiply defined.
 
+
+LaTeX Warning: Label `' multiply defined.
+
 )
 \openout1 = `breakpoint.aux'.
 
@@ -1493,7 +1496,7 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 [5
 
 ]
-<./figures/gg-traj-mixed.pdf, id=126, 361.35pt x 180.675pt>
+<./figures/gg-traj-mixed.pdf, id=118, 361.35pt x 180.675pt>
 File: ./figures/gg-traj-mixed.pdf Graphic file (type pdf)
 <use ./figures/gg-traj-mixed.pdf>
 Package pdftex.def Info: ./figures/gg-traj-mixed.pdf  used on input line 491.
@@ -1518,48 +1521,42 @@ Overfull \hbox (54.07056pt too wide) detected at line 547
 [7
 
 ]
-Overfull \hbox (47.12589pt too wide) detected at line 623
+Overfull \hbox (47.12589pt too wide) detected at line 603
+[]
+ []
+
+
+Overfull \hbox (89.79189pt too wide) detected at line 608
+[]
+ []
+
+
+Overfull \hbox (17.77664pt too wide) detected at line 616
 []
  []
 
 
 
-[8
-
-]
-Overfull \hbox (89.79189pt too wide) detected at line 628
+[8]
+Overfull \hbox (86.7943pt too wide) detected at line 625
 []
  []
 
 
-Overfull \hbox (9.15137pt too wide) detected at line 637
+Overfull \hbox (40.23283pt too wide) detected at line 633
 []
  []
 
 
-Overfull \hbox (85.67902pt too wide) detected at line 646
-[]
- []
-
-
-
-[9]
-Overfull \hbox (40.23283pt too wide) detected at line 657
-[]
- []
-
-
-Overfull \hbox (164.49765pt too wide) in paragraph at lines 657--657
+Overfull \hbox (164.49765pt too wide) in paragraph at lines 633--633
 [] 
  []
 
 
 
-[10
+[9]
 
-]
-
-[11]
+[10]
 \Changes@OutFile=\write6
 \openout6 = `breakpoint.soc'.
 
@@ -1568,7 +1565,7 @@ Overfull \hbox (164.49765pt too wide) in paragraph at lines 657--657
 
 
 
-[12
+[11
 
 ] (breakpoint.aux)
  ***********
@@ -1580,16 +1577,16 @@ L3 programming layer <2025-06-09>
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `breakpoint.out' has not changed.
-(rerunfilecheck)             Checksum: 3AB89A3599E5DF9D36CD0EB8C0D9B22A;2123.
+(rerunfilecheck)             Checksum: D4ED3A5E7B6B1DF336607B43FE09D105;1847.
  ) 
 Here is how much of TeX's memory you used:
- 31179 strings out of 468221
- 560803 string characters out of 5432408
- 1527814 words of memory out of 5000000
- 58892 multiletter control sequences out of 15000+600000
+ 31025 strings out of 468221
+ 558855 string characters out of 5432408
+ 1286704 words of memory out of 5000000
+ 58813 multiletter control sequences out of 15000+600000
  690619 words of font info for 112 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 114i,16n,117p,548b,2113s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 114i,16n,117p,548b,1953s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/doublestrok
 e/dsrom12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public
 /lm/lmbx12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publi
@@ -1602,14 +1599,15 @@ lic/lm/lmr17.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/lm/lmr6.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/lm/lmr8.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publi
 c/lm/lmsy10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/lm/lmsy6.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/lm/lmsy8.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publ
 ic/lm/lmtt10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/lm/lmtt12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pu
 blic/amsfonts/symbols/msam10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on breakpoint.pdf (12 pages, 350830 bytes).
+Output written on breakpoint.pdf (11 pages, 339397 bytes).
 PDF statistics:
- 399 PDF objects out of 1000 (max. 8388607)
- 180 named destinations out of 1000 (max. 500000)
- 120 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 306 PDF objects out of 1000 (max. 8388607)
+ 105 named destinations out of 1000 (max. 500000)
+ 104 words of extra memory for PDF output out of 10000 (max. 10000000)
 

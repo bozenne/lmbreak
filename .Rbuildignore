@@ -2,6 +2,7 @@
 .git
 .github
 README.org
+inst/paper
 LICENSE
 ^appveyor\.yml$
 ^doc$

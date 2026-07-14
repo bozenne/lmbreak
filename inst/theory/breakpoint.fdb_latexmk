@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1783960284.70595 "c:/Users/hpl802/Documents/Github/lmbreak/inst/theory/breakpoint.tex" "breakpoint.pdf" "breakpoint" 1783960286.52956 0
+["pdflatex"] 1784042214.70398 "c:/Users/hpl802/Documents/Github/lmbreak/inst/theory/breakpoint.tex" "breakpoint.pdf" "breakpoint" 1784042216.33824 0
   "C:/Users/hpl802/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1780905037 96941 ad57431e7715ccebfbfbf77c9c1c48cb ""
   "C:/Users/hpl802/AppData/Local/MiKTeX/fonts/tfm/public/stmaryrd/stmary10.tfm" 1752479638 848 f478e0761563bbc369eca609a1741348 ""
   "C:/Users/hpl802/AppData/Local/MiKTeX/fonts/tfm/public/stmaryrd/stmary6.tfm" 1752479641 848 068dd119e13b75777e62821af7d4f2a6 ""
@@ -62,6 +62,7 @@
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr6.pfb" 1256929440 123394 992f5e87d698d9e94717394c62580ea6 ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmr8.pfb" 1256929440 122174 a2d5e73f396ddbeb3bdf5c79aea0993d ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy10.pfb" 1256929440 27863 09ce3735688ffde955e72da27c95b61a ""
+  "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy6.pfb" 1256929440 28109 6d61305ed3d0eb794ebe36f15cf44aa0 ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmsy8.pfb" 1256929440 27802 5c876bb2c4040caaf035d60bd74a86bd ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt10.pfb" 1256929440 113227 d3d1adc024746ff57b20efba82c6d365 ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/lm/lmtt12.pfb" 1256929440 110323 19372944fba298bb4c4758abff959582 ""
@@ -261,10 +262,10 @@
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/tex/latex/xstring/xstring.sty" 1693735632 123 a302f2c651a95033260db60e51527ae8 ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-abspage.sty" 1750428951 2269 2de6c7a5fd634dfef00a960544463a38 ""
   "C:/Users/hpl802/AppData/Local/Programs/MiKTeX/tex/latex/zref/zref-base.sty" 1750428951 20785 198a9cb2e04238d92c320d0d9edbd76a ""
-  "breakpoint.aux" 1783960286 3176 ebe2f57ab53d26163daeca912ab404ec "pdflatex"
-  "breakpoint.out" 1783960286 2123 3ab89a3599e5df9d36cd0eb8c0d9b22a "pdflatex"
-  "breakpoint.tex" 1783960281 30662 c05788a9bc8eb42769bf08e0b1468f98 ""
-  "c:/Users/hpl802/Documents/Github/lmbreak/inst/theory/breakpoint.tex" 1783960281 30662 c05788a9bc8eb42769bf08e0b1468f98 ""
+  "breakpoint.aux" 1784042215 2773 84deb01e5a3c301100dd33acfe0406f0 "pdflatex"
+  "breakpoint.out" 1784042215 1847 d4ed3a5e7b6b1df336607b43fe09d105 "pdflatex"
+  "breakpoint.tex" 1784042195 28133 de661490cd64b85de0f87e1cf27eca3e ""
+  "c:/Users/hpl802/Documents/Github/lmbreak/inst/theory/breakpoint.tex" 1784042195 28133 de661490cd64b85de0f87e1cf27eca3e ""
   "figures/gg-traj-mixed.pdf" 1783959038 33701 aa1a951201428b1b108d07e837ef2122 ""
   (generated)
   "breakpoint.aux"
