@@ -1,4 +1,4 @@
-% Created 2026-07-15 on 10:23
+% Created 2026-07-15 on 14:02
 % Intended LaTeX compiler: pdflatex
 \documentclass[12pt]{article}
 
@@ -234,10 +234,10 @@ and (1.75,0.4) .. cycle;
 
 \maketitle
 \section{Subject specific, single breakpoint, single slope}
-\label{sec:orga433288}
+\label{sec:org0978280}
 
 \subsection{Direct optimisation}
-\label{sec:org1616f3a}
+\label{sec:orge803f2f}
 
 Consider a response variable \(Y\) and an explanatory variable \(X\)
 related by:
@@ -277,7 +277,7 @@ smoothness.
 
 \clearpage
 \subsection{Gradient descent}
-\label{sec:org876d2c5}
+\label{sec:org8d305e5}
 
 One can re-write the residual sum of squares as:
 \begin{align*}
@@ -357,7 +357,7 @@ So the breakpoint should be such that the average post-breakpoint value equal th
 
 \clearpage
 \subsection{Example}
-\label{sec:org8557c6d}
+\label{sec:org3e6200f}
 
 Simulate some data:
 \begin{lstlisting}[language=r,numbers=none]
@@ -455,10 +455,10 @@ We retrieve the estimate and log-likelihood of \texttt{lmbreak}.
 
 \clearpage
 \section{Mixed model, single breakpoint, single slope}
-\label{sec:org3a94474}
+\label{sec:org263f586}
 
 \subsection{Example}
-\label{sec:orgbb69414}
+\label{sec:org5306613}
 
 We will consider a dataset of 20 subjects with 25 observations each:
 \begin{lstlisting}[language=r,numbers=none]
@@ -466,7 +466,7 @@ library(lmbreak)
 library(mvtnorm)
 
 ## data generating parameters
-n.subject <- 20
+n.subject <- 50
 sigma2T <- 0.005
 betaT <- 1
 psiT <- 2
@@ -493,10 +493,8 @@ df.sim <- do.call(rbind,ls.sim)
 
 
 \clearpage
-\subsection{Direct optimisation (bivariate integral)}
-\label{sec:orge3b75ef}
-\subsubsection{Theory}
-\label{sec:orgb410da4}
+\subsection{Model}
+\label{sec:orge53288e}
 
 Consider a set of \(n\) subjects each undergoing \(T\) measurements at
 equally spaced timepoints \(1,\ldots,T\) of an outcome variable
@@ -538,8 +536,10 @@ Y_{i,t} =& \beta (t - (t - \psi - v_i)_+) + u_i (t - (t - \psi - v_i)_+) + \vare
 where \(\mu(t,\beta,\psi,u_i,v_i) = \beta t + u_i t\) when \(t \leq
 \psi + v_i\) \newline and \(\mu(t,\beta,\psi,u_i,v_i) = \beta (\psi +
 v_i) + u_i (\psi + v_i)\) otherwise.
-
-\bigskip
+\subsection{Likelihood}
+\label{sec:orgba80f7c}
+\subsubsection{Bivariate integral}
+\label{sec:org4f8b82c}
 
 Introduce \(\Theta =
 (\beta,\psi,\tau_{u,u},\tau_{u,v},\tau_{v,v},\sigma^2)\), we can
@@ -550,13 +550,15 @@ express the likelihood relative to \(n\) iid subjects as:
               =& \frac{1}{2\pi \sqrt{\tau_{u,u}\tau_{v,v}-\tau^2_{u,v}}} \exp\left(-\frac{u^2 w_{u,u}+2uv w_{u,v}+v^2 w_{v,v}}{2}\right)
 \end{align*}
 
+\clearpage
+
 One could evaluate this log-likelihood using numerical integration but
 this will typically be very slow:
 \begin{itemize}
 \item e.g. for a single subject at a single timepoint:
 \end{itemize}
 \begin{lstlisting}[language=r,numbers=none]
-system.time(
+system.time( ## single subject
   resIntegral2 <- logLik_mixed10(
     Y = df.sim[df.sim$id==1,"Y"], t = df.sim[df.sim$id==1,"X"],
     beta = betaT, psi = psiT, tau_uu = MtauT, sigma2 = sigma2T,
@@ -568,7 +570,7 @@ system.time(
 \label{}
 \begin{verbatim}
 bruger   system forløbet 
- 16.77     0.78    17.64
+ 11.64     0.61    12.30
 \end{verbatim}
 
 
@@ -580,22 +582,20 @@ head(resIntegral2)
 \label{}
 \begin{verbatim}
   integral1 error1 integral2 error2 integral        error    logLik
-1        NA     NA        NA     NA 3.126521 3.086796e-05 1.1399209
-2        NA     NA        NA     NA 3.923091 3.868127e-05 1.3668797
-3        NA     NA        NA     NA 3.301497 3.292422e-05 1.1943759
-4        NA     NA        NA     NA 2.990112 2.963236e-05 1.0953108
-5        NA     NA        NA     NA 2.300690 2.294792e-05 0.8332089
-6        NA     NA        NA     NA 2.195036 2.160457e-05 0.7861986
+1        NA     NA        NA     NA 4.220886 4.167256e-05 1.4400450
+2        NA     NA        NA     NA 4.810385 4.781720e-05 1.5707771
+3        NA     NA        NA     NA 2.947878 2.925916e-05 1.0810858
+4        NA     NA        NA     NA 3.071459 3.067560e-05 1.1221526
+5        NA     NA        NA     NA 2.468231 2.417586e-05 0.9035015
+6        NA     NA        NA     NA 2.181033 2.144690e-05 0.7797984
 \end{verbatim}
 
 
 Since standard optimizers may evaluate the likelihood a large number
 of times this direct approach is not really feasible (too slow).
-\subsection{Direct optimisation (nested univariate integrals)}
-\label{sec:orgcc6e4e0}
+\subsubsection{Nested univariate integrals}
+\label{sec:orgf9514e2}
 
-\subsubsection{Theory}
-\label{sec:org97d08fc}
 
 To simplify the numerical integration for a bivariate integral to
 univariate integral, we start by splitting second integral depending
@@ -653,7 +653,7 @@ Using \(a=-\infty\), \(b=t-\psi\), \(A=w_{v,v}+\frac{(\beta+u_i)^2}{\sigma^2}\),
 
 This approach is (much) more numerically efficient:
 \begin{lstlisting}[language=r,numbers=none]
-system.time(
+system.time( ## whole dataset 
   resIntegral <- logLik_mixed10(
     Y = df.sim$Y, t = df.sim$X,
     beta = betaT, psi = psiT, sigma2 = sigma2T,
@@ -666,11 +666,9 @@ system.time(
 \label{}
 \begin{verbatim}
 bruger   system forløbet 
-  0.12     0.00     0.13
+  0.22     0.00     0.22
 \end{verbatim}
 
-
-\clearpage
 
 \begin{lstlisting}[language=r,numbers=none]
 head(resIntegral)
@@ -680,24 +678,125 @@ head(resIntegral)
 \label{}
 \begin{verbatim}
   integral1       error1    integral2       error2 integral error    logLik
-1  3.126528 1.013930e-06 1.090811e-97 2.046914e-97 3.126528    NA 1.1399232
-2  3.923097 8.418369e-06 1.377458e-82 2.584089e-82 3.923097    NA 1.3668813
-3  3.301491 2.937633e-04 2.549903e-68 4.820844e-68 3.301491    NA 1.1943743
-4  2.990105 1.269216e-02 2.861756e-55 5.410472e-55 2.990105    NA 1.0953085
-5  2.300689 1.291344e-02 5.150787e-44 9.738089e-44 2.300689    NA 0.8332086
-6  2.195035 2.702594e-05 1.764517e-34 3.364701e-34 2.195035    NA 0.7861979
+1  4.220895 1.368832e-06 1.086702e-88 1.821438e-88 4.220895    NA 1.4400472
+2  4.810386 1.252909e-03 1.005836e-78 1.705596e-78 4.810386    NA 1.5707774
+3  2.947875 9.400217e-03 5.921995e-68 9.665419e-68 2.947875    NA 1.0810846
+4  3.071454 9.777754e-03 1.220746e-61 2.099327e-61 3.071454    NA 1.1221511
+5  2.468229 1.075678e-02 8.763755e-49 1.579133e-48 2.468229    NA 0.9035010
+6  2.181034 3.596076e-05 6.274525e-40 1.146041e-39 2.181034    NA 0.7797989
 \end{verbatim}
 
 
 
 and leads to nearly identical results:
 \begin{lstlisting}[language=r,numbers=none]
-range(resIntegral$logLik[1:NROW(resIntegral2)]-resIntegral2$logLik)
+quantile(resIntegral$logLik[1:NROW(resIntegral2)]-resIntegral2$logLik)
 \end{lstlisting}
 
 \phantomsection
 \label{}
 \begin{verbatim}
-[1] -3.568816e-05  1.317753e-01
+           0%           25%           50%           75%          100% 
+-1.216897e-04 -8.942998e-07  5.361709e-05  2.670979e-04  3.104343e-03
 \end{verbatim}
+
+
+To total log-likelihood can be obtained by summing the \texttt{logLik} over
+rows:
+\begin{lstlisting}[language=r,numbers=none]
+sum(resIntegral$logLik)
+\end{lstlisting}
+
+\phantomsection
+\label{}
+\begin{verbatim}
+[1] 59.66285
+\end{verbatim}
+
+
+or, equivalently, setting the argument \texttt{indiv} to \texttt{FALSE}:
+\begin{lstlisting}[language=r,numbers=none]
+logLik_mixed10(
+  Y = df.sim$Y, t = df.sim$X,
+  beta = betaT, psi = psiT, sigma2 = sigma2T,
+  tau_uu = MtauT[1,1], tau_uv = MtauT[1,2], tau_vv = MtauT[2,2],
+  indiv = FALSE) ## uses univariate-fast by default
+\end{lstlisting}
+
+\phantomsection
+\label{}
+\begin{verbatim}
+[1] 59.66285
+\end{verbatim}
+\subsection{Direct optimisation}
+\label{sec:orga57bf3b}
+
+\noindent We can now search for the model parameters maximizing the likelihood:
+\begin{itemize}
+\item using a transformation to constrain the variance-covariance matrix
+of the random effect to be positive
+\end{itemize}
+\begin{lstlisting}[language=r,numbers=none]
+res.optim0 <- optim(
+  ## initialize at the DGM value
+  par = c(tau_uu.log = log(MtauT[1,1]),
+          rho_uv = atanh(cov2cor(MtauT)[1,2]),
+          tau_vv.log = log(MtauT[2,2])),
+  fn = function(theta){
+    theta["tau_uu"] <- exp(theta["tau_uu.log"])
+    theta["tau_vv"] <- exp(theta["tau_vv.log"])
+    theta["tau_uv"] <- sqrt(theta["tau_uu"]*theta["tau_vv"])*tanh(theta["rho_uv"])
+    iOut <- logLik_mixed10(Y = df.sim$Y, t = df.sim$X,
+                           beta = betaT, psi = psiT,
+                           tau_uu = theta["tau_uu"],
+                           tau_uv = theta["tau_uv"],
+                           tau_vv = theta["tau_vv"],
+                           sigma2 = sigma2T,
+                           indiv = FALSE)
+    return(-iOut) ## optim is minimizing
+  }, control = list(reltol = 1e-3))
+\end{lstlisting}
+
+And obtain the following estimates (after back-transformation):
+\begin{lstlisting}[language=r,numbers=none]
+res.optim0$par["tau_uu"] <- exp(res.optim0$par["tau_uu.log"])
+res.optim0$par["tau_vv"] <- exp(res.optim0$par["tau_vv.log"])
+res.optim0$par["tau_uv"] <- tanh(res.optim0$par["rho_uv"])*sqrt(res.optim0$par["tau_uu"]*res.optim0$par["tau_vv"])
+res.optim0$par[4:6]
+\end{lstlisting}
+
+\phantomsection
+\label{}
+\begin{verbatim}
+    tau_uu      tau_vv      tau_uv 
+0.010979172 0.069672254 0.002123152
+\end{verbatim}
+
+
+Here we assumed some of the parameters (\(\beta, \psi, \sigma^2\)) to
+be known to simplify the optimisation. Otherwise the problem is too
+complex for a 'standard optimiser' like \texttt{optim} which will return an error.
+
+\clearpage
+\subsection{Profile likelihood}
+\label{sec:org9e71292}
+
+To simplify the optimisation problem we will find the optimal
+expression of \((\beta,\psi,\sigma^2)\) given
+\((\tau_{u,u},\tau_{u,v},\tau{v,v})\) and inject these in the
+likelihood.
+
+\bigskip
+
+\noindent To do so we first derive the joint distribution of \((Y,u,v)\):
+\begin{align*}
+\Esp[Y] =& \beta t + \beta \Esp\left[(t-\psi-v_i)\Ind[t-\psi-v_i>0]\right]  + \Esp\left[u_i(t-\psi-v_i)\Ind[t-\psi-v_i>0]\right] \\
+ =& \beta t + \beta (t-\psi) - \Esp\left[v_i\Ind[t-\psi-v_i>0]\right] + (t-\psi)\Esp\left[u_i\Ind[t-\psi-v_i>0]\right] - \Esp\left[u_i v_i\Ind[t-\psi-v_i>0]\right] \\
+ =& \beta t + \beta (t-\psi) - \Esp\left[v_i\Ind[v_i < t-\psi]\right] + (t-\psi)\Esp\left[u_i\Ind[v_i<t-\psi]\right] - \Esp\left[u_i v_i\Ind[v_i<t-\psi]\right] \\
+\end{align*}
+
+We now focus on the expectation terms:
+\begin{align*}
+\Esp\left[v_i\Ind[v_i < t-\psi]\right] = \int_{-\infty}^{t-\psi} \frac{v_i}{\sqrt{2\pi \tau_{v,v}}} \exp\left(-\frac{v_i^2}{2\tau_{v,v}}\right)
+\end{align*}
 \end{document}

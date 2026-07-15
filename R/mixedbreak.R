@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: jul 14 2026 (10:40) 
 ## Version: 
-## Last-Updated: jul 15 2026 (10:24) 
+## Last-Updated: jul 15 2026 (13:15) 
 ##           By: Brice Ozenne
-##     Update #: 117
+##     Update #: 172
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -32,7 +32,7 @@
 ##' @param upper [numeric] upper bound for the numerical integration: above this value the density of the random effect distribution is ignored.
 ##' @param indiv [logical] should the log-likelihood be output for each observation or only its sum across all observations
 ##' @param integration [character] method use to compute the likelihood: \code{"bivariate"} or \code{"univariate"}.
-##' The latter is much faster.
+##' The latter is much faster. \code{"univariate-fast"} precomputes some quantities involved in \code{"univariate"} so is slightly faster.
 ##'
 ##' @return A numeric value for the value of the total log-likelihood (\code{indiv=FALSE}) or a \code{data.frame} with as many rows as observations (\code{indiv=TRUE}).
 
@@ -75,12 +75,12 @@
 ##' @export
 logLik_mixed10 <- function(Y, t,
                            beta, psi, tau_uu, tau_uv, tau_vv, sigma2,
-                           lower = -5, upper = 5, indiv = TRUE, integration){
+                           lower = -5, upper = 5, indiv = TRUE, integration = "univariate-fast"){
 
     ## ** normalize user input
 
     ## *** integration
-    integration <- match.arg(integration, c("univariate","bivariate"))
+    integration <- match.arg(integration, c("univariate","univariate-fast","bivariate"))
     if(is.matrix(tau_uu)){
         Mtau <- tau_uu
         tau_vv <- Mtau[2,2]
@@ -103,8 +103,12 @@ logLik_mixed10 <- function(Y, t,
     
     ## ** prepare
     n.obs <- length(Y)
-    out <- data.frame(matrix(NA, nrow = n.obs, ncol = 7, dimnames = list(NULL,c("integral1","error1","integral2","error2","integral","error","logLik"))))  
-
+    if(indiv == FALSE){
+        out <- 0
+    }else{
+        out <- data.frame(matrix(NA, nrow = n.obs, ncol = 7, dimnames = list(NULL,c("integral1","error1","integral2","error2","integral","error","logLik"))))  
+    }
+    
     if(integration == "bivariate"){
         if(length(lower)==1){
             lower <- rep(lower, 2)
@@ -112,9 +116,15 @@ logLik_mixed10 <- function(Y, t,
         if(length(upper)==1){
             upper <- rep(upper, 2)
         }
-    }else if(integration == "univariate"){
+    }else if(integration %in% c("univariate","univariate-fast")){
         normalizing.log <- -log(2*pi)-0.5*log(sigma2*(tau_uu*tau_vv-tau_uv^2))
         normalizing <- 1/(2*pi*sqrt(sigma2*(tau_uu*tau_vv-tau_uv^2)))
+
+        term1.factor <- 1/sqrt(w_vv)
+        term1A.www2 <- (w_uu - w_uv^2/w_vv)/2
+        term1B.mwpsiw <- -w_vv*psi/sqrt(w_vv)
+
+        A.cst <- w_vv + beta^2/sigma2
     }
 
     ## ** loop
@@ -131,50 +141,82 @@ logLik_mixed10 <- function(Y, t,
                 return(term1*term2)
             }, lower = lower, upper = upper)
 
-            out[iId,c("integral","error","logLik")] <- c(iInt$integral,iInt$error,log(iInt$integral))
+            if(indiv == FALSE){
+                out <- out + log(iInt$integral)
+            }else{
+                out[iId,c("integral","error","logLik")] <- c(iInt$integral,iInt$error,log(iInt$integral))
+            }
             
-        }else if(integration == "univariate"){
+        }else{
+            if(integration == "univariate"){
+                
+                ## *** first term
+                iInt1 <- stats::integrate(f = function(u){ ## u <- 1
+                    term1.log <- (iY - (beta+u)*iT)^2/(2*sigma2) + u^2*(w_uu - w_uv^2/w_vv)/2
+                    term2 <- (w_vv*(iT-psi)+u*w_uv)/sqrt(w_vv)
+                    return( exp(-term1.log) * (1 - stats::pnorm(term2)) / sqrt(w_vv) )
+                }, lower = lower, upper = upper)
+                
+                ## *** second term
+                iInt2 <- stats::integrate(f = function(u){ ## u <- 1
+                    A <- w_vv + (beta+u)^2/sigma2
+                    B <- u*w_uv - (beta+u)*(iY-psi*(beta+u))/sigma2
+                    term1.log <- (iY - psi*(beta+u))^2/(2*sigma2) + (u^2*w_uu - B^2/A)/2
+                    term2 <- (A*(iT-psi)+B)/sqrt(A)
+                    return(exp(-term1.log) * stats::pnorm(term2)/sqrt(A) )
+                }, lower = lower, upper = upper)
+                
+            }else if(integration == "univariate-fast"){
+                
+                ## *** first term
+                iTerm1A.cst <- -(iY-beta*iT)^2/(2*sigma2)
+                iTerm1A.u <-  +2*iT*(iY-beta*iT)/(2*sigma2)
+                iTerm1A.u2 <- -term1A.www2 - iT^2/(2*sigma2)
+                
+                iTerm1B.cst <- term1B.mwpsiw+w_vv*iT/sqrt(w_vv)
+                iTerm1B.u <- w_uv/sqrt(w_vv)
 
-            ## *** first term
-            iInt1 <- stats::integrate(f = function(u){ ## u <- 1
-                term1.log <- (iY - (beta+u)*iT)^2/(2*sigma2) + u^2*(w_uu - w_uv^2/w_vv)/2
-                term2 <- (w_vv*(iT-psi)+u*w_uv)/sqrt(w_vv)
-                return( exp(-term1.log) * (1 - stats::pnorm(term2)) / sqrt(w_vv) )
-            }, lower = lower, upper = upper)
+                iInt1 <- stats::integrate(f = function(u){ ## u <- 1
+                    return( exp(iTerm1A.cst + u*iTerm1A.u + u^2*iTerm1A.u2) * (1 - stats::pnorm(iTerm1B.cst + u*iTerm1B.u)) * term1.factor )
+                }, lower = lower, upper = upper)
+                
+                ## *** second term
+                iA.u <- 2*beta/sigma2
+                iA.u2 <- 1/sigma2
 
-            ## when y=beta=t=w_uv=0 and tau_vv=tau_uu=1            
-            ## sqrt(2*pi)*(1 - pnorm(-psi))*normalizing
-         
-            ## *** second term
-            iInt2 <- stats::integrate(f = function(u){ ## u <- 1
-                A <- w_vv + (beta+u)^2/sigma2
-                B <- u*w_uv - (beta+u)*(iY-psi*(beta+u))/sigma2
-                term1.log <- (iY - psi*(beta+u))^2/(2*sigma2) + (u^2*w_uu - B^2/A)/2
-                term2 <- (A*(iT-psi)+B)/sqrt(A)
-                return(exp(-term1.log) * stats::pnorm(term2)/sqrt(A) )
-            }, lower = lower, upper = upper)
+                iB.cst <- -beta*iY/sigma2 + beta^2*psi/sigma2
+                iB.u <- w_uv + beta^2*psi/sigma2 - iY/sigma2 + psi*beta/sigma2
+                iB.u2 <- psi/sigma2
 
-            ## when y=beta=t=w_uv=0 and tau_vv=tau_uu=1
-            ## stats::integrate(f = function(u){ ## u <- 1
-            ##     return(exp(-u^2*(1 + psi^2 + u^2)/(2*(1+u^2))) / sqrt(1 + u^2))
-            ## }, lower = lower, upper = upper)$value * stats::pnorm(-psi)
+                iTerm2A.cst <- (iY^2 - 2*iY*psi*beta + psi^2*beta^2)/(2*sigma2)
+                iTerm2A.u <- psi*(psi*beta - iY)/sigma2
+                iTerm2A.u2 <- psi^2/(2*sigma2) + w_uu/2
 
-            out[iId,c("integral1","error1","integral2","error2","integral","error","logLik")] <- c(iInt1$value*normalizing,
-                                                                                                   iInt1$abs.error*normalizing,
-                                                                                                   iInt2$value*normalizing,
-                                                                                                   iInt2$abs.error*normalizing,
-                                                                                                   (iInt1$value+iInt2$value)*normalizing,
-                                                                                                   NA,
-                                                                                                   log(iInt1$value+iInt2$value)+normalizing.log)
+                iInt2 <- stats::integrate(f = function(u){ ## u <- 1
+                    A <- A.cst + iA.u*u + iA.u2*u^2
+                    sqrtA <- sqrt(A)
+                    B <- iB.cst + iB.u*u + iB.u2*u^2
+                    return(exp(-iTerm2A.cst - u*iTerm2A.u - u^2*iTerm2A.u2 + B^2/(2*A)) * stats::pnorm(sqrtA*(iT-psi)+B/sqrtA) / sqrtA )
+                }, lower = lower, upper = upper)
+                
+            }
+
+            if(indiv==FALSE){
+                out <- out + log(iInt1$value+iInt2$value)+normalizing.log
+            }else{
+                out[iId,c("integral1","error1","integral2","error2","integral","error","logLik")] <- c(iInt1$value*normalizing,
+                                                                                                       iInt1$abs.error*normalizing,
+                                                                                                       iInt2$value*normalizing,
+                                                                                                       iInt2$abs.error*normalizing,
+                                                                                                       (iInt1$value+iInt2$value)*normalizing,
+                                                                                                       NA,
+                                                                                                       log(iInt1$value+iInt2$value)+normalizing.log)
+            }
         }
     }
 
     ## ** export
-    if(indiv==TRUE){
-        return(out)
-    }else{
-        return(sum(out$logLik))
-    }  
+    return(out)
 }
 
 
