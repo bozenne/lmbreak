@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.7.9)  14 JUL 2026 17:16
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.7.9)  15 JUL 2026 10:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1512,7 +1512,7 @@ whose in-verse is $\OT1/lmr/m/n/12 ^^F[] = [] = [] []$\T1/lmr/m/n/12 .
  []
 
 
-Overfull \hbox (54.07056pt too wide) detected at line 547
+Overfull \hbox (54.07056pt too wide) detected at line 551
 []
  []
 
@@ -1521,34 +1521,34 @@ Overfull \hbox (54.07056pt too wide) detected at line 547
 [7
 
 ]
-Overfull \hbox (47.12589pt too wide) detected at line 603
+Overfull \hbox (47.12589pt too wide) detected at line 607
 []
  []
 
 
-Overfull \hbox (89.79189pt too wide) detected at line 608
+Overfull \hbox (89.79189pt too wide) detected at line 612
 []
  []
 
 
-Overfull \hbox (17.77664pt too wide) detected at line 616
+Overfull \hbox (17.77664pt too wide) detected at line 621
 []
  []
 
 
 
 [8]
-Overfull \hbox (86.7943pt too wide) detected at line 625
+Overfull \hbox (76.6292pt too wide) detected at line 631
 []
  []
 
 
-Overfull \hbox (40.23283pt too wide) detected at line 633
+Overfull \hbox (40.23283pt too wide) detected at line 639
 []
  []
 
 
-Overfull \hbox (164.49765pt too wide) in paragraph at lines 633--633
+Overfull \hbox (164.49765pt too wide) in paragraph at lines 639--639
 [] 
  []
 
@@ -1556,7 +1556,9 @@ Overfull \hbox (164.49765pt too wide) in paragraph at lines 633--633
 
 [9]
 
-[10]
+[10
+
+]
 \Changes@OutFile=\write6
 \openout6 = `breakpoint.soc'.
 
@@ -1580,10 +1582,10 @@ Package rerunfilecheck Info: File `breakpoint.out' has not changed.
 (rerunfilecheck)             Checksum: D4ED3A5E7B6B1DF336607B43FE09D105;1847.
  ) 
 Here is how much of TeX's memory you used:
- 31025 strings out of 468221
- 558855 string characters out of 5432408
+ 31024 strings out of 468221
+ 558846 string characters out of 5432408
  1286704 words of memory out of 5000000
- 58813 multiletter control sequences out of 15000+600000
+ 58811 multiletter control sequences out of 15000+600000
  690619 words of font info for 112 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  114i,16n,117p,548b,1953s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1605,9 +1607,9 @@ ic/lm/lmtt10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/lm/lmtt12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pu
 blic/amsfonts/symbols/msam10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on breakpoint.pdf (11 pages, 339397 bytes).
+Output written on breakpoint.pdf (11 pages, 339771 bytes).
 PDF statistics:
- 306 PDF objects out of 1000 (max. 8388607)
- 105 named destinations out of 1000 (max. 500000)
+ 307 PDF objects out of 1000 (max. 8388607)
+ 106 named destinations out of 1000 (max. 500000)
  104 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -316,7 +316,11 @@ Y_{i,t} =& \beta (t - (t - \psi - v_i)_+) + u_i (t - (t - \psi - v_i)_+) + \vare
 #+END_EXPORT
 where \(\mu(t,\beta,\psi,u_i,v_i) = \beta t + u_i t \) when \(t \leq
 \psi + v_i\) \newline and \(\mu(t,\beta,\psi,u_i,v_i) = \beta (\psi +
-v_i) + u_i (\psi + v_i) \) otherwise. \newline Introduce \(\Theta =
+v_i) + u_i (\psi + v_i) \) otherwise.
+
+\bigskip
+
+Introduce \(\Theta =
 (\beta,\psi,\tau_{u,u},\tau_{u,v},\tau_{v,v},\sigma^2)\), we can
 express the likelihood relative to \(n\) iid subjects as:
 #+BEGIN_EXPORT latex
@@ -341,7 +345,7 @@ system.time(
 
 #+RESULTS:
 :   bruger   system forløbet 
-:    35.35     2.81    39.87
+:    11.43     0.89    12.55
 
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
 head(resIntegral2)
@@ -388,18 +392,20 @@ Using that:
 &= \int_{a}^{b} \exp\left( - \frac{A}{2}(v_i^2 + 2 \frac{B}{A} v_i) \right) dv_i  \\
 &= \int_{a}^{b} \exp\left( - \frac{A}{2}(v_i + \frac{B}{A})^2 + \frac{B^2}{2 A} \right) dv_i  \\ 
 &= \sqrt{\frac{2 \pi}{A}}\exp\left(\frac{B^2}{2 A}\right)\frac{1}{\sqrt{2 \pi A^{-1}}} \int_{a}^{b} \exp\left( - \frac{(v^2_i- -\frac{B}{A})^2}{2A^{-1}} \right) dv_i \\
-&= \sqrt{\frac{2 \pi}{A}}\exp\left(\frac{B^2}{2 A}\right) \left(\Phi_{\mu=-\frac{B}{A},\sigma^2=A^{-1}}(b) - \Phi_{\mu=-\frac{B}{A},\sigma^2=A^{-1}}(a) \right)
+&= \sqrt{\frac{2 \pi}{A}}\exp\left(\frac{B^2}{2 A}\right) \left(\Phi_{\mu=-\frac{B}{A},\sigma^2=A^{-1}}(b) - \Phi_{\mu=-\frac{B}{A},\sigma^2=A^{-1}}(a) \right) \\
+&= \sqrt{\frac{2 \pi}{A}}\exp\left(\frac{B^2}{2 A}\right) \left(\Phi\left(\frac{bA+B}{\sqrt{A}}\right) - \Phi\left(\frac{aA+B}{\sqrt{A}}\right) \right)
 \end{align*}
 #+END_EXPORT
-where \(\Phi_{\mu,\sigma^2}\) denotes the Cumulative Distribution Function (CDF) of a
-normal distribution with mean \(\mu\) and variance \(\sigma^2\). For the first
-term, using \(a=t-\psi\), \(b=+\infty\), \(A=w_{v,v}\), and \(B = u_i
-w_{u,v}\), we obtain:
+where \(\Phi_{\mu,\sigma^2}(\bullet)= \Phi(\frac{\bullet-\mu}{\sigma})\) denotes
+the Cumulative Distribution Function (CDF) of a normal distribution
+with mean \(\mu\) and variance \(\sigma^2\). For the first term, using
+\(a=t-\psi\), \(b=+\infty\), \(A=w_{v,v}\), and \(B = u_i w_{u,v}\),
+we obtain:
 #+BEGIN_EXPORT latex
 \begin{align*}
 \Likelihood_{1,i,t}(\Theta) =&
 \sqrt{\frac{2\pi}{w_{v,v}}} \int_{-\infty}^{+\infty} \exp\left(-\frac{(Y_i - \beta t - u_i t)^2}{2\sigma^2} - \frac{u_i^2 (w_{u,u} -  \frac{w^2_{u,v}}{w_{v,v}})}{2} \right)
-                                             \left(1 - \Phi\left(\tau_{v,v}(w_{v,v} (t-\psi) + u_i w_{u,v})\right)\right)
+                                             \left(1 - \Phi\left(\frac{w_{v,v} (t-\psi) + u_i w_{u,v}}{\sqrt{w_{v,v}}}\right)\right)
 \end{align*}
 #+END_EXPORT
 which can be evaluated using numerical intergration
@@ -413,32 +419,35 @@ page). A similar approach can be used to evaluate the second term.
 \end{align*}
 #+END_EXPORT
 #+LaTeX: \end{adjustwidth}
-Using \(a=-\infty\), \(b=t-\psi\), \(A=w_{v,v}+(\beta+u_i)^2\), and
+Using \(a=-\infty\), \(b=t-\psi\), \(A=w_{v,v}+\frac{(\beta+u_i)^2}{\sigma^2}\), and
 \(B = u_i w_{u,v} - h(u_i)\) where
-\(h(u_i)=(\beta+u_i)(Y_i-\psi(\beta+u_i))\), we obtain for \(\Likelihood_{2,i,t}(\Theta)\):
+\(h(u_i)=\frac{(\beta+u_i)(Y_i-\psi(\beta+u_i))}{\sigma^2}\), we obtain for \(\Likelihood_{2,i,t}(\Theta)\):
 
 #+LaTeX: \begin{adjustwidth}{-7em}{-7em}
 #+BEGIN_EXPORT latex
 \begin{align*}
 \sqrt{2\pi} \int_{-\infty}^{+\infty} \exp\left(-\frac{(Y_i - \psi (\beta + u_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u} -  \frac{(u_i w_{u,v}-h(u_i))^2}{w_{v,v}+(\beta+u_i)^2}}{2} \right)
-                                             \frac{\Phi\left(\tau_{v,v}((w_{v,v}+(\beta+u_i)^2) (t-\psi) + u_i w_{u,v} - h(u_i)\right)}{\sqrt{w_{v,v}+(\beta+u_i)^2}} du_i
+                                             \frac{\Phi\left( \frac{(w_{v,v}+(\beta+u_i)^2) (t-\psi) + u_i w_{u,v} - h(u_i)}{\sqrt{w_{v,v}+(\beta+u_i)^2}}\right)}{\sqrt{w_{v,v}+(\beta+u_i)^2}} du_i
 \end{align*}
 #+END_EXPORT
 #+LaTeX: \end{adjustwidth}
 
+\clearpage
+
 This approach is (much) more numerically efficient:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
 system.time(
-  resIntegral <- logLik_mixed10(Y = df.sim$Y, t = df.sim$X,
-                                beta = betaT, psi = psiT, sigma2 = sigma2T,
-                                tau_uu = MtauT[1,1], tau_uv = MtauT[1,2], tau_vv = MtauT[2,2],
-                                integration  = "univariate")
+  resIntegral <- logLik_mixed10(
+    Y = df.sim$Y, t = df.sim$X,
+    beta = betaT, psi = psiT, sigma2 = sigma2T,
+    tau_uu = MtauT[1,1], tau_uv = MtauT[1,2], tau_vv = MtauT[2,2],
+    integration  = "univariate")
 )
 #+END_SRC
 
 #+RESULTS:
 :   bruger   system forløbet 
-:     0.30     0.00     0.35
+:     0.11     0.00     0.09
 
 \clearpage
 
@@ -447,23 +456,26 @@ head(resIntegral)
 #+END_SRC
 
 #+RESULTS:
-:     integral1       error1    integral2       error2  integral error    logLik
-: 1 0.002075497 3.177549e-05 2.348028e-12 4.254261e-12 0.2697098    NA -1.310409
-: 2 0.002594158 1.206309e-04 3.027044e-11 5.717863e-11 0.3371095    NA -1.087348
-: 3 0.002168798 1.148973e-05 3.815324e-08 7.213300e-08 0.2818391    NA -1.266419
-: 4 0.001949584 8.319586e-06 3.005641e-08 5.669998e-08 0.2533513    NA -1.372978
-: 5 0.001471287 5.025842e-05 1.462091e-08 2.628091e-08 0.1911949    NA -1.654462
-: 6 0.001374173 1.000105e-04 1.891155e-05 3.606195e-05 0.1810305    NA -1.709090
+:   integral1       error1    integral2       error2 integral error    logLik
+: 1  3.126528 1.013930e-06 9.199403e-89 1.540194e-88 3.126528    NA 1.1399232
+: 2  3.923097 8.418369e-06 6.446281e-77 1.094922e-76 3.923097    NA 1.3668813
+: 3  3.301491 2.937633e-04 2.479404e-68 4.135706e-68 3.301491    NA 1.1943743
+: 4  2.990105 1.269216e-02 7.006556e-62 1.204212e-61 2.990105    NA 1.0953085
+: 5  2.300689 1.291344e-02 2.622398e-48 4.766823e-48 2.300689    NA 0.8332086
+: 6  2.195035 2.702594e-05 3.101972e-39 5.686815e-39 2.195035    NA 0.7861979
 
 
-However something is not quite right as the two approaches do not
-lead to similar results (TO DEBUG)
+and leads to nearly identical results:
 #+BEGIN_SRC R :exports both :results output :session *R* :cache no
-cor(resIntegral$logLik[1:NROW(resIntegral2)],resIntegral2$integral)
+range(resIntegral$logLik[1:NROW(resIntegral2)]-resIntegral2$logLik)
 #+END_SRC
 
 #+RESULTS:
-: [1] -0.5922597
+: [1] -6.738102e-05  5.249521e-04
+
+
+
+
 
 #+BEGIN_SRC R :exports none :results output :session *R* :cache no
 ## known 'fixed effects'

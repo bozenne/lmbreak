@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: jul 14 2026 (10:40) 
 ## Version: 
-## Last-Updated: jul 14 2026 (17:12) 
+## Last-Updated: jul 15 2026 (10:24) 
 ##           By: Brice Ozenne
-##     Update #: 107
+##     Update #: 117
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -40,13 +40,13 @@
 ##' @examples
 ##' #### EXAMPLE 1 ####
 ##' logLik_mixed10(Y = 0, t = 0, beta = 0, psi = 0, tau_uu = 1, tau_uv = 0, tau_vv = 1, sigma2 = 1, lower = -5, upper = 5, integration = "univariate")
-##' ##   integral1       error1 integral2       error2  integral error    logLik
-##' ##    1.253313 1.086413e-09 0.9896668 6.379719e-06 0.3569814    NA -1.030072
+##' ##   integral1      error1 integral2       error2  integral error    logLik
+##' ## 1  0.199471 1.72908e-10 0.1575104 1.015364e-06 0.3569814    NA -1.030072
 ##'
 ##' ## first integral
-##' sqrt(2*pi) * pnorm(5)*(1-pnorm(0))
+##' pnorm(5)*(1-pnorm(0)) / sqrt(2*pi)
 ##' ## second integral
-##' pnorm(0) * integrate(f = function(u){return(exp(-u^2/2) / sqrt(1+u^2))}, lower = -5, upper = 5)$value
+##' pnorm(0) * integrate(f = function(u){return(exp(-u^2/2) / sqrt(1+u^2))}, lower = -5, upper = 5)$value / (2*pi)
 ##'
 ##' logLik_mixed10(Y = 0, t = 0, beta = 0, psi = 0, tau_uu = 1, tau_uv = 0, tau_vv = 1, sigma2 = 1, lower = -5, upper = 5, integration = "bivariate")
 ##' ## integral1 error1 integral2 error2  integral        error    logLik
@@ -54,12 +54,22 @@
 ##' 
 ##' #### EXAMPLE 2 ####
 ##' logLik_mixed10(Y = 0, t = 0, beta = 1, psi = 1, tau_uu = 1, tau_uv = 0, tau_vv = 1, sigma2 = 1, lower = -5, upper = 5, integration = "univariate")
-##' ##    integral1       error1 integral2       error2 integral error     logLik
-##' ## 1  2.108937 1.828095e-09  0.227924 7.136171e-07 0.371923    NA -0.9890684
+##' ##   integral1       error1  integral2       error2  integral error     logLik
+##' ## 1 0.3356478 2.909504e-10 0.05056137 4.592356e-06 0.3862092    NA -0.9513762
 ##' 
 ##' logLik_mixed10(Y = 0, t = 0, beta = 1, psi = 1, tau_uu = 1, tau_uv = 0, tau_vv = 1, sigma2 = 1, lower = -5, upper = 5, integration = "bivariate")
 ##' ##  integral1 error1 integral2 error2  integral        error     logLik
 ##' ##         NA     NA        NA     NA 0.3862079 3.845569e-06 -0.9513795
+##' 
+##' #### EXAMPLE 3 ####
+##' logLik_mixed10(Y = 0.5, t = 2.2, beta = 1, psi = 3, tau_uu = 2, tau_uv = 0.3, tau_vv = 0.25, sigma2 = 1, lower = -5, upper = 5, integration = "univariate")
+##' ##    integral1       error1   integral2       error2  integral error    logLik
+##' ## 1 0.09976617 1.909237e-06 0.007462216 6.232982e-09 0.1072284    NA -2.232794
+##' 
+##' logLik_mixed10(Y = 0.5, t = 2.2, beta = 1, psi = 3, tau_uu = 2, tau_uv = 0.3, tau_vv = 0.25, sigma2 = 1, lower = -5, upper = 5, integration = "bivariate")
+##' ##   integral1 error1 integral2 error2  integral        error    logLik
+##' ## 1        NA     NA        NA     NA 0.1072284 1.061953e-06 -2.232794
+
 
 ## * logLik_mixed10 (code)
 ##' @export
@@ -128,8 +138,8 @@ logLik_mixed10 <- function(Y, t,
             ## *** first term
             iInt1 <- stats::integrate(f = function(u){ ## u <- 1
                 term1.log <- (iY - (beta+u)*iT)^2/(2*sigma2) + u^2*(w_uu - w_uv^2/w_vv)/2
-                term2 <- tau_vv*(w_vv*(iT-psi)+u*w_uv)  
-                return( exp(-term1.log) * (1 - stats::pnorm(term2)) / w_vv)
+                term2 <- (w_vv*(iT-psi)+u*w_uv)/sqrt(w_vv)
+                return( exp(-term1.log) * (1 - stats::pnorm(term2)) / sqrt(w_vv) )
             }, lower = lower, upper = upper)
 
             ## when y=beta=t=w_uv=0 and tau_vv=tau_uu=1            
@@ -137,11 +147,11 @@ logLik_mixed10 <- function(Y, t,
          
             ## *** second term
             iInt2 <- stats::integrate(f = function(u){ ## u <- 1
-                A <- w_vv + (beta+u)^2
-                B <- u*w_uv - (beta+u)*(iY-psi*(beta+u))
+                A <- w_vv + (beta+u)^2/sigma2
+                B <- u*w_uv - (beta+u)*(iY-psi*(beta+u))/sigma2
                 term1.log <- (iY - psi*(beta+u))^2/(2*sigma2) + (u^2*w_uu - B^2/A)/2
-                term2 <- tau_vv*(A*(iT-psi)+B)  
-                return(exp(-term1.log) * sqrt(2*pi/A) * stats::pnorm(term2, mean = - B/A, sd = 1/sqrt(A)))
+                term2 <- (A*(iT-psi)+B)/sqrt(A)
+                return(exp(-term1.log) * stats::pnorm(term2)/sqrt(A) )
             }, lower = lower, upper = upper)
 
             ## when y=beta=t=w_uv=0 and tau_vv=tau_uu=1
