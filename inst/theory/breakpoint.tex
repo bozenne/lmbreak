@@ -1,4 +1,4 @@
-% Created 2026-07-15 on 14:02
+% Created 2026-07-15 on 18:55
 % Intended LaTeX compiler: pdflatex
 \documentclass[12pt]{article}
 
@@ -234,10 +234,10 @@ and (1.75,0.4) .. cycle;
 
 \maketitle
 \section{Subject specific, single breakpoint, single slope}
-\label{sec:org0978280}
+\label{sec:orgdfa667d}
 
 \subsection{Direct optimisation}
-\label{sec:orge803f2f}
+\label{sec:org489cc30}
 
 Consider a response variable \(Y\) and an explanatory variable \(X\)
 related by:
@@ -277,36 +277,36 @@ smoothness.
 
 \clearpage
 \subsection{Gradient descent}
-\label{sec:org8d305e5}
+\label{sec:org3b696b5}
 
 One can re-write the residual sum of squares as:
 \begin{align*}
 RSS(\Theta_\mu) = \sum_{i=1}^n \varepsilon_i(\psi)^2  = Y (I-H(\psi))\trans{(I-H(\psi))}\trans{Y} = Y (I-H(\psi))\trans{Y}
 \end{align*}
 where \(H(\psi) =
-X(\psi)\left(\trans{X}(\psi)X(\psi)\right)^{-1}\trans{X}(\psi)\) is
-the hat matrix. It is idempotent and so is \(I-H\) where \(I\) denote
+Z(\psi)\left(\trans{Z}(\psi)Z(\psi)\right)^{-1}\trans{Z}(\psi)\) is
+the hat matrix and \({Z(\psi)=(X-(X-\psi)_+)}\). It is idempotent and so is \(I-H\) where \(I\) denote
 the identity matrix. Therefore a possible derivative w.r.t. \(\psi\) of the RSS is:
 \begin{align*}
 \frac{\partial RSS(\Theta_\mu)}{\partial \psi} =& - Y \frac{\partial H(\psi)}{\partial \psi} \trans{Y} \\
- =& - Y \frac{\partial X(\psi)}{\partial \psi} \left(\trans{X}(\psi) X(\psi)\right)^{-1}\trans{X}(\psi) \trans{Y} \\
-  & + Y X(\psi) \left(\trans{X}(\psi) X(\psi)\right)^{-1} \left(\frac{\partial \trans{X}(\psi)}{\partial \psi}X(\psi)+\trans{X}(\psi)\frac{\partial X(\psi)}{\partial \psi} \right) \left(\trans{X}(\psi) X(\psi)\right)^{-1}\trans{X}(\psi) \trans{Y} \\
-  &  - Y X(\psi) \left(\trans{X}(\psi)  X(\psi)\right)^{-1} \frac{\partial \trans{X}(\psi)}{\partial \psi} \trans{Y}
+ =& - Y \frac{\partial Z(\psi)}{\partial \psi} \left(\trans{Z}(\psi) Z(\psi)\right)^{-1}\trans{Z}(\psi) \trans{Y} \\
+  & + Y Z(\psi) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1} \left(\frac{\partial \trans{Z}(\psi)}{\partial \psi}Z(\psi)+\trans{Z}(\psi)\frac{\partial Z(\psi)}{\partial \psi} \right) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1}\trans{Z}(\psi) \trans{Y} \\
+  &  - Y Z(\psi) \left(\trans{Z}(\psi)  Z(\psi)\right)^{-1} \frac{\partial \trans{Z}(\psi)}{\partial \psi} \trans{Y}
 \end{align*}
 The first and last term being scalar and transpose of each other they
 are equal. Similarly the two middle terms are also scalar and
 transpose of each other so equal. Therefore:
 \begin{align*}
 \frac{\partial RSS(\Theta_\mu)}{\partial \psi}
-=& - 2 Y \frac{\partial X(\psi)}{\partial \psi} \left(\trans{X}(\psi) X(\psi)\right)^{-1}\trans{X}(\psi) \trans{Y} \\
- & + 2 Y X(\psi) \left(\trans{X}(\psi) X(\psi)\right)^{-1} \left(\trans{X}(\psi)\frac{\partial X(\psi)}{\partial \psi} \right) \left(\trans{X}(\psi) X(\psi)\right)^{-1}\trans{X}(\psi) \trans{Y} \\
-=& 2 Y \left(- \frac{\partial X(\psi)}{\partial \psi} + X(\psi) \left(\trans{X}(\psi) X(\psi)\right)^{-1} \trans{X}(\psi)\frac{\partial X(\psi)}{\partial \psi} \right) \left(\trans{X}(\psi) X(\psi)\right)^{-1}\trans{X}(\psi) \trans{Y} \\
-=& 2 Y \left(X(\psi) \left(\trans{X}(\psi) X(\psi)\right)^{-1} \trans{X}(\psi) - I \right) \frac{\partial X(\psi)}{\partial \psi} \left(\trans{X}(\psi) X(\psi)\right)^{-1}\trans{X}(\psi) \trans{Y}
+=& - 2 Y \frac{\partial Z(\psi)}{\partial \psi} \left(\trans{Z}(\psi) Z(\psi)\right)^{-1}\trans{Z}(\psi) \trans{Y} \\
+ & + 2 Y Z(\psi) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1} \left(\trans{Z}(\psi)\frac{\partial Z(\psi)}{\partial \psi} \right) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1}\trans{Z}(\psi) \trans{Y} \\
+=& 2 Y \left(- \frac{\partial Z(\psi)}{\partial \psi} + Z(\psi) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1} \trans{Z}(\psi)\frac{\partial Z(\psi)}{\partial \psi} \right) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1}\trans{Z}(\psi) \trans{Y} \\
+=& 2 Y \left(Z(\psi) \left(\trans{Z}(\psi) Z(\psi)\right)^{-1} \trans{Z}(\psi) - I \right) \frac{\partial Z(\psi)}{\partial \psi} \left(\trans{Z}(\psi) Z(\psi)\right)^{-1}\trans{Z}(\psi) \trans{Y}
 \end{align*}
 So it only remains to evaluate the (sub-)derivatives of \(X(\psi)\):
 \begin{align*}
-\frac{\partial X(\psi)}{\partial \psi} = \frac{\partial (X-\psi)\Ind[X>\psi]}{\partial \psi}
- = -\Ind[X>\psi] + \Ind[X=\psi]\delta
+\frac{\partial Z(\psi)}{\partial \psi} = \frac{\partial (X-\psi)\Ind[X>\psi]}{\partial \psi}
+ = -\Ind[X>\psi] - \Ind[X=\psi]\delta = -(\Ind[X>\psi] +\Ind[X=\psi]\delta) 
 \end{align*}
 where \(\delta \in [0,1]\).
 
@@ -357,7 +357,7 @@ So the breakpoint should be such that the average post-breakpoint value equal th
 
 \clearpage
 \subsection{Example}
-\label{sec:org3e6200f}
+\label{sec:orga8a0d39}
 
 Simulate some data:
 \begin{lstlisting}[language=r,numbers=none]
@@ -455,10 +455,10 @@ We retrieve the estimate and log-likelihood of \texttt{lmbreak}.
 
 \clearpage
 \section{Mixed model, single breakpoint, single slope}
-\label{sec:org263f586}
+\label{sec:orgd32238d}
 
 \subsection{Example}
-\label{sec:org5306613}
+\label{sec:org7bd40d2}
 
 We will consider a dataset of 20 subjects with 25 observations each:
 \begin{lstlisting}[language=r,numbers=none]
@@ -487,6 +487,13 @@ ls.sim <- lapply(1:n.subject, function(iS){ ## iS <- 1
 df.sim <- do.call(rbind,ls.sim)
 \end{lstlisting}
 
+\phantomsection
+\label{}
+\begin{verbatim}
+lmbreak version 0.1.2
+\end{verbatim}
+
+
 \begin{center}
 \includegraphics[trim={0 0 0 0},clip,width=1\textwidth]{./figures/gg-traj-mixed.pdf}
 \end{center}
@@ -494,7 +501,7 @@ df.sim <- do.call(rbind,ls.sim)
 
 \clearpage
 \subsection{Model}
-\label{sec:orge53288e}
+\label{sec:org7b49251}
 
 Consider a set of \(n\) subjects each undergoing \(T\) measurements at
 equally spaced timepoints \(1,\ldots,T\) of an outcome variable
@@ -537,15 +544,15 @@ where \(\mu(t,\beta,\psi,u_i,v_i) = \beta t + u_i t\) when \(t \leq
 \psi + v_i\) \newline and \(\mu(t,\beta,\psi,u_i,v_i) = \beta (\psi +
 v_i) + u_i (\psi + v_i)\) otherwise.
 \subsection{Likelihood}
-\label{sec:orgba80f7c}
+\label{sec:orgbf16792}
 \subsubsection{Bivariate integral}
-\label{sec:org4f8b82c}
+\label{sec:orgd81fac4}
 
 Introduce \(\Theta =
 (\beta,\psi,\tau_{u,u},\tau_{u,v},\tau_{v,v},\sigma^2)\), we can
 express the likelihood relative to \(n\) iid subjects as:
 \begin{align*}
-\Likelihood(\Theta) &= \prod_{i=1}^n \prod_{t=1}^T \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{+\infty} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \mu(t,\beta,\psi,u_i,v_i))^2}{2\sigma^2}\right)f_{\tau}(u,v) du_i dv_i \\
+\Likelihood(\Theta) &= \prod_{i=1}^n \prod_{t=1}^T \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{+\infty} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \mu(t,\beta,\psi,u_i,v_i))^2}{2\sigma^2}\right)f_{\tau}(u,v) dv_i du_i \\
 \text{ where } f_{\tau}(u,v) =& \frac{1}{2\pi \left|\Sigma_\tau\right|^{1/2}} \exp\left(-\frac{1}{2}\begin{bmatrix}u & v \end{bmatrix}\Sigma^{-1}_\tau\begin{bmatrix}u\\ v \end{bmatrix}\right) \\
               =& \frac{1}{2\pi \sqrt{\tau_{u,u}\tau_{v,v}-\tau^2_{u,v}}} \exp\left(-\frac{u^2 w_{u,u}+2uv w_{u,v}+v^2 w_{v,v}}{2}\right)
 \end{align*}
@@ -594,21 +601,21 @@ head(resIntegral2)
 Since standard optimizers may evaluate the likelihood a large number
 of times this direct approach is not really feasible (too slow).
 \subsubsection{Nested univariate integrals}
-\label{sec:orgf9514e2}
+\label{sec:org87f99ca}
 
 
 To simplify the numerical integration for a bivariate integral to
 univariate integral, we start by splitting second integral depending
 on whether \(t \leq \psi + v_i\) i.e. \(v_i \geq t - \psi\):
 \begin{align*}
-\Likelihood(\Theta) =& \prod_{i=1}^n \prod_{t=1}^T \int_{u_i=-\infty}^{+\infty}\int_{v_i=t-\psi}^{+\infty} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta t - u_i t)^2}{2\sigma^2}\right)f_{\tau}(u_i,v_i) du_i dv_i \\
-                   & + \prod_{i=1}^n \prod_{t=1}^T \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta (\psi + v_i) - u_i (\psi + v_i))^2}{2\sigma^2}\right)f_{\tau}(u_i,v_i) du_i dv_i \\
+\Likelihood(\Theta) =& \prod_{i=1}^n \prod_{t=1}^T \int_{u_i=-\infty}^{+\infty}\int_{v_i=t-\psi}^{+\infty} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta t - u_i t)^2}{2\sigma^2}\right)f_{\tau}(u_i,v_i) dv_i du_i \\
+                   & + \prod_{i=1}^n \prod_{t=1}^T \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(Y_i - \beta (\psi + v_i) - u_i (\psi + v_i))^2}{2\sigma^2}\right)f_{\tau}(u_i,v_i) dv_i du_i \\
                    =& \frac{1}{(2\pi)^{3nT/2}\sigma^{nT}(\tau_{u,u}\tau_{v,v}-\tau^2_{u,v})^{nT/2}} \prod_{i=1}^n \prod_{t=1}^T \left(\Likelihood_{1,i,t}(\Theta) + \Likelihood_{2,i,t}(\Theta) \right)
 \end{align*}
 where we introduce the notation:
 \begin{align*}
-\Likelihood_{1,i,t}(\Theta) =& \int_{u_i=-\infty}^{+\infty}\int_{v_i=t-\psi}^{+\infty} \exp\left(-\frac{(Y_i - \beta t - u_i t)^2}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) du_i dv_i \\
-\Likelihood_{2,i,t}(\Theta) =& \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \exp\left(-\frac{(Y_i - \beta (\psi + v_i) - u_i (\psi + v_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) du_i dv_i
+\Likelihood_{1,i,t}(\Theta) =& \int_{u_i=-\infty}^{+\infty}\int_{v_i=t-\psi}^{+\infty} \exp\left(-\frac{(Y_i - \beta t - u_i t)^2}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) dv_i du_i \\
+\Likelihood_{2,i,t}(\Theta) =& \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \exp\left(-\frac{(Y_i - \beta (\psi + v_i) - u_i (\psi + v_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) dv_i du_i
 \end{align*}
 Using that:
 \begin{align*}
@@ -624,18 +631,20 @@ the Cumulative Distribution Function (CDF) of a normal distribution
 with mean \(\mu\) and variance \(\sigma^2\). For the first term, using
 \(a=t-\psi\), \(b=+\infty\), \(A=w_{v,v}\), and \(B = u_i w_{u,v}\),
 we obtain:
+\begin{adjustwidth}{-4em}{-4em}
 \begin{align*}
 \Likelihood_{1,i,t}(\Theta) =&
 \sqrt{\frac{2\pi}{w_{v,v}}} \int_{-\infty}^{+\infty} \exp\left(-\frac{(Y_i - \beta t - u_i t)^2}{2\sigma^2} - \frac{u_i^2 (w_{u,u} -  \frac{w^2_{u,v}}{w_{v,v}})}{2} \right)
-                                             \left(1 - \Phi\left(\frac{w_{v,v} (t-\psi) + u_i w_{u,v}}{\sqrt{w_{v,v}}}\right)\right)
+                                             \left(1 - \Phi\left(\frac{w_{v,v} (t-\psi) + u_i w_{u,v}}{\sqrt{w_{v,v}}}\right)\right)du_i
 \end{align*}
+\end{adjustwidth}
 which can be evaluated using numerical intergration
 (e.g. \texttt{stats::integrate} and \texttt{stats::pnorm} - see function next
 page). A similar approach can be used to evaluate the second term.
 \begin{adjustwidth}{-7em}{-7em}
 \begin{align*}
-&\Likelihood_{2,i,t}(\Theta) = \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \exp\left(-\frac{(Y_i - \psi (\beta + u_i) - v_i (\beta + u_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) du_i dv_i \\
-=& \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \exp\left(-\frac{(Y_i - \psi (\beta + u_i))^2 + v^2_i (\beta + u_i)^2 - 2 v_i (\beta + u_i) (Y_i - \psi (\beta + u_i))}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) du_i dv_i
+&\Likelihood_{2,i,t}(\Theta) = \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \exp\left(-\frac{(Y_i - \psi (\beta + u_i) - v_i (\beta + u_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) dv_i du_i \\
+=& \int_{u_i=-\infty}^{+\infty}\int_{v_i=-\infty}^{t-\psi} \exp\left(-\frac{(Y_i - \psi (\beta + u_i))^2 + v^2_i (\beta + u_i)^2 - 2 v_i (\beta + u_i) (Y_i - \psi (\beta + u_i))}{2\sigma^2} - \frac{u_i^2 w_{u,u}+2u_i v_i w_{u,v}+v_i^2 w_{v,v}}{2}\right) dv_i du_i
 \end{align*}
 \end{adjustwidth}
 Using \(a=-\infty\), \(b=t-\psi\), \(A=w_{v,v}+\frac{(\beta+u_i)^2}{\sigma^2}\), and
@@ -644,8 +653,8 @@ Using \(a=-\infty\), \(b=t-\psi\), \(A=w_{v,v}+\frac{(\beta+u_i)^2}{\sigma^2}\),
 
 \begin{adjustwidth}{-7em}{-7em}
 \begin{align*}
-\sqrt{2\pi} \int_{-\infty}^{+\infty} \exp\left(-\frac{(Y_i - \psi (\beta + u_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u} -  \frac{(u_i w_{u,v}-h(u_i))^2}{w_{v,v}+(\beta+u_i)^2}}{2} \right)
-                                             \frac{\Phi\left( \frac{(w_{v,v}+(\beta+u_i)^2) (t-\psi) + u_i w_{u,v} - h(u_i)}{\sqrt{w_{v,v}+(\beta+u_i)^2}}\right)}{\sqrt{w_{v,v}+(\beta+u_i)^2}} du_i
+\sqrt{2\pi} \int_{-\infty}^{+\infty} \exp\left(-\frac{(Y_i - \psi (\beta + u_i))^2}{2\sigma^2} - \frac{u_i^2 w_{u,u} -  \frac{(u_i w_{u,v}-h(u_i))^2}{w_{v,v}+\sigma^{-2}(\beta+u_i)^2}}{2} \right)
+                                             \frac{\Phi\left( \frac{(w_{v,v}+\sigma^{-2}(\beta+u_i)^2) (t-\psi) + u_i w_{u,v} - h(u_i)}{\sqrt{w_{v,v}+\sigma^{-2}(\beta+u_i)^2}}\right)}{\sqrt{w_{v,v}+\sigma^{-2}(\beta+u_i)^2}} du_i
 \end{align*}
 \end{adjustwidth}
 
@@ -729,74 +738,94 @@ logLik_mixed10(
 [1] 59.66285
 \end{verbatim}
 \subsection{Direct optimisation}
-\label{sec:orga57bf3b}
+\label{sec:org7724c0a}
 
 \noindent We can now search for the model parameters maximizing the likelihood:
 \begin{itemize}
-\item using a transformation to constrain the variance-covariance matrix
-of the random effect to be positive
+\item using a transformation to constrain the breakpoint to be within the
+range of observation times, the variance-covariance matrix of the
+random effect to be positive, and the variance to be positive
 \end{itemize}
+
 \begin{lstlisting}[language=r,numbers=none]
-res.optim0 <- optim(
-  ## initialize at the DGM value
-  par = c(tau_uu.log = log(MtauT[1,1]),
+res.optim <- optim(
+  par = c(beta = 1,
+          psi.logit = qlogis(0.5),
+          tau_uu.log = log(MtauT[1,1]),
           rho_uv = atanh(cov2cor(MtauT)[1,2]),
-          tau_vv.log = log(MtauT[2,2])),
+          tau_vv.log = log(MtauT[2,2]),
+          sigma2.log = log(0.05)),
   fn = function(theta){
+    theta["psi"] <- max(df.sim$X) * plogis(theta["psi.logit"])
     theta["tau_uu"] <- exp(theta["tau_uu.log"])
     theta["tau_vv"] <- exp(theta["tau_vv.log"])
     theta["tau_uv"] <- sqrt(theta["tau_uu"]*theta["tau_vv"])*tanh(theta["rho_uv"])
-    iOut <- logLik_mixed10(Y = df.sim$Y, t = df.sim$X,
-                           beta = betaT, psi = psiT,
-                           tau_uu = theta["tau_uu"],
-                           tau_uv = theta["tau_uv"],
-                           tau_vv = theta["tau_vv"],
-                           sigma2 = sigma2T,
-                           indiv = FALSE)
-    return(-iOut) ## optim is minimizing
+    theta["sigma2"] <- exp(theta["sigma2.log"])
+
+    iOut <- try(logLik_mixed10(Y = df.sim$Y, t = df.sim$X,
+                               beta = theta["beta"], psi = theta["psi"],
+                               tau_uu = theta["tau_uu"],
+                               tau_uv = theta["tau_uv"],
+                               tau_vv = theta["tau_vv"],
+                               sigma2 = theta["sigma2"],
+                               indiv = FALSE), silent = TRUE)
+    if(inherits(iOut,"try-error")){
+      cat("ERROR: ",paste(theta[c("beta","psi","tau_uu","tau_uv","tau_vv","sigma2")], collapse=", "))
+      return(Inf) ## optim is minimizing
+    }else{
+      return(-iOut) ## optim is minimizing
+    }
+    
   }, control = list(reltol = 1e-3))
 \end{lstlisting}
 
-And obtain the following estimates (after back-transformation):
+After back-transformation we obtain the following estimates:
 \begin{lstlisting}[language=r,numbers=none]
-res.optim0$par["tau_uu"] <- exp(res.optim0$par["tau_uu.log"])
-res.optim0$par["tau_vv"] <- exp(res.optim0$par["tau_vv.log"])
-res.optim0$par["tau_uv"] <- tanh(res.optim0$par["rho_uv"])*sqrt(res.optim0$par["tau_uu"]*res.optim0$par["tau_vv"])
-res.optim0$par[4:6]
+res.optim$par["psi"] <- max(df.sim$X) * plogis(res.optim$par["psi.logit"])
+res.optim$par["tau_uu"] <- exp(res.optim$par["tau_uu.log"])
+res.optim$par["tau_vv"] <- exp(res.optim$par["tau_vv.log"])
+res.optim$par["tau_uv"] <- sqrt(res.optim$par["tau_uu"]*res.optim$par["tau_vv"])*tanh(res.optim$par["rho_uv"])
+res.optim$par["sigma2"] <- exp(res.optim$par["sigma2.log"])
+res.optim$par[c("beta","psi","tau_uu","tau_uv","tau_vv","sigma2")]
 \end{lstlisting}
 
 \phantomsection
 \label{}
 \begin{verbatim}
-    tau_uu      tau_vv      tau_uv 
-0.010979172 0.069672254 0.002123152
+       beta         psi      tau_uu      tau_uv      tau_vv      sigma2 
+0.989314425 1.942741606 0.008735823 0.014492654 0.039373193 0.006122932
 \end{verbatim}
+\subsection{Estimating the random effects}
+\label{sec:org14f9c47}
 
-
-Here we assumed some of the parameters (\(\beta, \psi, \sigma^2\)) to
-be known to simplify the optimisation. Otherwise the problem is too
-complex for a 'standard optimiser' like \texttt{optim} which will return an error.
-
-\clearpage
-\subsection{Profile likelihood}
-\label{sec:org9e71292}
-
-To simplify the optimisation problem we will find the optimal
-expression of \((\beta,\psi,\sigma^2)\) given
-\((\tau_{u,u},\tau_{u,v},\tau{v,v})\) and inject these in the
-likelihood.
-
-\bigskip
-
-\noindent To do so we first derive the joint distribution of \((Y,u,v)\):
+Knowing the model parameters and a vector of outcomes for a specific
+subject, we can evaluate the subject-specific random effect as the
+expected value of the random effect given the observations. We
+therefore need the joint distribution of \((Y,u,v)\):
 \begin{align*}
 \Esp[Y] =& \beta t + \beta \Esp\left[(t-\psi-v_i)\Ind[t-\psi-v_i>0]\right]  + \Esp\left[u_i(t-\psi-v_i)\Ind[t-\psi-v_i>0]\right] \\
  =& \beta t + \beta (t-\psi) - \Esp\left[v_i\Ind[t-\psi-v_i>0]\right] + (t-\psi)\Esp\left[u_i\Ind[t-\psi-v_i>0]\right] - \Esp\left[u_i v_i\Ind[t-\psi-v_i>0]\right] \\
- =& \beta t + \beta (t-\psi) - \Esp\left[v_i\Ind[v_i < t-\psi]\right] + (t-\psi)\Esp\left[u_i\Ind[v_i<t-\psi]\right] - \Esp\left[u_i v_i\Ind[v_i<t-\psi]\right] \\
+ =& \beta t + \beta (t-\psi) - \Esp\left[v_i\Ind[v_i < t-\psi]\right] + (t-\psi)\Esp\left[u_i\Ind[v_i<t-\psi]\right] - \Esp\left[u_i v_i\Ind[v_i<t-\psi]\right] 
 \end{align*}
 
-We now focus on the expectation terms:
+\noindent We now focus on the expectation terms:
 \begin{align*}
-\Esp\left[v_i\Ind[v_i < t-\psi]\right] = \int_{-\infty}^{t-\psi} \frac{v_i}{\sqrt{2\pi \tau_{v,v}}} \exp\left(-\frac{v_i^2}{2\tau_{v,v}}\right)
+\Esp\left[v_i\Ind[v_i < t-\psi]\right]
+&= \int_{-\infty}^{t-\psi} \frac{v_i}{\sqrt{2\pi \tau_{v,v}}} \exp\left(-\frac{v_i^2}{2\tau_{v,v}}\right)dv_i \\
+&= -\frac{\sqrt{\tau_{v,v}}}{\sqrt{2\pi}}\left[\exp\left(-\frac{v_i^2}{2\tau_{v,v}}\right) \right]_{-\infty}^{t-\psi}
+= -\frac{\exp\left(-\frac{(t-\psi)^2}{2\tau_{v,v}}\right) \sqrt{\tau_{v,v}}}{\sqrt{2\pi}} \\
+&= \mu_1(t,\psi,\tau_{v,v})
+\end{align*}
+
+\begin{align*}
+&\Esp\left[u_i\Ind[v_i < t-\psi]\right]
+= \int_{-\infty}^{+\infty}\int_{-\infty}^{t-\psi} \frac{u_i}{2\pi\sqrt{\tau_{u,u}\tau_{v,v} - \tau^2_{u,v}}} \exp\left(-\frac{w_{v,v} v_i^2+2 w_{u,v} u_i v_i+w_{u,u}  u_i^2}{2}\right)dv_i du_i \\
+=& \frac{1}{\sqrt{2\pi w_{v,v}(\tau_{u,u}\tau_{v,v} - \tau^2_{u,v})}} \int_{-\infty}^{+\infty} u_i \exp\left(-\frac{u_i^2 (w_{u,u} - \frac{w^2_{u,v}}{w_{v,v}})}{2}\right)\Phi\left((t-\psi)\sqrt{w_{v,v}}+\frac{w_{u,v}}{\sqrt{w_{v,v}}}u_i\right) du_i \\ 
+=& \mu_2(t,\psi,\tau_{u,u},\tau_{u,v},\tau_{v,v})
+\end{align*}
+
+\begin{align*}
+&\Esp\left[u_i v_i\Ind[v_i < t-\psi]\right]
+= \int_{-\infty}^{+\infty}\int_{-\infty}^{t-\psi} \frac{u_i v_i}{2\pi\sqrt{\tau_{u,u}\tau_{v,v} - \tau^2_{u,v}}} \exp\left(-\frac{w_{v,v} v_i^2+2 w_{u,v} u_i v_i+w_{u,u}  u_i^2}{2}\right)dv_i du_i 
 \end{align*}
 \end{document}

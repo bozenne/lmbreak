@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.7.9)  15 JUL 2026 14:02
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (MiKTeX 25.4) (preloaded format=pdflatex 2025.7.9)  15 JUL 2026 18:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1295,6 +1295,9 @@ LaTeX Warning: Label `' multiply defined.
 
 LaTeX Warning: Label `' multiply defined.
 
+
+LaTeX Warning: Label `' multiply defined.
+
 )
 \openout1 = `breakpoint.aux'.
 
@@ -1457,12 +1460,20 @@ File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 ppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathsy.enc}{C:/Users/hpl802/
 AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-mathex.enc}{C:/Users/hpl802
 /AppData/Local/Programs/MiKTeX/fonts/enc/dvips/lm/lm-ts1.enc}]
-Overfull \hbox (80.34915pt too wide) detected at line 295
+Overfull \hbox (24.5684pt too wide) in paragraph at lines 285--290
+\T1/lmr/m/n/12 where $\OML/lmm/m/it/12 H\OT1/lmr/m/n/12 (\OML/lmm/m/it/12  \OT1
+/lmr/m/n/12 ) = \OML/lmm/m/it/12 Z\OT1/lmr/m/n/12 (\OML/lmm/m/it/12  \OT1/lmr/m
+/n/12 ) [][] \OML/lmm/m/it/12 Z[]\OT1/lmr/m/n/12 (\OML/lmm/m/it/12  \OT1/lmr/m/
+n/12 )$ \T1/lmr/m/n/12 is the hat ma-trix and $[]$.
+ []
+
+
+Overfull \hbox (62.43945pt too wide) detected at line 295
 []
  []
 
 
-Overfull \hbox (50.23767pt too wide) detected at line 305
+Overfull \hbox (34.11894pt too wide) detected at line 305
 []
  []
 
@@ -1508,20 +1519,20 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 <./figures/gg-traj-mixed.pdf, id=126, 361.35pt x 180.675pt>
 File: ./figures/gg-traj-mixed.pdf Graphic file (type pdf)
 <use ./figures/gg-traj-mixed.pdf>
-Package pdftex.def Info: ./figures/gg-traj-mixed.pdf  used on input line 491.
+Package pdftex.def Info: ./figures/gg-traj-mixed.pdf  used on input line 498.
 (pdftex.def)             Requested size: 430.00462pt x 215.00314pt.
 
 
 [6
 
  <./figures/gg-traj-mixed.pdf>]
-Overfull \hbox (82.89642pt too wide) in paragraph at lines 525--532
+Overfull \hbox (82.89642pt too wide) in paragraph at lines 532--539
 \T1/lmr/m/n/12 We fur-ther de-note $\OT1/lmr/m/n/12 ^^F[] = []$ \T1/lmr/m/n/12 
 whose in-verse is $\OT1/lmr/m/n/12 ^^F[] = [] = [] []$\T1/lmr/m/n/12 .
  []
 
 
-Overfull \hbox (54.07056pt too wide) detected at line 551
+Overfull \hbox (54.07056pt too wide) detected at line 558
 []
  []
 
@@ -1530,17 +1541,17 @@ Overfull \hbox (54.07056pt too wide) detected at line 551
 [7
 
 ]
-Overfull \hbox (47.12589pt too wide) detected at line 607
+Overfull \hbox (47.12589pt too wide) detected at line 614
 []
  []
 
 
-Overfull \hbox (89.79189pt too wide) detected at line 612
+Overfull \hbox (89.79189pt too wide) detected at line 619
 []
  []
 
 
-Overfull \hbox (17.77664pt too wide) detected at line 621
+Overfull \hbox (17.77664pt too wide) detected at line 628
 []
  []
 
@@ -1549,17 +1560,22 @@ Overfull \hbox (17.77664pt too wide) detected at line 621
 [8
 
 ]
-Overfull \hbox (76.6292pt too wide) detected at line 631
+Overfull \hbox (0.81738pt too wide) detected at line 639
 []
  []
 
 
-Overfull \hbox (40.23283pt too wide) detected at line 639
+Overfull \hbox (93.99866pt too wide) in paragraph at lines 639--639
+[] 
+ []
+
+
+Overfull \hbox (40.23283pt too wide) detected at line 648
 []
  []
 
 
-Overfull \hbox (164.49765pt too wide) in paragraph at lines 639--639
+Overfull \hbox (164.49765pt too wide) in paragraph at lines 648--648
 [] 
  []
 
@@ -1572,6 +1588,15 @@ Overfull \hbox (164.49765pt too wide) in paragraph at lines 639--639
 ]
 
 [11]
+Overfull \hbox (37.0477pt too wide) detected at line 825
+[]
+ []
+
+
+Overfull \hbox (27.26889pt too wide) detected at line 830
+[]
+ []
+
 \Changes@OutFile=\write6
 \openout6 = `breakpoint.soc'.
 
@@ -1580,9 +1605,7 @@ Overfull \hbox (164.49765pt too wide) in paragraph at lines 639--639
 
 
 
-[12
-
-] (breakpoint.aux)
+[12] (breakpoint.aux)
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-06-09>
@@ -1592,16 +1615,16 @@ L3 programming layer <2025-06-09>
 LaTeX Warning: There were multiply-defined labels.
 
 Package rerunfilecheck Info: File `breakpoint.out' has not changed.
-(rerunfilecheck)             Checksum: E33479300D50DC94B713FD173A31BB56;1925.
+(rerunfilecheck)             Checksum: 23A77F56EB61817F777B6FE17C73690A;1986.
  ) 
 Here is how much of TeX's memory you used:
- 31084 strings out of 468221
- 559648 string characters out of 5432408
- 1497770 words of memory out of 5000000
- 58833 multiletter control sequences out of 15000+600000
+ 31113 strings out of 468221
+ 560015 string characters out of 5432408
+ 1684781 words of memory out of 5000000
+ 58848 multiletter control sequences out of 15000+600000
  690619 words of font info for 112 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 114i,16n,117p,548b,1953s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 114i,16n,117p,548b,2111s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public/doublestrok
 e/dsrom12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/public
 /lm/lmbx12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/publi
@@ -1620,9 +1643,9 @@ ic/lm/lmtt10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pub
 lic/lm/lmtt12.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX/fonts/type1/pu
 blic/amsfonts/symbols/msam10.pfb><C:/Users/hpl802/AppData/Local/Programs/MiKTeX
 /fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on breakpoint.pdf (12 pages, 352676 bytes).
+Output written on breakpoint.pdf (12 pages, 357304 bytes).
 PDF statistics:
- 361 PDF objects out of 1000 (max. 8388607)
- 144 named destinations out of 1000 (max. 500000)
+ 379 PDF objects out of 1000 (max. 8388607)
+ 158 named destinations out of 1000 (max. 500000)
  120 words of extra memory for PDF output out of 10000 (max. 10000000)
 

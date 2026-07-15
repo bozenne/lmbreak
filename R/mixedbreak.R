@@ -3,9 +3,9 @@
 ## Author: Brice Ozenne
 ## Created: jul 14 2026 (10:40) 
 ## Version: 
-## Last-Updated: jul 15 2026 (13:15) 
+## Last-Updated: jul 15 2026 (18:46) 
 ##           By: Brice Ozenne
-##     Update #: 172
+##     Update #: 175
 ##----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -75,7 +75,7 @@
 ##' @export
 logLik_mixed10 <- function(Y, t,
                            beta, psi, tau_uu, tau_uv, tau_vv, sigma2,
-                           lower = -5, upper = 5, indiv = TRUE, integration = "univariate-fast"){
+                           lower = -5, upper = 5, indiv = TRUE, integration = "univariate"){
 
     ## ** normalize user input
 

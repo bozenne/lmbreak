@@ -16,7 +16,7 @@ logLik_mixed10(
   lower = -5,
   upper = 5,
   indiv = TRUE,
-  integration
+  integration = "univariate-fast"
 )
 }
 \arguments{
@@ -43,7 +43,7 @@ logLik_mixed10(
 \item{indiv}{[logical] should the log-likelihood be output for each observation or only its sum across all observations}
 
 \item{integration}{[character] method use to compute the likelihood: \code{"bivariate"} or \code{"univariate"}.
-The latter is much faster.}
+The latter is much faster. \code{"univariate-fast"} precomputes some quantities involved in \code{"univariate"} so is slightly faster.}
 }
 \value{
 A numeric value for the value of the total log-likelihood (\code{indiv=FALSE}) or a \code{data.frame} with as many rows as observations (\code{indiv=TRUE}).
